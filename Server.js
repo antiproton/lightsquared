@@ -16,6 +16,25 @@ define(function(require) {
 
 	Server.DEFAULT_PORT=8080;
 
+	/*
+	var cookies={};
+
+		for(var i=0; i<request.cookies.length; i++) {
+			cookies[request.cookies[i].name]=request.cookies[i].value;
+		}
+
+		if("session" in cookies) {
+			var sessionId=cookies["session"];
+			var connection=request.accept(null, request.origin);
+
+			if(!(sessionId in usersBySessionId)) {
+				usersBySessionId[sessionId]=new User();
+			}
+
+			var user=usersBySessionId[sessionId];
+		}
+	*/
+
 	Server.prototype.run=function() {
 		var httpServer=http.createServer(function(request, response) {
 			response.writeHead(404);
