@@ -1,9 +1,19 @@
 var requirejs=require("requirejs");
 
 requirejs.config({
-	nodeRequire: require
+	nodeRequire: require,
+	paths: {
+		"lib": "/var/www/lib/js"
+	},
+	map: {
+		"*": {
+			"css": "lib/require-css/css",
+			"file": "lib/require-text/text",
+			"chess": "../chess"
+		}
+	}
 });
 
-requirejs(["./ChessServer"], function(ChessServer) {
-	ChessServer.run();
+requirejs(["./server"], function(server) {
+	server.run();
 });
