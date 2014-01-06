@@ -26,7 +26,7 @@ define(function(require) {
 			httpServer: httpServer
 		});
 
-		wsServer.on("request", function(request) {
+		wsServer.on("request", (function(request) {
 			var cookies={};
 
 			for(var i=0; i<request.cookies.length; i++) {
@@ -38,14 +38,19 @@ define(function(require) {
 				var connection=request.accept(null, request.origin);
 	
 				if(!(sessionId in this._clientsBySessionCookie)) {
-					this._clientsBySessionCookie[sessionId]=new Client(connection);
+					this._clientsBySessionCookie[sessionId]=new Client();
 				}
+				
+				var client=this._clientsBySessionCookie[sessionId];
+				
+				client.disconnect();
+				client.connect(connection);
 	
 				this.ClientConnected.fire({
-					client: this._clientsBySessionCookie[sessionId]
+					client: client
 				});
 			}
-		});
+		}).bind(this));
 	}
 
 	return Server;
