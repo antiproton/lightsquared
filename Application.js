@@ -12,8 +12,8 @@ define(function(require) {
 		server.ClientConnected.addHandler(this, function(data) {
 			var client=data.client;
 			
-			if(client.getUser()===null) {
-				client.setUser(new User());
+			if(!("user" in client.session)) {
+				client.session["user"]=new User();
 			}
 			
 			console.log("connect");
