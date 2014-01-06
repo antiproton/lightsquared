@@ -16,7 +16,7 @@ define(function(require) {
 			}
 			
 			client.subscribe("/disconnect", (function() {
-				
+				console.log("disconnect");
 			}).bind(this));
 		});
 	}
