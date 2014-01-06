@@ -9,7 +9,7 @@ define(function(require) {
 		
 		this.ClientConnected=new Event(this);
 		
-		this._clientsBySessionCookie={};
+		this._session={};
 	}
 
 	Server.DEFAULT_PORT=8080;
@@ -37,17 +37,12 @@ define(function(require) {
 				var sessionId=cookies["session"];
 				var connection=request.accept(null, request.origin);
 	
-				if(!(sessionId in this._clientsBySessionCookie)) {
-					this._clientsBySessionCookie[sessionId]=new Client();
+				if(!(sessionId in this._session)) {
+					this._session[sessionId]={};
 				}
-				
-				var client=this._clientsBySessionCookie[sessionId];
-				
-				client.disconnect();
-				client.connect(connection);
 	
 				this.ClientConnected.fire({
-					client: client
+					client: new Client(session)
 				});
 			}
 		}).bind(this));
