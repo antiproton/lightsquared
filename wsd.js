@@ -7,8 +7,6 @@ requirejs.config({
 	},
 	map: {
 		"*": {
-			"css": "lib/require-css/css",
-			"file": "lib/require-text/text",
 			"chess": "../chess"
 		}
 	}
