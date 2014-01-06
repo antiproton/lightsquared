@@ -1,6 +1,7 @@
 define(function(require) {
 	var Publisher=require("lib/Publisher");
 	var List=require("lib/List");
+	var User=require("./User");
 	
 	function Application(server) {
 		this._onlineUsersByUsername={};
@@ -15,8 +16,14 @@ define(function(require) {
 				client.setUser(new User());
 			}
 			
+			console.log("connect");
+			
 			client.subscribe("/disconnect", (function() {
 				console.log("disconnect");
+			}).bind(this));
+			
+			client.subscribe("/test", (function(data) {
+				console.log(data);
 			}).bind(this));
 		});
 	}
