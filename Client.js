@@ -3,9 +3,9 @@ define(function(require) {
 	var time=require("lib/time");
 	var Publisher=require("lib/Publisher");
 	
-	function Client(session) {
-		this.session=session;
+	function Client(connection, session) {
 		this._connection=connection;
+		this.session=session;
 		this._timeLastMessageReceived=null;
 		this._timeLastMessageSent=null;
 		this._timeConnected=time();
@@ -22,10 +22,8 @@ define(function(require) {
 	}
 
 	Client.prototype.sendMessage=function(data) {
-		if(this._connection!==null) {
-			this._connection.sendUTF(JSON.stringify(data));
-			this._timeLastMessageReceived=time();
-		}
+		this._connection.sendUTF(JSON.stringify(data));
+		this._timeLastMessageReceived=time();
 	}
 	
 	Client.prototype.getTimeLastActive=function() {

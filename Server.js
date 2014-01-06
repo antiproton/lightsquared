@@ -42,7 +42,7 @@ define(function(require) {
 				}
 	
 				this.ClientConnected.fire({
-					client: new Client(session)
+					client: new Client(connection, this._session[sessionId])
 				});
 			}
 		}).bind(this));
