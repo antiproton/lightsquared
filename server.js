@@ -1,11 +1,13 @@
 define(function(require) {
 	var Server=require("./Server");
-	var AuthenticationLayer=require("./AuthenticationLayer");
-	var ApplicationLayer=require("./ApplicationLayer");
+	var Application=require("./Application");
 	
 	return {
 		run: function() {
+			var server=new Server();
+			var app=new Application(server);
 			
+			server.run();
 		}
 	};
 });
