@@ -2,11 +2,13 @@ define(function(require) {
 	var Event=require("lib/Event");
 	var WsServer=require("websocket").server;
 	var http=require("http");
+	var Client=require("./Client");
 
 	function Server(port) {
-		ServerStackLayer.call(this);
-
 		this._port=port||Server.DEFAULT_PORT;
+		
+		this.ClientConnected=new Event(this);
+		
 		this._clientsBySessionCookie={};
 	}
 
