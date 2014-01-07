@@ -21,9 +21,13 @@ define(function(require) {
 		this._publisher.unsubscribe(url, callback);
 	}
 
-	Client.prototype.sendMessage=function(data) {
+	Client.prototype.send=function(data) {
 		this._connection.sendUTF(JSON.stringify(data));
 		this._timeLastMessageReceived=time();
+	}
+	
+	Client.prototype.close=function() {
+		this._connection.close();
 	}
 	
 	Client.prototype.getTimeLastActive=function() {
