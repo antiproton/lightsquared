@@ -4,12 +4,31 @@ define(function(require) {
 	var Publisher=require("lib/Publisher");
 	
 	function Client(connection, session) {
-		this._connection=connection;
 		this.session=session;
+		this._connection=connection;
+		
+		this.Disconnected=new Event(this);
+		
 		this._timeLastMessageReceived=null;
 		this._timeLastMessageSent=null;
 		this._timeConnected=time();
+		
 		this._publisher=new Publisher();
+		
+		this._connectionMessageHandler=(function(message) {
+			if(message.type==="utf8") {
+				this._publisher.publish(JSON.parse(message.utf8Data));
+				this._timeLastMessageSent=time();
+			}
+		}).bind(this);
+		
+		this._connectionCloseHandler=(function(reason, description) {
+			this.Disconnected.fire({
+				reason: reason,
+				description: description
+			});
+		}).bind(this);
+		
 		this._setupConnection();
 	}
 	
@@ -28,6 +47,7 @@ define(function(require) {
 	
 	Client.prototype.close=function() {
 		this._connection.close();
+		this._teardownConnection();
 	}
 	
 	Client.prototype.getTimeLastActive=function() {
@@ -35,23 +55,13 @@ define(function(require) {
 	}
 	
 	Client.prototype._setupConnection=function() {
-		this._connection.on("message", (function(message) {
-			if(message.type==="utf8") {
-				this._publisher.publish(JSON.parse(message.utf8Data));
-				this._timeLastMessageSent=time();
-			}
-		}).bind(this));
-
-		this._connection.on("close", (function(reason, description) {
-			console.log("Client _connection close");
-			
-			this._publisher.publish({
-				"/disconnect": {
-					reason: reason,
-					description: description
-				}
-			});
-		}).bind(this));
+		this._connection.on("message", this._connectionMessageHandler);
+		this._connection.on("close", this._connectionCloseHandler);
+	}
+	
+	Client.prototype._teardownConnection=function() {
+		this._connection.off("message", this._connectionMessageHandler);
+		this._connection.off("close", this._connectionCloseHandler);
 	}
 
 	return Client;
