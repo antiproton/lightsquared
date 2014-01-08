@@ -15,16 +15,6 @@ define(function(require) {
 			if(!("user" in client.session)) {
 				client.session["user"]=new User();
 			}
-			
-			console.log("connect");
-			
-			client.subscribe("/disconnect", (function() {
-				console.log("disconnect");
-			}).bind(this));
-			
-			client.subscribe("/test", (function(data) {
-				console.log(data);
-			}).bind(this));
 		});
 	}
 	
