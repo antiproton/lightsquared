@@ -17,6 +17,6 @@ requirejs.config({
 	}
 });
 
-requirejs(["./server"], function(server) {
-	server.run();
+requirejs(["./main"], function(main) {
+	main();
 });
