@@ -9,8 +9,8 @@ define(function(require) {
 		
 		this.Disconnected=new Event(this);
 		
-		this._timeLastMessageReceived=null;
-		this._timeLastMessageSent=null;
+		this._timeLastMessageReceived=0;
+		this._timeLastMessageSent=0;
 		this._timeConnected=time();
 		
 		this._publisher=new Publisher();
@@ -43,6 +43,12 @@ define(function(require) {
 	Client.prototype.send=function(data) {
 		this._connection.sendUTF(JSON.stringify(data));
 		this._timeLastMessageReceived=time();
+	}
+	
+	Client.prototype.sendKeepAliveMessage=function(maxTimeBetweenMessages) {
+		if(time()-this._timeLastMessageReceived>maxTimeBetweenMessages) {
+			this.send({});
+		}
 	}
 	
 	Client.prototype.close=function() {
