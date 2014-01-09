@@ -3,6 +3,8 @@ define(function(require) {
 	var WsServer=require("websocket").server;
 	var http=require("http");
 	var Client=require("./Client");
+	var time=require("lib/time");
+	require("lib/Array.remove");
 
 	function Server(port) {
 		this._port=port||Server.DEFAULT_PORT;
@@ -10,6 +12,14 @@ define(function(require) {
 		this.ClientConnected=new Event(this);
 		
 		this._session={};
+		
+		this._timeBetweenKeepAlives=1000;
+		this._timeLastBroadcastMessageSent=0;
+		this._connectedClients=[];
+		
+		setInterval((function() {
+			this._sendKeepAliveMessages();
+		}).bind(this), this._timeBetweenKeepAlives);
 	}
 
 	Server.DEFAULT_PORT=8080;
@@ -40,12 +50,36 @@ define(function(require) {
 				if(!(sessionId in this._session)) {
 					this._session[sessionId]={};
 				}
+				
+				var client=new Client(connection, this._session[sessionId])
+				
+				this._connectedClients.push(client);
+				
+				client.Disconnected.addHandler(this, function() {
+					this._connectedClients.remove(client);
+				});
 	
 				this.ClientConnected.fire({
-					client: new Client(connection, this._session[sessionId])
+					client: client
 				});
 			}
 		}).bind(this));
+	}
+	
+	Server.prototype.sendBroadcastMessage=function(dataByUrl) {
+		this._connectedClients.forEach((function(client) {
+			client.send(dataByUrl);
+		}).bind(this));
+		
+		this._timeLastBroadcastMessageSent=time();
+	}
+	
+	Server.prototype._sendKeepAliveMessages=function() {
+		if(time()-this._timeLastBroadcastMessageSent>this._timeBetweenKeepAlives) {
+			this._connectedClients.forEach((function(client) {
+				client.sendKeepAliveMessage(this._timeBetweenKeepAlives);
+			}).bind(this));
+		}
 	}
 
 	return Server;
