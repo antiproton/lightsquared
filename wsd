@@ -1,3 +1,5 @@
+#!/usr/bin/js
+
 var requirejs=require("requirejs");
 
 requirejs.config({
