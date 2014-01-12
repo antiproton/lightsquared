@@ -9,7 +9,7 @@ define(function(require) {
 			this._publisher.publish(dataByUrl);
 		}).bind(this));
 		
-		this.ignoredUrls=[];
+		this._ignoredUrls=[];
 		this._messageFiltersByUrl={};
 		
 		this.subscribe("/filter_add", (function(data) {
