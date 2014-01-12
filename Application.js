@@ -25,8 +25,15 @@ define(function(require) {
 			var user=client.session["user"];
 			
 			user.send({
-				"/users_online": this._countUsersOnline()
+				"/users_online": this._countUsersOnline(),
+				"/challenges": this._getChallengeList()
 			});
+			
+			user.subscribe("/request/challenge_list", (function() {
+				user.send({
+					"/challenges": this._getChallengeList()
+				});
+			}).bind(this));
 			
 			/*
 			TODO send them full data of all the games they're in.
