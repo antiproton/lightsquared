@@ -25,26 +25,21 @@ define(function(require) {
 			var user=client.session["user"];
 			
 			user.send({
-				"/users_online": this._countUsersOnline(),
-				"/challenges": this._getChallengeList()
+				"/challenges": this._openChallenges
 			});
-			
-			user.subscribe("/request/challenge_list", (function() {
-				user.send({
-					"/challenges": this._getChallengeList()
-				});
-			}).bind(this));
 			
 			/*
 			TODO send them full data of all the games they're in.
+			
+			TODO go through games seeing which ones they're in, add them to their list
+			when they join/watch a game, add that one.  the above TODO can now be done
+			without looping through the games each time.
 			*/
 			
 			this._sendBroadcastMessage({
 				"/user_connected": user.id
 			});
 		});
-		
-		
 	}
 	
 	Application.prototype._sendBroadcastMessage=function(dataByUrl) {
