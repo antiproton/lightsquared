@@ -18,7 +18,7 @@ define(function(require) {
 		this._connectionMessageHandler=(function(message) {
 			if(message.type==="utf8") {
 				this._publisher.publish(JSON.parse(message.utf8Data));
-				this._timeLastMessageSent=time();
+				this._timeLastMessageReceived=time();
 			}
 		}).bind(this);
 		
@@ -42,11 +42,11 @@ define(function(require) {
 
 	Client.prototype.send=function(dataByUrl) {
 		this._connection.sendUTF(JSON.stringify(dataByUrl));
-		this._timeLastMessageReceived=time();
+		this._timeLastMessageSent=time();
 	}
 	
 	Client.prototype.sendKeepAliveMessage=function(maxTimeBetweenMessages) {
-		if(time()-this._timeLastMessageReceived>maxTimeBetweenMessages) {
+		if(time()-this._timeLastMessageSent>maxTimeBetweenMessages) {
 			this.send({});
 		}
 	}
@@ -57,7 +57,7 @@ define(function(require) {
 	}
 	
 	Client.prototype.getTimeLastActive=function() {
-		return Math.max(this._timeConnected, this._timeLastMessageSent);
+		return Math.max(this._timeConnected, this._timeLastMessageReceived);
 	}
 	
 	Client.prototype._setupConnection=function() {
