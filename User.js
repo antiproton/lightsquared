@@ -12,17 +12,17 @@ define(function(require) {
 		this._ignoredUrls=[];
 		this._messageFiltersByUrl={};
 		
-		this.subscribe("/filter_add", (function(data) {
+		this._client.subscribe("/filter_add", (function(data) {
 			
 		}).bind(this));
 	}
 	
 	User.prototype.subscribe=function(url, callback) {
-		this._client.subscribe(url, callback);
+		this._publisher.subscribe(url, callback);
 	}
 	
 	User.prototype.unsubscribe=function(url, callback) {
-		this._client.unsubscribe(url, callback);
+		this._publisher.unsubscribe(url, callback);
 	}
 	
 	User.prototype.send=function(dataByUrl) {
