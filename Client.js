@@ -40,8 +40,8 @@ define(function(require) {
 		this._publisher.unsubscribe(url, callback);
 	}
 
-	Client.prototype.send=function(data) {
-		this._connection.sendUTF(JSON.stringify(data));
+	Client.prototype.send=function(dataByUrl) {
+		this._connection.sendUTF(JSON.stringify(dataByUrl));
 		this._timeLastMessageReceived=time();
 	}
 	
