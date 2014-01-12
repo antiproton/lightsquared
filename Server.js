@@ -32,7 +32,7 @@ define(function(require) {
 
 		httpServer.listen(this._port);
 
-		wsServer=new WsServer({
+		var wsServer=new WsServer({
 			httpServer: httpServer
 		});
 
