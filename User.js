@@ -8,6 +8,10 @@ define(function(require) {
 		this._publisher=new Publisher();
 		this.username="Anonymous"+id();
 		
+		this._client.Disconnected.addHandler(this, function() {
+			this._publisher.publish("/disconnected");
+		});
+		
 		this._client.subscribe("*", (function(dataByUrl) {
 			this._publisher.publish(dataByUrl);
 		}).bind(this));
@@ -23,11 +27,6 @@ define(function(require) {
 	
 	User.prototype.send=function(dataByUrl) {
 		this._client.send(dataByUrl);
-		this._client.send(this.username);
-	}
-	
-	User.prototype._publish=function(dataByUrl) {
-		this._publisher.publish(dataByUrl);
 	}
 	
 	return User;

@@ -11,18 +11,13 @@ define(function(require) {
 		
 		server.ClientConnected.addHandler(this, function(data) {
 			var client=data.client;
+			var user=new User(client);
 			
-			client.Disconnected.addHandler(this, function() {
+			user.subscribe("/disconnected", (function() {
 				this._sendBroadcastMessage({
 					"/user_disconnected": user.id
 				});
-			});
-			
-			if(!("user" in client.session)) {
-				client.session["user"]=new User(client);
-			}
-			
-			var user=client.session["user"];
+			}).bind(this));
 			
 			user.send({
 				"/challenges": this._openChallenges
@@ -35,6 +30,10 @@ define(function(require) {
 			when they join/watch a game, add that one.  the above TODO can now be done
 			without looping through the games each time.
 			*/
+			
+			this._tables.forEach((function(table) {
+				
+			}).bind(this));
 			
 			this._sendBroadcastMessage({
 				"/user_connected": user.id
