@@ -19,6 +19,8 @@ define(function(require) {
 				});
 			}).bind(this));
 			
+			user.sendCurrentTables(this._tables);
+			
 			user.send({
 				"/challenges": this._openChallenges
 			});
