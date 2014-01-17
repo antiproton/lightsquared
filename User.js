@@ -3,10 +3,20 @@ define(function(require) {
 	require("lib/Array.contains");
 	var id=require("lib/id");
 	
+	function urlStartsWithPath(url, path) {
+		return (url===path || url.substr(0, path.length+1)===path+"/");
+	}
+	
 	function User(client) {
 		this._client=client;
 		this._publisher=new Publisher();
 		this._isAnonymous=true;
+		
+		this._interestingPaths=[
+			"/game",
+			"/direct_challenge"
+		];
+		
 		this.username="Anonymous"+id();
 		
 		if("username" in this._client.session) {
@@ -20,6 +30,10 @@ define(function(require) {
 		
 		this._client.subscribe("*", (function(dataByUrl) {
 			this._publisher.publish(dataByUrl);
+		}).bind(this));
+		
+		this._client.subscribe("/interested", (function(data) {
+			
 		}).bind(this));
 	}
 	
@@ -48,7 +62,17 @@ define(function(require) {
 	}
 	
 	User.prototype.send=function(dataByUrl) {
-		this._client.send(dataByUrl);
+		var interestingData={};
+		
+		for(var url in dataByUrl) {
+			this._interestingPaths.forEach(function(path) {
+				if(urlStartsWithPath(url, path)) {
+					interestingData[url]=dataByUrl[url];
+				}
+			});
+		}
+		
+		this._client.send(interestingData);
 	}
 	
 	User.prototype.isAtTable=function(table) {
