@@ -31,8 +31,8 @@ define(function(require) {
 		});
 	}
 	
-	Application.prototype._sendBroadcastMessage=function(dataByUrl) {
-		this._server.sendBroadcastMessage(dataByUrl);
+	Application.prototype._sendBroadcastMessage=function(data) {
+		this._server.sendBroadcastMessage(data);
 	}
 	
 	return Application;

@@ -29,8 +29,8 @@ define(function(require) {
 			this._publisher.publish("/disconnected");
 		});
 		
-		this._client.subscribe("*", (function(dataByUrl) {
-			this._publisher.publish(dataByUrl);
+		this._client.subscribe("*", (function(data) {
+			this._publisher.publish(data);
 		}).bind(this));
 		
 		this._client.subscribe("/interested", (function(data) {
@@ -66,13 +66,13 @@ define(function(require) {
 		this._publisher.unsubscribe(url, callback);
 	}
 	
-	User.prototype.send=function(dataByUrl) {
+	User.prototype.send=function(data) {
 		var interestingData={};
 		
-		for(var url in dataByUrl) {
+		for(var url in data) {
 			this._interestingPaths.forEach(function(path) {
 				if(urlStartsWithPath(url, path)) {
-					interestingData[url]=dataByUrl[url];
+					interestingData[url]=data[url];
 				}
 			});
 		}
