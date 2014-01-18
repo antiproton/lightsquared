@@ -1,6 +1,7 @@
 define(function(require) {
 	var Publisher=require("lib/Publisher");
 	require("lib/Array.contains");
+	require("lib/Array.remove");
 	var id=require("lib/id");
 	
 	function urlStartsWithPath(url, path) {
@@ -17,10 +18,10 @@ define(function(require) {
 			"/direct_challenge"
 		];
 		
-		this.username="Anonymous"+id();
+		this._username="Anonymous"+id();
 		
 		if("username" in this._client.session) {
-			this.username=this._client.session["username"];
+			this._username=this._client.session["username"];
 			this._isAnonymous=false;
 		}
 		
@@ -33,7 +34,11 @@ define(function(require) {
 		}).bind(this));
 		
 		this._client.subscribe("/interested", (function(data) {
-			
+			this._interestingPaths.push(data.url);
+		}).bind(this));
+		
+		this._client.subscribe("/not_interested", (function(data) {
+			this._interestingPaths.remove(data.url);
 		}).bind(this));
 	}
 	
@@ -77,6 +82,10 @@ define(function(require) {
 	
 	User.prototype.isAtTable=function(table) {
 		return (table.userIsSeated(this) || table.userIsWatching(this));
+	}
+	
+	User.prototype.getUsername=function() {
+		return this._username;
 	}
 	
 	return User;
