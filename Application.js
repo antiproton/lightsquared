@@ -19,6 +19,10 @@ define(function(require) {
 				});
 			}).bind(this));
 			
+			user.subscribe("/create_challenge", (function(data) {
+				this._createChallenge(data);
+			}).bind(this));
+			
 			user.sendCurrentTables(this._tables);
 			
 			user.send({
@@ -28,6 +32,16 @@ define(function(require) {
 			this._sendBroadcastMessage({
 				"/user_connected": user.id
 			});
+		});
+	}
+	
+	Application.prototype._createChallenge=function(options) {
+		var challenge=new Challenge(options);
+		
+		this._openChallenges[challenge.id]=challenge;
+		
+		this._sendBroadcastMessage({
+			"/challenges": [challenge]
 		});
 	}
 	
