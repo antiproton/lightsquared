@@ -14,6 +14,8 @@ define(function(require) {
 		this._session=this._client.getSession();
 		this._publisher=new Publisher();
 		this._isAnonymous=true;
+		this._gamesPlayedAsWhite=0;
+		this._gamesPlayedAsBlack=0;
 		
 		this._interestingPaths=[
 			"/game",
@@ -92,6 +94,10 @@ define(function(require) {
 	
 	User.prototype.getUsername=function() {
 		return this._username;
+	}
+	
+	User.prototype.getGamesAsWhiteRatio=function() {
+		Math.max(1, this._gamesPlayedAsWhite)/Math.max(1, this._gamesPlayedAsBlack);
 	}
 	
 	return User;
