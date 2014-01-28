@@ -11,6 +11,7 @@ define(function(require) {
 	function User(client) {
 		this._id=id();
 		this._client=client;
+		this._session=this._client.getSession();
 		this._publisher=new Publisher();
 		this._isAnonymous=true;
 		
@@ -21,8 +22,8 @@ define(function(require) {
 		
 		this._username="Anonymous"+id();
 		
-		if("username" in this._client.session) {
-			this._username=this._client.session["username"];
+		if("username" in this._session) {
+			this._username=this._session["username"];
 			this._isAnonymous=false;
 		}
 		
@@ -48,18 +49,18 @@ define(function(require) {
 	}
 	
 	User.prototype.sendCurrentTables=function(tables) {
-		if(!("current_tables" in this._client.session)) {
-			this._client.session["current_tables"]=[];
+		if(!("current_tables" in this._session)) {
+			this._session["current_tables"]=[];
 			
 			tables.forEach((function(table) {
 				if(this.isAtTable(table)) {
-					this._client.session["current_tables"].push(table);
+					this._session["current_tables"].push(table);
 				}
 			}).bind(this));
 		}
 		
 		this.send({
-			"/tables": this._client.session["current_tables"]
+			"/tables": this._session["current_tables"]
 		});
 	}
 	
