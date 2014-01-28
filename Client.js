@@ -4,7 +4,7 @@ define(function(require) {
 	var Publisher=require("lib/Publisher");
 	
 	function Client(connection, session) {
-		this.session=session;
+		this._session=session;
 		this._connection=connection;
 		
 		this.Disconnected=new Event(this);
@@ -49,6 +49,10 @@ define(function(require) {
 		if(time()-this._timeLastMessageSent>maxTimeBetweenMessages) {
 			this.send({});
 		}
+	}
+	
+	Client.prototype.getSession=function() {
+		return this._session;
 	}
 	
 	Client.prototype.close=function() {
