@@ -9,6 +9,7 @@ define(function(require) {
 	}
 	
 	function User(client) {
+		this._id=id();
 		this._client=client;
 		this._publisher=new Publisher();
 		this._isAnonymous=true;
@@ -40,6 +41,10 @@ define(function(require) {
 		this._client.subscribe("/not_interested", (function(data) {
 			this._interestingPaths.remove(data.url);
 		}).bind(this));
+	}
+	
+	User.prototype.getId=function() {
+		return this._id;
 	}
 	
 	User.prototype.sendCurrentTables=function(tables) {
