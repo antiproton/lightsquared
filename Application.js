@@ -15,12 +15,12 @@ define(function(require) {
 			
 			user.subscribe("/disconnected", (function() {
 				this._sendBroadcastMessage({
-					"/user_disconnected": user.id
+					"/user_disconnected": user.getId()
 				});
 			}).bind(this));
 			
 			user.subscribe("/create_challenge", (function(data) {
-				this._createChallenge(data);
+				this._createChallenge(user, data);
 			}).bind(this));
 			
 			user.sendCurrentTables(this._tables);
@@ -35,10 +35,10 @@ define(function(require) {
 		});
 	}
 	
-	Application.prototype._createChallenge=function(options) {
-		var challenge=new Challenge(options);
+	Application.prototype._createChallenge=function(owner, options) {
+		var challenge=new Challenge(owner, options);
 		
-		this._openChallenges[challenge.id]=challenge;
+		this._openChallenges[challenge.getId()]=challenge;
 		
 		this._sendBroadcastMessage({
 			"/challenges": [challenge]
