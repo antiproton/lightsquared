@@ -2,6 +2,7 @@ define(function(require) {
 	var id=require("lib/id");
 	var Piece=require("chess/Piece");
 	var Chess=require("chess/Chess");
+	var Event=require("lib/Event");
 	
 	function Challenge(owner, options) {
 		this._id=id();
@@ -9,7 +10,9 @@ define(function(require) {
 		this._players=[];
 		this._players[Piece.WHITE]=null;
 		this._players[Piece.BLACK]=null;
-		this._isAccepted=false;
+		
+		this.Accepted=new Event(this);
+		this.Declined=new Event(this);
 		
 		this._options={
 			ownerPlaysAs: null,
@@ -26,7 +29,7 @@ define(function(require) {
 	}
 	
 	Challenge.prototype.accept=function(user) {
-		if(this._options.playAs===null) {
+		if(this._options.ownerPlaysAs===null) {
 			var ownerRatio=this._owner.getGamesAsWhiteRatio();
 			var guestRatio=user.getGamesAsWhiteRatio();
 			
@@ -46,13 +49,19 @@ define(function(require) {
 			this._players[Chess.getOppColour(this._options.ownerPlaysAs)]=user;
 		}
 		
-		this._isAccepted=true;
+		var table=new Table(this._owner);
+		
+		this.Accepted.fire({
+			table: table
+		});
 	}
 	
 	Challenge.prototype.toJSON=function() {
 		return {
 			id: this._id,
-			owner: this._owner
+			owner: this._owner,
+			ownerPlaysAs: this._options.ownerPlaysAs,
+			rated: this._options.rated
 		};
 	}
 	
