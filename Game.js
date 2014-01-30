@@ -52,6 +52,8 @@ define(function(require) {
 	
 	Game.prototype.toJSON=function() {
 		return {
+			white: this._players[Piece.WHITE],
+			black: this._players[Piece.BLACK],
 			history: this._game.getHistory()
 		};
 	}
