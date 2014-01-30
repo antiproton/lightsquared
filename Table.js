@@ -36,5 +36,11 @@ define(function(require) {
 		return (this._playerIsReady[Piece.WHITE] && this._playerIsReady[Piece.BLACK]);
 	}
 	
+	Table.prototype.toJSON=function() {
+		return {
+			
+		};
+	}
+	
 	return Table;
 });
