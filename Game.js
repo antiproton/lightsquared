@@ -3,6 +3,7 @@ define(function(require) {
 	var Piece=require("chess/Piece");
 	var id=require("lib/id");
 	var Chess=require("chess/Chess");
+	var Move=require("./Move");
 	
 	function Game(table, white, black, options) {
 		this._id=id();
@@ -57,17 +58,17 @@ define(function(require) {
 			var move=this._game.move(from, to, promoteTo);
 			
 			if(move.isLegal()) {
-				this._players[oppColour].send("/game/"+this._id+"/move", move);
+				this._sendToAll("/game/"+this._id+"/move", Move.fromMove(move));
 			}
 		}
 	}
 	
-	Game.prototype._sendToAll=function(data) {
+	Game.prototype._sendToAll=function(url, data) {
+		var allUsers=this._players.concat(this._table.getSpectators());
 		
-	}
-	
-	Game.prototype._sendToAllButOne=function(data, excludedUser) {
-		
+		allUsers.forEach(function(user) {
+			user.send(url, data);
+		});
 	}
 	
 	Game.prototype.toJSON=function() {
