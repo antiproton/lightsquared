@@ -3,6 +3,7 @@ define(function(require) {
 	var Piece=require("chess/Piece");
 	var Chess=require("chess/Chess");
 	var Event=require("lib/Event");
+	var Game=require("./Game");
 	
 	function Challenge(owner, options) {
 		this._id=id();
@@ -16,11 +17,20 @@ define(function(require) {
 		
 		this._options={
 			ownerPlaysAs: null,
-			rated: true
+			startingFen: Fen.STARTING_FEN,
+			clockStartHalfmove: 1,
+			clockStartDelay: 0,
+			initialTime: 600,
+			timeIncrement: 0,
+			timingStyle: Game.timingStyles.SUDDEN_DEATH,
+			isOvertime: false,
+			overtimeFullmove: 40,
+			overtimeBonus: 600,
+			isRated: true
 		};
 		
-		for(var p in options) {
-			this._options[p]=options[p];
+		for(var p in challengeOptions) {
+			this._options[p]=challengeOptions[p];
 		}
 	}
 	
