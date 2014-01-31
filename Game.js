@@ -73,11 +73,16 @@ define(function(require) {
 	
 	Game.prototype.toJSON=function() {
 		var options=this._game.getOptions();
+		var history=[];
+		
+		this._game.getHistory().forEach(function(move) {
+			history.push(Move.fromMove(move));
+		});
 		
 		return {
 			white: this._players[Piece.WHITE],
 			black: this._players[Piece.BLACK],
-			history: this._game.getHistory(),
+			history: history,
 			state: this._game.getState(),
 			result: this._game.getResult(),
 			resultDetails: this._game.getResultDetails(),
