@@ -17,7 +17,9 @@ define(function(require) {
 		
 		this._connectionMessageHandler=(function(message) {
 			if(message.type==="utf8") {
-				this._publisher.publish(JSON.parse(message.utf8Data));
+				var data=JSON.parse(message.utf8Data);
+				
+				this._publisher.publish(data.url, data.data);
 				this._timeLastMessageReceived=time();
 			}
 		}).bind(this);
@@ -51,7 +53,7 @@ define(function(require) {
 	
 	Client.prototype.sendKeepAliveMessage=function(maxTimeBetweenMessages) {
 		if(time()-this._timeLastMessageSent>maxTimeBetweenMessages) {
-			this.send({});
+			this.send("/keepalive");
 		}
 	}
 	

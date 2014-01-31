@@ -66,9 +66,9 @@ define(function(require) {
 		}).bind(this));
 	}
 	
-	Server.prototype.sendBroadcastMessage=function(data) {
+	Server.prototype.sendBroadcastMessage=function(url, data) {
 		this._connectedClients.forEach(function(client) {
-			client.send(data);
+			client.send(url, data);
 		});
 		
 		this._timeLastBroadcastMessageSent=time();

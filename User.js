@@ -33,8 +33,8 @@ define(function(require) {
 			this._publisher.publish("/disconnected");
 		});
 		
-		this._client.subscribe("*", (function(data) {
-			this._publisher.publish(data);
+		this._client.subscribe("*", (function(url, data) {
+			this._publisher.publish(url, data);
 		}).bind(this));
 		
 		this._client.subscribe("/interested", (function(data) {
@@ -61,9 +61,7 @@ define(function(require) {
 			}).bind(this));
 		}
 		
-		this.send({
-			"/tables": this._session["current_tables"]
-		});
+		this.send("/tables", this._session["current_tables"]);
 	}
 	
 	User.prototype.subscribe=function(url, callback) {

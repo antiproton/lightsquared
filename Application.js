@@ -14,9 +14,7 @@ define(function(require) {
 			var user=new User(client);
 			
 			user.subscribe("/disconnected", (function() {
-				this._sendBroadcastMessage({
-					"/user_disconnected": user.getId()
-				});
+				this._sendBroadcastMessage("/user_disconnected", user.getId());
 			}).bind(this));
 			
 			user.subscribe("/create_challenge", (function(data) {
@@ -24,14 +22,8 @@ define(function(require) {
 			}).bind(this));
 			
 			user.sendCurrentTables(this._tables);
-			
-			user.send({
-				"/challenges": this._openChallenges
-			});
-			
-			this._sendBroadcastMessage({
-				"/user_connected": user.id
-			});
+			user.send("/challenges", this._openChallenges);
+			this._sendBroadcastMessage("/user_connected", user.id);
 		});
 	}
 	
@@ -39,10 +31,7 @@ define(function(require) {
 		var challenge=new Challenge(owner, options);
 		
 		this._openChallenges[challenge.getId()]=challenge;
-		
-		this._sendBroadcastMessage({
-			"/challenges": [challenge]
-		});
+		this._sendBroadcastMessage("/challenges", [challenge]);
 	}
 	
 	Application.prototype._sendBroadcastMessage=function(data) {
