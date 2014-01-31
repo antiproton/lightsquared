@@ -4,9 +4,10 @@ define(function(require) {
 	var id=require("lib/id");
 	var Chess=require("chess/Chess");
 	
-	function Game(white, black, options) {
+	function Game(table, white, black, options) {
 		this._id=id();
-		this._game=new ChessGame();
+		this._table=table;
+		this._game=new ChessGame(options);
 		
 		this._players=[];
 		this._players[Piece.WHITE]=white;
@@ -22,22 +23,6 @@ define(function(require) {
 		
 		this._isUndoRequested=false;
 		this._isDrawOffered=false;
-		
-		this._options={
-			clockStartHalfmove: 1,
-			clockStartDelay: 0,
-			initialTime: 600,
-			increment: 0,
-			timingStyle: ChessGame.timingStyles.SUDDEN_DEATH,
-			isOvertime: false,
-			overtimeFullmove: 40,
-			overtimeBonus: 600,
-			isRated: true
-		};
-		
-		for(var p in options) {
-			this._options[p]=options[p];
-		}
 		
 		this._players.forEach((function(player) {
 			player.subscribe("/game/"+this._id+"/move", (function(data) {
@@ -77,7 +62,17 @@ define(function(require) {
 		}
 	}
 	
+	Game.prototype._sendToAll=function(data) {
+		
+	}
+	
+	Game.prototype._sendToAllButOne=function(data, excludedUser) {
+		
+	}
+	
 	Game.prototype.toJSON=function() {
+		var options=this._game.getOptions();
+		
 		return {
 			white: this._players[Piece.WHITE],
 			black: this._players[Piece.BLACK],
@@ -94,7 +89,16 @@ define(function(require) {
 			blackRatingOld: this._oldRatings[Piece.BLACK],
 			blackRatingNew: this._newRatings[Piece.BLACK],
 			isUndoRequested: this._isUndoRequested,
-			isDrawOffered: this._isDrawOffered
+			isDrawOffered: this._isDrawOffered,
+			clockStartHalfmove: options.clockStartHalfmove,
+			clockStartDelay: options.clockStartDelay,
+			timingStyle: options.timingStyle,
+			initialTime: options.initialTime,
+			increment: options.increment,
+			isOvertime: options.isOvertime,
+			overtimeFullmove: options.overtimeFullmove,
+			overtimeBonus: options.overtimeBonus,
+			isRated: options.isRated
 		};
 	}
 	
