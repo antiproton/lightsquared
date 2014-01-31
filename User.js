@@ -74,7 +74,7 @@ define(function(require) {
 		this._publisher.unsubscribe(url, callback);
 	}
 	
-	User.prototype.send=function(data) {
+	User.prototype._sendMany=function(data) {
 		var interestingData={};
 		
 		for(var url in data) {
@@ -86,6 +86,28 @@ define(function(require) {
 		}
 		
 		this._client.send(interestingData);
+	}
+	
+	User.prototype._sendOne=function(url, data) {
+		if(data===undefined) {
+			data={};
+		}
+		
+		var dataByUrl={};
+		
+		dataByUrl[url]=data;
+		
+		this._sendMany(dataByUrl);
+	}
+	
+	User.prototype.send=function(data) {
+		if(typeof arguments[0]==="string") {
+			this._sendOne.apply(this, arguments);
+		}
+		
+		else {
+			this._sendMany.apply(this, arguments);
+		}
 	}
 	
 	User.prototype.isAtTable=function(table) {
