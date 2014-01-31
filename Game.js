@@ -35,6 +35,10 @@ define(function(require) {
 			isRated: true
 		};
 		
+		for(var p in options) {
+			this._options[p]=options[p];
+		}
+		
 		this._players.forEach((function(player) {
 			player.subscribe("/game/"+this._id+"/move", (function(data) {
 				var promoteTo=Piece.QUEEN;
