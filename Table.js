@@ -2,8 +2,10 @@ define(function(require) {
 	var Piece=require("chess/Piece");
 	var Game=require("./Game");
 	
-	function Table(owner) {
+	function Table(owner, gameOptions) {
 		this._owner=owner;
+		
+		this._gameOptions=gameOptions;
 		
 		this._players=[];
 		this._players[Piece.WHITE]=null;
@@ -13,7 +15,8 @@ define(function(require) {
 		this._playerIsReady[Piece.WHITE]=false;
 		this._playerIsReady[Piece.BLACK]=false;
 		
-		this._game=null;
+		this._games=[];
+		this._currentGame=null;
 	}
 	
 	Table.prototype.sit=function(user, colour) {
@@ -29,16 +32,23 @@ define(function(require) {
 	}
 	
 	Table.prototype._startGame=function() {
-		this._game=new Game();
+		var game=new Game(this, this._players[Piece.WHITE], this._players[Piece.BLACK], this._gameOptions);
+		
+		this._games.push(game);
+		this._currentGame=game;
 	}
 	
-	Table.prototype._allPlayersAreReady=function() {
+	Table.prototype._areAllPlayersReady=function() {
 		return (this._playerIsReady[Piece.WHITE] && this._playerIsReady[Piece.BLACK]);
 	}
 	
 	Table.prototype.toJSON=function() {
 		return {
-			
+			owner: this._owner,
+			white: this._players[Piece.WHITE],
+			black: this._players[Piece.BLACK],
+			games: this._games,
+			currentGame: this._currentGame
 		};
 	}
 	
