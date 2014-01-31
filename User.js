@@ -74,40 +74,12 @@ define(function(require) {
 		this._publisher.unsubscribe(url, callback);
 	}
 	
-	User.prototype._sendMany=function(data) {
-		var interestingData={};
-		
-		for(var url in data) {
-			this._interestingPaths.forEach(function(path) {
-				if(urlStartsWithPath(url, path)) {
-					interestingData[url]=data[url];
-				}
-			});
-		}
-		
-		this._client.send(interestingData);
-	}
-	
-	User.prototype._sendOne=function(url, data) {
-		if(data===undefined) {
-			data={};
-		}
-		
-		var dataByUrl={};
-		
-		dataByUrl[url]=data;
-		
-		this._sendMany(dataByUrl);
-	}
-	
-	User.prototype.send=function(data) {
-		if(typeof arguments[0]==="string") {
-			this._sendOne.apply(this, arguments);
-		}
-		
-		else {
-			this._sendMany.apply(this, arguments);
-		}
+	User.prototype.send=function(url, data) {
+		this._interestingPaths.forEach((function(path) {
+			if(urlStartsWithPath(url, path)) {
+				this._client.send(url, data);
+			}
+		}).bind(this));
 	}
 	
 	User.prototype.isAtTable=function(table) {
