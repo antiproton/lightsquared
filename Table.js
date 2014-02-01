@@ -26,7 +26,7 @@ define(function(require) {
 	Table.prototype.ready=function(colour) {
 		this._playerIsReady[colour]=true;
 		
-		if(this._allPlayersAreReady) {
+		if(this._allPlayersAreReady()) {
 			this._startGame();
 		}
 	}
@@ -38,7 +38,7 @@ define(function(require) {
 		this._currentGame=game;
 	}
 	
-	Table.prototype._areAllPlayersReady=function() {
+	Table.prototype._allPlayersAreReady=function() {
 		return (this._playerIsReady[Piece.WHITE] && this._playerIsReady[Piece.BLACK]);
 	}
 	
