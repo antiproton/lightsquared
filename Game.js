@@ -58,12 +58,12 @@ define(function(require) {
 			var move=this._game.move(from, to, promoteTo);
 			
 			if(move.isLegal()) {
-				this._sendToAll("/game/"+this._id+"/move", Move.fromMove(move));
+				this._sendToAllUsers("/game/"+this._id+"/move", Move.fromMove(move));
 			}
 		}
 	}
 	
-	Game.prototype._sendToAll=function(url, data) {
+	Game.prototype._sendToAllUsers=function(url, data) {
 		var allUsers=this._players.concat(this._table.getSpectators());
 		
 		allUsers.forEach(function(user) {
