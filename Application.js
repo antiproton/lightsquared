@@ -6,6 +6,7 @@ define(function(require) {
 	function Application(server) {
 		this._server=server;
 		this._tables=[];
+		this._users=[];
 		this._openChallenges=[];
 		this._publisher=new Publisher();
 		
@@ -13,8 +14,11 @@ define(function(require) {
 			var client=data.client;
 			var user=new User(client);
 			
+			this._users.push(user);
+			
 			user.subscribe("/disconnected", (function() {
-				this._sendBroadcastMessage("/user_disconnected", user.getId());
+				this._sendToAllUsers("/user_disconnected", user.getId());
+				this._users.remove(user);
 			}).bind(this));
 			
 			user.subscribe("/create_challenge", (function(data) {
@@ -23,8 +27,7 @@ define(function(require) {
 			
 			user.sendCurrentTables(this._tables);
 			user.send("/challenges", this._openChallenges);
-			this._sendBroadcastMessage("/user_connected", user.getId());
-			this._sendBroadcastMessage(user.getId());
+			this._sendToAllUsers("/user_connected", user.getId());
 		});
 	}
 	
@@ -32,11 +35,13 @@ define(function(require) {
 		var challenge=new Challenge(owner, options);
 		
 		this._openChallenges[challenge.getId()]=challenge;
-		this._sendBroadcastMessage("/challenges", [challenge]);
+		this._sendToAllUsers("/challenges", [challenge]);
 	}
 	
-	Application.prototype._sendBroadcastMessage=function(url, data) {
-		this._server.sendBroadcastMessage(url, data);
+	Application.prototype._sendToAllUsers=function(url, data) {
+		this._users.forEach(function(user) {
+			user.send(url, data);
+		});
 	}
 	
 	return Application;
