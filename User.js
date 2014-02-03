@@ -18,6 +18,7 @@ define(function(require) {
 		this._gamesPlayedAsBlack=0;
 		
 		this._interestingPaths=[
+			"/challenges",
 			"/game",
 			"/direct_challenge"
 		];
