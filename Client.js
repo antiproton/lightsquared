@@ -51,6 +51,12 @@ define(function(require) {
 		this._timeLastMessageSent=time();
 	}
 	
+	Client.prototype.sendKeepAliveMessage=function(maxTimeBetweenMessages) {
+		if(time()-this._timeLastMessageSent>maxTimeBetweenMessages) {
+			this.send("/keepalive");
+		}
+	}
+	
 	Client.prototype.getSession=function() {
 		return this._session;
 	}

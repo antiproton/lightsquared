@@ -12,7 +12,14 @@ define(function(require) {
 		this.ClientConnected=new Event(this);
 		
 		this._session={};
+		
+		this._timeBetweenKeepAlives=1000;
+		this._timeLastBroadcastMessageSent=0;
 		this._connectedClients=[];
+		
+		setInterval((function() {
+			this._sendKeepAliveMessages();
+		}).bind(this), this._timeBetweenKeepAlives);
 	}
 
 	Server.DEFAULT_PORT=8080;
@@ -63,6 +70,16 @@ define(function(require) {
 		this._connectedClients.forEach(function(client) {
 			client.send(url, data);
 		});
+		
+		this._timeLastBroadcastMessageSent=time();
+	}
+	
+	Server.prototype._sendKeepAliveMessages=function() {
+		if(time()-this._timeLastBroadcastMessageSent>this._timeBetweenKeepAlives) {
+			this._connectedClients.forEach((function(client) {
+				client.sendKeepAliveMessage(this._timeBetweenKeepAlives);
+			}).bind(this));
+		}
 	}
 
 	return Server;
