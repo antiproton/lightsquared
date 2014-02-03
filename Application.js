@@ -17,7 +17,7 @@ define(function(require) {
 			this._users.push(user);
 			
 			user.subscribe("/disconnected", (function() {
-				this._sendToAllUsers("/user_disconnected", user.getId());
+				this._sendToAllUsers("/user/disconnected", user.getId());
 				this._users.remove(user);
 			}).bind(this));
 			
@@ -27,7 +27,7 @@ define(function(require) {
 			
 			user.sendCurrentTables(this._tables);
 			user.send("/challenges", this._openChallenges);
-			this._sendToAllUsers("/user_connected", user.getId());
+			this._sendToAllUsers("/user/connected", user.getId());
 		});
 	}
 	

@@ -5,7 +5,7 @@ define(function(require) {
 	var id=require("lib/id");
 	
 	function urlStartsWithPath(url, path) {
-		return (url===path || url.substr(0, path.length+1)===path+"/");
+		return (path==="/" || url===path || url.substr(0, path.length+1)===path+"/");
 	}
 	
 	function User(client) {
@@ -19,8 +19,7 @@ define(function(require) {
 		
 		this._interestingPaths=[
 			"/challenges",
-			"/game",
-			"/direct_challenge"
+			"/user"
 		];
 		
 		this._username="Anonymous"+id();
