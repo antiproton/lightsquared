@@ -13,7 +13,7 @@ define(function(require) {
 		
 		this._session={};
 		
-		this._timeBetweenKeepAlives=1000;
+		this._timeBetweenKeepAlives=15000;
 		this._timeLastBroadcastMessageSent=0;
 		this._connectedClients=[];
 		
