@@ -23,7 +23,8 @@ define(function(require) {
 			
 			user.sendCurrentTables(this._tables);
 			user.send("/challenges", this._openChallenges);
-			this._sendBroadcastMessage("/user_connected", user.id);
+			this._sendBroadcastMessage("/user_connected", user.getId());
+			this._sendBroadcastMessage(user.getId());
 		});
 	}
 	
@@ -34,8 +35,8 @@ define(function(require) {
 		this._sendBroadcastMessage("/challenges", [challenge]);
 	}
 	
-	Application.prototype._sendBroadcastMessage=function(data) {
-		this._server.sendBroadcastMessage(data);
+	Application.prototype._sendBroadcastMessage=function(url, data) {
+		this._server.sendBroadcastMessage(url, data);
 	}
 	
 	return Application;
