@@ -73,10 +73,6 @@ define(function(require) {
 					time: move.getTime()
 				});
 			}
-			
-			else {
-				return null;
-			}
 		}
 	};
 });
