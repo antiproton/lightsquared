@@ -18,8 +18,7 @@ define(function(require) {
 			this._users[user]=user;
 			
 			user.subscribe("/disconnected", (function() {
-				this._sendToAllUsers("/user/disconnected", user.getId());
-				delete this._users[user];
+				this._disconnect(user);
 			}).bind(this));
 			
 			user.subscribe("/challenge/create", (function(options) {
@@ -27,14 +26,12 @@ define(function(require) {
 			}).bind(this));
 			
 			user.subscribe("/challenge/accept", (function(id) {
-				if(id in this._openChallenges && this._openChallenges[id].accept(user)) {
-					delete this._openChallenges[id];
-					this._sendToAllUsers("/challenge/expired", id);
-				}
+				this._acceptChallenge(user, id);
 			}).bind(this));
 			
 			user.sendCurrentTables(this._tables);
 			user.send("/challenge/list", this._openChallenges);
+			
 			this._sendToAllUsers("/user/connected", user);
 		});
 	}
@@ -44,6 +41,18 @@ define(function(require) {
 		
 		this._openChallenges[challenge]=challenge;
 		this._sendToAllUsers("/challenge/new", challenge);
+	}
+	
+	Application.prototype._acceptChallenge=function(user, challengeId) {
+		if(id in this._openChallenges && this._openChallenges[id].accept(user)) {
+			delete this._openChallenges[id];
+			this._sendToAllUsers("/challenge/expired", id);
+		}
+	}
+	
+	Application.prototype._disconnect=function(user) {
+		this._sendToAllUsers("/user/disconnected", user.getId());
+		delete this._users[user];
 	}
 	
 	Application.prototype._sendToAllUsers=function(url, data) {
