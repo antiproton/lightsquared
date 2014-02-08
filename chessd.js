@@ -3,7 +3,8 @@
 var requirejs=require("requirejs");
 var fs=require("fs");
 
-fs.writeFileSync("/var/run/chessd.pid", process.pid.toString());
+//FIXME this doesn't work; writes the wrong PID
+//fs.writeFileSync("/var/run/chessd.pid", process.pid.toString());
 
 requirejs.config({
 	nodeRequire: require,

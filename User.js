@@ -13,20 +13,17 @@ define(function(require) {
 		this._client=client;
 		this._session=this._client.getSession();
 		this._publisher=new Publisher();
-		this._isAnonymous=true;
 		this._gamesPlayedAsWhite=0;
 		this._gamesPlayedAsBlack=0;
 		
 		this._interestingPaths=[
-			"/challenges",
-			"/user"
+			"/" //DEBUG interested in everything for testing purposes
 		];
 		
-		this._username="Anonymous"+id();
+		this._username="Anonymous";
 		
 		if("username" in this._session) {
 			this._username=this._session["username"];
-			this._isAnonymous=false;
 		}
 		
 		this._client.Disconnected.addHandler(this, function() {
@@ -37,12 +34,12 @@ define(function(require) {
 			this._publisher.publish(url, data);
 		}).bind(this));
 		
-		this._client.subscribe("/interested", (function(data) {
-			this._interestingPaths.push(data.url);
+		this._client.subscribe("/interested", (function(url) {
+			this._interestingPaths.push(url);
 		}).bind(this));
 		
-		this._client.subscribe("/not_interested", (function(data) {
-			this._interestingPaths.remove(data.url);
+		this._client.subscribe("/not-interested", (function(url) {
+			this._interestingPaths.remove(url);
 		}).bind(this));
 	}
 	
@@ -50,15 +47,23 @@ define(function(require) {
 		return this._id;
 	}
 	
+	User.prototype.toString=function() {
+		return this._id;
+	}
+	
 	User.prototype.sendCurrentTables=function(tables) {
 		if(!("current_tables" in this._session)) {
 			this._session["current_tables"]=[];
 			
-			tables.forEach((function(table) {
+			var table;
+			
+			for(var id in tables) {
+				table=tables[id];
+				
 				if(this.isAtTable(table)) {
 					this._session["current_tables"].push(table);
 				}
-			}).bind(this));
+			}
 		}
 		
 		this.send("/tables", this._session["current_tables"]);
@@ -90,6 +95,13 @@ define(function(require) {
 	
 	User.prototype.getGamesAsWhiteRatio=function() {
 		Math.max(1, this._gamesPlayedAsWhite)/Math.max(1, this._gamesPlayedAsBlack);
+	}
+	
+	User.prototype.toJSON=function() {
+		return {
+			id: this._id,
+			username: this._username
+		};
 	}
 	
 	return User;

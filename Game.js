@@ -46,6 +46,8 @@ define(function(require) {
 		}).bind(this));
 	}
 	
+	Game.timingStyles=ChessGame.timingStyles;
+	
 	Game.prototype.getId=function() {
 		return this._id;
 	}

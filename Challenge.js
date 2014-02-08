@@ -4,6 +4,8 @@ define(function(require) {
 	var Chess=require("chess/Chess");
 	var Event=require("lib/Event");
 	var Game=require("./Game");
+	var Fen=require("chess/Fen");
+	var Table=require("./Table");
 	
 	function Challenge(owner, options) {
 		this._id=id();
@@ -11,9 +13,6 @@ define(function(require) {
 		this._players=[];
 		this._players[Piece.WHITE]=null;
 		this._players[Piece.BLACK]=null;
-		
-		this.Accepted=new Event(this);
-		this.Declined=new Event(this);
 		
 		this._options={
 			ownerPlaysAs: null,
@@ -29,8 +28,8 @@ define(function(require) {
 			isRated: true
 		};
 		
-		for(var p in challengeOptions) {
-			this._options[p]=challengeOptions[p];
+		for(var p in options) {
+			this._options[p]=options[p];
 		}
 	}
 	
@@ -38,7 +37,13 @@ define(function(require) {
 		return this._id;
 	}
 	
+	Challenge.prototype.toString=function() {
+		return this._id;
+	}
+	
 	Challenge.prototype.accept=function(user) {
+		var success=true;
+		
 		if(this._options.ownerPlaysAs===null) {
 			var ownerRatio=this._owner.getGamesAsWhiteRatio();
 			var guestRatio=user.getGamesAsWhiteRatio();
@@ -61,9 +66,7 @@ define(function(require) {
 		
 		var table=new Table(this._owner);
 		
-		this.Accepted.fire({
-			table: table
-		});
+		return success;
 	}
 	
 	Challenge.prototype.toJSON=function() {
