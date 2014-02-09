@@ -43,7 +43,7 @@ define(function(require) {
 		this._sendToAllUsers("/challenge/new", challenge);
 	}
 	
-	Application.prototype._acceptChallenge=function(user, challengeId) {
+	Application.prototype._acceptChallenge=function(user, id) {
 		if(id in this._openChallenges && this._openChallenges[id].accept(user)) {
 			delete this._openChallenges[id];
 			this._sendToAllUsers("/challenge/expired", id);
