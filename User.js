@@ -1,6 +1,5 @@
 define(function(require) {
 	var Publisher=require("lib/Publisher");
-	require("lib/Array.contains");
 	require("lib/Array.remove");
 	var id=require("lib/id");
 	
