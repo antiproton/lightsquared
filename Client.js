@@ -2,10 +2,15 @@ define(function(require) {
 	var Event=require("lib/Event");
 	var time=require("lib/time");
 	var Publisher=require("lib/Publisher");
+	require("lib/Array.remove");
 	
-	function Client(connection, session) {
-		this._session=session;
+	function urlStartsWithPath(url, path) {
+		return (path==="/" || url===path || url.substr(0, path.length+1)===path+"/");
+	}
+	
+	function Client(connection) {
 		this._connection=connection;
+		this._publisher=new Publisher();
 		
 		this.Disconnected=new Event(this);
 		
@@ -13,23 +18,17 @@ define(function(require) {
 		this._timeLastMessageSent=0;
 		this._timeConnected=time();
 		
-		this._publisher=new Publisher();
+		this._interestingPaths=[
+			"/"
+		];
 		
-		this._connectionMessageHandler=(function(message) {
-			if(message.type==="utf8") {
-				var data=JSON.parse(message.utf8Data);
-				
-				this._publisher.publish(data.url, data.data);
-				this._timeLastMessageReceived=time();
-			}
-		}).bind(this);
+		this._publisher.subscribe("/interested", (function(url) {
+			this._interestingPaths.push(url);
+		}).bind(this));
 		
-		this._connectionCloseHandler=(function(reason, description) {
-			this.Disconnected.fire({
-				reason: reason,
-				description: description
-			});
-		}).bind(this);
+		this._publisher.subscribe("/not-interested", (function(url) {
+			this._interestingPaths.remove(url);
+		}).bind(this));
 		
 		this._setupConnection();
 	}
@@ -43,12 +42,16 @@ define(function(require) {
 	}
 
 	Client.prototype.send=function(url, data) {
-		this._connection.sendUTF(JSON.stringify({
-			url: url,
-			data: data
-		}));
-		
-		this._timeLastMessageSent=time();
+		this._interestingPaths.forEach((function(path) {
+			if(urlStartsWithPath(url, path)) {
+				this._connection.sendUTF(JSON.stringify({
+					url: url,
+					data: data
+				}));
+				
+				this._timeLastMessageSent=time();
+			}
+		}).bind(this));
 	}
 	
 	Client.prototype.sendKeepAliveMessage=function(maxTimeBetweenMessages) {
@@ -57,27 +60,26 @@ define(function(require) {
 		}
 	}
 	
-	Client.prototype.getSession=function() {
-		return this._session;
-	}
-	
-	Client.prototype.close=function() {
-		this._connection.close();
-		this._teardownConnection();
-	}
-	
 	Client.prototype.getTimeLastActive=function() {
 		return Math.max(this._timeConnected, this._timeLastMessageReceived);
 	}
 	
 	Client.prototype._setupConnection=function() {
-		this._connection.on("message", this._connectionMessageHandler);
-		this._connection.on("close", this._connectionCloseHandler);
-	}
-	
-	Client.prototype._teardownConnection=function() {
-		this._connection.off("message", this._connectionMessageHandler);
-		this._connection.off("close", this._connectionCloseHandler);
+		this._connection.on("message", (function(message) {
+			if(message.type==="utf8") {
+				var data=JSON.parse(message.utf8Data);
+				
+				this._publisher.publish(data.url, data.data);
+				this._timeLastMessageReceived=time();
+			}
+		}).bind(this));
+		
+		this._connection.on("close", (function(reason, description) {
+			this.Disconnected.fire({
+				reason: reason,
+				description: description
+			});
+		}).bind(this));
 	}
 
 	return Client;

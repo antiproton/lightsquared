@@ -11,11 +11,11 @@ define(function(require) {
 		this._openChallenges={};
 		this._publisher=new Publisher();
 		
-		server.ClientConnected.addHandler(this, function(data) {
-			var client=data.client;
-			var user=new User(client);
+		server.UserConnected.addHandler(this, function(data) {
+			var user=data.user;
+			var chessUser=new User(client);
 			
-			this._users[user]=user;
+			this._users[chessUser]=chessUser;
 			
 			user.subscribe("/disconnected", (function() {
 				this._disconnect(user);

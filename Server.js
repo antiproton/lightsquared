@@ -3,19 +3,29 @@ define(function(require) {
 	var WsServer=require("websocket").server;
 	var http=require("http");
 	var Client=require("./Client");
+	var User=require("./User");
 	var time=require("lib/time");
 	require("lib/Array.remove");
+	
+	function parseCookies(array) {
+		var cookies={};
+		
+		array.forEach(function(cookie) {
+			cookies[cookie.name]=cookie.value;
+		});
+		
+		return cookies;
+	}
 
 	function Server(port) {
 		this._port=port||Server.DEFAULT_PORT;
 		
-		this.ClientConnected=new Event(this);
+		this.UserConnected=new Event(this);
 		
-		this._session={};
+		this._users={};
 		
 		this._timeBetweenKeepAlives=1000;
 		this._timeLastBroadcastMessageSent=0;
-		this._connectedClients=[];
 		
 		setInterval((function() {
 			this._sendKeepAliveMessages();
@@ -37,47 +47,40 @@ define(function(require) {
 		});
 
 		wsServer.on("request", (function(request) {
-			var cookies={};
-
-			for(var i=0; i<request.cookies.length; i++) {
-				cookies[request.cookies[i].name]=request.cookies[i].value;
-			}
+			var cookies=parseCookies(request.cookies);
 	
 			if("session" in cookies) {
-				var sessionId=cookies["session"];
+				var id=cookies["session"];
 				var connection=request.accept(null, request.origin);
+				var client=new Client(connection);
 	
-				if(!(sessionId in this._session)) {
-					this._session[sessionId]={};
+				if(id in this._users) {
+					this._users[id].addClient(client);
 				}
 				
-				var client=new Client(connection, this._session[sessionId])
-				
-				this._connectedClients.push(client);
-				
-				client.Disconnected.addHandler(this, function() {
-					this._connectedClients.remove(client);
-				});
-	
-				this.ClientConnected.fire({
-					client: client
-				});
+				else {
+					this._users[id]=new User(client);
+					
+					this.UserConnected.fire({
+						user: this._users[id]
+					});
+				}
 			}
 		}).bind(this));
 	}
 	
 	Server.prototype.sendBroadcastMessage=function(url, data) {
-		this._connectedClients.forEach(function(client) {
-			client.send(url, data);
-		});
+		for(var id in this._users) {
+			this._users[id].send(url, data);
+		}
 		
 		this._timeLastBroadcastMessageSent=time();
 	}
 	
 	Server.prototype._sendKeepAliveMessages=function() {
 		if(time()-this._timeLastBroadcastMessageSent>this._timeBetweenKeepAlives) {
-			this._connectedClients.forEach((function(client) {
-				client.sendKeepAliveMessage(this._timeBetweenKeepAlives);
+			this._connectedUsers.forEach((function(user) {
+				user.sendKeepAliveMessage(this._timeBetweenKeepAlives);
 			}).bind(this));
 		}
 	}
