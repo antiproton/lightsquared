@@ -1,11 +1,12 @@
 define(function(require) {
 	var Publisher=require("lib/Publisher");
-	require("lib/Array.remove");
 	var id=require("lib/id");
+	var Event=require("lib/Event");
 	
 	function User(user) {
 		this._id=id();
 		this._user=user;
+		this._session=user.getSession();
 		this.Connected=new Event(this);
 		this.Disconnected=new Event(this);
 		this._username="Anonymous";
