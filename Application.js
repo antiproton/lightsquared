@@ -33,7 +33,7 @@ define(function(require) {
 	}
 	
 	Application.prototype._connectUser=function(user) {
-		this._users[chessUser]=user;
+		this._users[user]=user;
 			
 		user.sendCurrentTables(this._tables);
 		user.send("/challenge/list", this._openChallenges);
