@@ -77,11 +77,7 @@ define(function(require) {
 	}
 	
 	User.prototype.send=function(url, data) {
-		this._interestingPaths.forEach((function(path) {
-			if(urlStartsWithPath(url, path)) {
-				this._client.send(url, data);
-			}
-		}).bind(this));
+		this._user.send(url, data);
 	}
 	
 	User.prototype.isAtTable=function(table) {
