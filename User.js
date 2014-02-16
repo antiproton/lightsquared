@@ -2,20 +2,22 @@ define(function(require) {
 	var Publisher=require("lib/Publisher");
 	var id=require("lib/id");
 	var Event=require("lib/Event");
+	var db=require("lib/db/db");
 	
 	function User(user) {
 		this._id=id();
 		this._user=user;
 		this._session=user.getSession();
-		this.Connected=new Event(this);
-		this.Disconnected=new Event(this);
 		this._username="Anonymous";
 		this._publisher=new Publisher();
 		this._gamesPlayedAsWhite=0;
 		this._gamesPlayedAsBlack=0;
 		
-		if("username" in this._session) {
-			this._username=this._session["username"];
+		this.Connected=new Event(this);
+		this.Disconnected=new Event(this);
+		
+		if("user" in this._session) {
+			this._loadJSON(this._session["user"]);
 		}
 		
 		this._user.Disconnected.addHandler(this, function() {
@@ -25,17 +27,6 @@ define(function(require) {
 		this._user.Connected.addHandler(this, function() {
 			this.Connected.fire();
 		});
-		
-		//FIXME new user every time ...
-		
-		/*
-		
-		options:
-		
-			use session (database call every time to log in, or keep it all in the session?)
-			extend User so that all users are ChessUsers (how to tell the server about that?)
-			
-		*/
 		
 		this._user.subscribe("*", (function(url, data) {
 			this._publisher.publish(url, data);
@@ -48,6 +39,10 @@ define(function(require) {
 	
 	User.prototype.toString=function() {
 		return this._id;
+	}
+	
+	User.prototype.login=function(username, password) {
+		
 	}
 	
 	User.prototype.sendCurrentTables=function(tables) {
@@ -94,9 +89,16 @@ define(function(require) {
 	
 	User.prototype.toJSON=function() {
 		return {
-			id: this._id,
-			username: this._username
+			username: this._username,
+			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
+			gamesPlayedAsBlack: this._gamesPlayedAsBlack
 		};
+	}
+	
+	User.prototype._loadJSON=function(json) {
+		this._username=json.username;
+		this._gamesPlayedAsWhite=json.gamesPlayedAsWhite;
+		this._gamesPlayedAsBlack=json.gamesPlayedAsBlack;
 	}
 	
 	return User;
