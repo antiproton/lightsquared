@@ -5,21 +5,22 @@ define(function(require) {
 	var Challenge=require("./Challenge");
 	
 	function Application(server) {
-		this._server=server;
-		this._tables={};
 		this._users={};
 		this._openChallenges={};
 		this._publisher=new Publisher();
 		
 		server.UserConnected.addHandler(this, function(data) {
-			var user=data.user;
-			var chessUser=new User(client);
+			var user=new User(data.user);
 			
-			this._users[chessUser]=chessUser;
+			user.Disconnected.addHandler(this, function() {
+				this._disconnectUser(user);
+			});
 			
-			user.subscribe("/disconnected", (function() {
-				this._disconnect(user);
-			}).bind(this));
+			user.Connected.addHandler(this, function() {
+				this._connectUser(user);
+			});
+			
+			this._connectUser(user);
 			
 			user.subscribe("/challenge/create", (function(options) {
 				this._createChallenge(user, options);
@@ -28,12 +29,22 @@ define(function(require) {
 			user.subscribe("/challenge/accept", (function(id) {
 				this._acceptChallenge(user, id);
 			}).bind(this));
-			
-			user.sendCurrentTables(this._tables);
-			user.send("/challenge/list", this._openChallenges);
-			
-			this._sendToAllUsers("/user/connected", user);
 		});
+	}
+	
+	Application.prototype._connectUser=function(user) {
+		this._users[chessUser]=user;
+			
+		user.sendCurrentTables(this._tables);
+		user.send("/challenge/list", this._openChallenges);
+		
+		this._sendToAllUsers("/user/connected", user);
+	}
+	
+	Application.prototype._disconnectUser=function(user) {
+		this._sendToAllUsers("/user/disconnected", user.getId());
+		
+		delete this._users[user];
 	}
 	
 	Application.prototype._createChallenge=function(owner, options) {
@@ -45,14 +56,10 @@ define(function(require) {
 	
 	Application.prototype._acceptChallenge=function(user, id) {
 		if(id in this._openChallenges && this._openChallenges[id].accept(user)) {
-			delete this._openChallenges[id];
 			this._sendToAllUsers("/challenge/expired", id);
+			
+			delete this._openChallenges[id];
 		}
-	}
-	
-	Application.prototype._disconnect=function(user) {
-		this._sendToAllUsers("/user/disconnected", user.getId());
-		delete this._users[user];
 	}
 	
 	Application.prototype._sendToAllUsers=function(url, data) {
