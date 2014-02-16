@@ -18,9 +18,7 @@ requirejs.config({
 	}
 });
 
-requirejs(["./Application", "lib/websocket-server/Server"], function(Application, Server) {
-	var server=new Server();
+requirejs(["lib/websocket-server/Server", "./Application"], function(Server, Application) {
+	var server=new Server(8080);
 	var app=new Application(server);
-	
-	server.run();
 });
