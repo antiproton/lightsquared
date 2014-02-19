@@ -33,7 +33,7 @@ define(function(require) {
 	}
 	
 	Application.prototype._connectUser=function(user) {
-		this._users[user]=user;
+		this._users[user.getId()]=user;
 			
 		user.sendCurrentTables(this._tables);
 		user.send("/challenge/list", this._openChallenges);
@@ -44,7 +44,7 @@ define(function(require) {
 	Application.prototype._disconnectUser=function(user) {
 		this._sendToAllUsers("/user/disconnected", user.getId());
 		
-		delete this._users[user];
+		delete this._users[user.getId()];
 	}
 	
 	Application.prototype._createChallenge=function(owner, options) {
