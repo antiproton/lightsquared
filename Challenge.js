@@ -1,20 +1,20 @@
 define(function(require) {
-	var id=require("lib/id");
-	var Piece=require("chess/Piece");
-	var Chess=require("chess/Chess");
-	var Event=require("lib/Event");
-	var Game=require("./Game");
-	var Fen=require("chess/Fen");
-	var Table=require("./Table");
+	var id = require("lib/id");
+	var Piece = require("chess/Piece");
+	var Chess = require("chess/Chess");
+	var Event = require("lib/Event");
+	var Game = require("./Game");
+	var Fen = require("chess/Fen");
+	var Table = require("./Table");
 	
 	function Challenge(owner, options) {
-		this._id=id();
-		this._owner=owner;
-		this._players=[];
-		this._players[Piece.WHITE]=null;
-		this._players[Piece.BLACK]=null;
+		this._id = id();
+		this._owner = owner;
+		this._players = [];
+		this._players[Piece.WHITE] = null;
+		this._players[Piece.BLACK] = null;
 		
-		this._options={
+		this._options = {
 			ownerPlaysAs: null,
 			startingFen: Fen.STARTING_FEN,
 			clockStartHalfmove: 1,
@@ -29,47 +29,47 @@ define(function(require) {
 		};
 		
 		for(var p in options) {
-			this._options[p]=options[p];
+			this._options[p] = options[p];
 		}
 	}
 	
-	Challenge.prototype.getId=function() {
+	Challenge.prototype.getId = function() {
 		return this._id;
 	}
 	
-	Challenge.prototype.toString=function() {
+	Challenge.prototype.toString = function() {
 		return this._id;
 	}
 	
-	Challenge.prototype.accept=function(user) {
-		var success=true;
+	Challenge.prototype.accept = function(user) {
+		var success = true;
 		
-		if(this._options.ownerPlaysAs===null) {
-			var ownerRatio=this._owner.getGamesAsWhiteRatio();
-			var guestRatio=user.getGamesAsWhiteRatio();
+		if(this._options.ownerPlaysAs === null) {
+			var ownerRatio = this._owner.getGamesAsWhiteRatio();
+			var guestRatio = user.getGamesAsWhiteRatio();
 			
 			if(ownerRatio>guestRatio) {
-				this._players[Piece.WHITE]=user;
-				this._players[Piece.BLACK]=this._owner;
+				this._players[Piece.WHITE] = user;
+				this._players[Piece.BLACK] = this._owner;
 			}
 			
 			else {
-				this._players[Piece.WHITE]=this._owner;
-				this._players[Piece.BLACK]=user;
+				this._players[Piece.WHITE] = this._owner;
+				this._players[Piece.BLACK] = user;
 			}
 		}
 		
 		else {
-			this._players[this._options.ownerPlaysAs]=this._owner;
-			this._players[Chess.getOppColour(this._options.ownerPlaysAs)]=user;
+			this._players[this._options.ownerPlaysAs] = this._owner;
+			this._players[Chess.getOppColour(this._options.ownerPlaysAs)] = user;
 		}
 		
-		var table=new Table(this._owner);
+		var table = new Table(this._owner);
 		
 		return success;
 	}
 	
-	Challenge.prototype.toJSON=function() {
+	Challenge.prototype.toJSON = function() {
 		return {
 			id: this._id,
 			owner: this._owner,

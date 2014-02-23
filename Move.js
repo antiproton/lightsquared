@@ -1,55 +1,55 @@
 define(function(require) {
-	var Position=require("chess/Position");
+	var Position = require("chess/Position");
 	
 	function Move(details) {
-		this._details=details;
+		this._details = details;
 	}
 	
-	Move.prototype.getLabel=function() {
+	Move.prototype.getLabel = function() {
 		return this._details.label;
 	}
 	
-	Move.prototype.getFullLabel=function() {
+	Move.prototype.getFullLabel = function() {
 		return this._details.fullLabel;
 	}
 	
-	Move.prototype.getColour=function() {
+	Move.prototype.getColour = function() {
 		return this._details.colour;
 	}
 	
-	Move.prototype.getFullmove=function() {
+	Move.prototype.getFullmove = function() {
 		return this._details.fullmove;
 	}
 	
-	Move.prototype.getCapturedPiece=function() {
+	Move.prototype.getCapturedPiece = function() {
 		return this._details.capturedPiece;
 	}
 	
-	Move.prototype.isCheck=function() {
+	Move.prototype.isCheck = function() {
 		return this._details.isCheck;
 	}
 	
-	Move.prototype.isMate=function() {
+	Move.prototype.isMate = function() {
 		return this._details.isMate;
 	}
 	
-	Move.prototype.isCastling=function() {
+	Move.prototype.isCastling = function() {
 		return this._details.isCastling;
 	}
 	
-	Move.prototype.getPositionAfter=function() {
+	Move.prototype.getPositionAfter = function() {
 		return new Position(this._details.resultingFen);
 	}
 	
-	Move.prototype.getTime=function() {
+	Move.prototype.getTime = function() {
 		return this._details.time;
 	}
 	
-	Move.prototype.isLegal=function() {
+	Move.prototype.isLegal = function() {
 		return true;
 	}
 	
-	Move.prototype.toJSON=function() {
+	Move.prototype.toJSON = function() {
 		return this._details;
 	}
 	
