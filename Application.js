@@ -36,7 +36,7 @@ define(function(require) {
 		this._users[user.getId()] = user;
 			
 		user.sendCurrentTables(this._tables);
-		user.send("/challenge/list", this._openChallenges);
+		user.send("/challenge/new", this._openChallenges);
 		
 		this._sendToAllUsers("/user/connected", user);
 	}
@@ -51,12 +51,12 @@ define(function(require) {
 		var challenge = new Challenge(owner, options);
 		
 		this._openChallenges[challenge] = challenge;
-		this._sendToAllUsers("/challenge/new", challenge);
+		this._sendToAllUsers("/challenge/new", [challenge]);
 	}
 	
 	Application.prototype._acceptChallenge = function(user, id) {
 		if(id in this._openChallenges && this._openChallenges[id].accept(user)) {
-			this._sendToAllUsers("/challenge/expired", id);
+			this._sendToAllUsers("/challenge/expired/" + id);
 			
 			delete this._openChallenges[id];
 		}

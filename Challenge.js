@@ -48,7 +48,7 @@ define(function(require) {
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();
 			var guestRatio = user.getGamesAsWhiteRatio();
 			
-			if(ownerRatio>guestRatio) {
+			if(ownerRatio > guestRatio) {
 				this._players[Piece.WHITE] = user;
 				this._players[Piece.BLACK] = this._owner;
 			}
@@ -74,7 +74,16 @@ define(function(require) {
 			id: this._id,
 			owner: this._owner,
 			ownerPlaysAs: this._options.ownerPlaysAs,
-			rated: this._options.rated
+			startingFen: this._options.startingFen,
+			clockStartDelay: this._options.clockStartDelay,
+			clockStartHalfmove: this._options.clockStartHalfmove,
+			initialTime: this._options.initialTime,
+			timeIncrement: this._options.timeIncrement,
+			timingStyle: this._options.timingStyle,
+			isOvertime: this._options.isOvertime,
+			overtimeFullmove: this._options.overtimeFullmove,
+			overtimeBonus: this._options.overtimeBonus,
+			isRated: this._options.isRated
 		};
 	}
 	
