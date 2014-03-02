@@ -37,6 +37,14 @@ define(function(require) {
 		return this._details.isCastling;
 	}
 	
+	Move.prototype.isPromotion = function() {
+		return this._details.isPromotion;
+	}
+	
+	Move.prototype.getPromotionPiece = function() {
+		return this._details.promotionPiece;
+	}
+	
 	Move.prototype.getPositionAfter = function() {
 		return new Position(this._details.resultingFen);
 	}
@@ -68,6 +76,8 @@ define(function(require) {
 					isCheck: move.isCheck(),
 					isMate: move.isMate(),
 					isCastling: move.isCastling(),
+					isPromotion: move.isPromotion(),
+					promotionPiece: move.getPromotionPiece(),
 					resultingFen: move.getPositionAfter().getFen(),
 					capturedPiece: move.getCapturedPiece(),
 					time: move.getTime()
