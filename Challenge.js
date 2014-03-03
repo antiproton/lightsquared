@@ -5,7 +5,6 @@ define(function(require) {
 	var Event = require("lib/Event");
 	var Game = require("./Game");
 	var Fen = require("chess/Fen");
-	var Table = require("./Table");
 	
 	function Challenge(owner, options) {
 		this._id = id();
@@ -13,6 +12,8 @@ define(function(require) {
 		this._players = [];
 		this._players[Piece.WHITE] = null;
 		this._players[Piece.BLACK] = null;
+		
+		this.Accepted = new Event(this);
 		
 		this._options = {
 			ownerPlaysAs: null,
@@ -42,8 +43,6 @@ define(function(require) {
 	}
 	
 	Challenge.prototype.accept = function(user) {
-		var success = true;
-		
 		if(this._options.ownerPlaysAs === null) {
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();
 			var guestRatio = user.getGamesAsWhiteRatio();
@@ -64,9 +63,11 @@ define(function(require) {
 			this._players[Chess.getOppColour(this._options.ownerPlaysAs)] = user;
 		}
 		
-		var table = new Table(this._owner);
+		var game = new Game(this._owner);
 		
-		return success;
+		this.Accepted.fire({
+			game: game
+		});
 	}
 	
 	Challenge.prototype.toJSON = function() {

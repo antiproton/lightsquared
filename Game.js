@@ -5,14 +5,15 @@ define(function(require) {
 	var Chess = require("chess/Chess");
 	var Move = require("./Move");
 	
-	function Game(table, white, black, options) {
+	function Game(white, black, options) {
 		this._id = id();
-		this._table = table;
 		this._game = new ChessGame(options);
 		
 		this._players = [];
 		this._players[Piece.WHITE] = white;
 		this._players[Piece.BLACK] = black;
+		
+		this._spectators = [];
 		
 		this._oldRatings = [];
 		this._oldRatings[Piece.WHITE] = null;
@@ -43,6 +44,8 @@ define(function(require) {
 			player.subscribe("/game/" + this._id + "/offer_draw", (function() {
 				this._offerDraw(player);
 			}).bind(this));
+			
+			player.send("/game/new", this);
 		}).bind(this));
 	}
 	
@@ -66,7 +69,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._sendToAllUsers = function(url, data) {
-		var allUsers = this._players.concat(this._table.getSpectators());
+		var allUsers = this._players.concat(this._spectators);
 		
 		allUsers.forEach(function(user) {
 			user.send(url, data);

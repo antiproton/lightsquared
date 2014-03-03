@@ -55,7 +55,9 @@ define(function(require) {
 	}
 	
 	Application.prototype._acceptChallenge = function(user, id) {
-		if(id in this._openChallenges && this._openChallenges[id].accept(user)) {
+		if(id in this._openChallenges) {
+			this._openChallenges[id].accept(user);
+			
 			this._sendToAllUsers("/challenge/expired/" + id);
 			
 			delete this._openChallenges[id];
