@@ -3,7 +3,7 @@ define(function(require) {
 	var Piece = require("chess/Piece");
 	var id = require("lib/id");
 	var Chess = require("chess/Chess");
-	var Move = require("./Move");
+	var Move = require("common/Move");
 	
 	function Game(white, black, options) {
 		this._id = id();
