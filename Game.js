@@ -90,7 +90,7 @@ define(function(require) {
 			history: history,
 			state: this._game.getState(),
 			result: this._game.getResult(),
-			resultDetails: this._game.getResultDetails(),
+			resultType: this._game.getResultType(),
 			startTime: this._game.getStartTime(),
 			endTime: this._game.getEndTime(),
 			isThreefoldClaimable: this._game.isThreefoldClaimable(),

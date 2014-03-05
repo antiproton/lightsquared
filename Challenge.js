@@ -59,7 +59,7 @@ define(function(require) {
 			this._players[Chess.getOppColour(this._options.ownerPlaysAs)] = user;
 		}
 		
-		var game = new Game(this._owner);
+		var game = new Game(this._players[Piece.WHITE], this._players[Piece.BLACK], this._options);
 		
 		this.Accepted.fire({
 			game: game
