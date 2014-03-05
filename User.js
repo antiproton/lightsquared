@@ -86,22 +86,22 @@ define(function(require) {
 		});
 	}
 	
-	User.prototype.sendCurrentTables = function(tables) {
-		if(!this._session.currentTables) {
-			this._session.currentTables = [];
+	User.prototype.sendCurrentGames = function(allGames) {
+		if(!this._session.currentGames) {
+			this._session.currentGames = [];
 			
-			var table;
+			var game;
 			
-			for(var id in tables) {
-				table = tables[id];
+			for(var id in allGames) {
+				game = allGames[id];
 				
-				if(this._isAtTable(table)) {
-					this._session.currentTables.push(table);
+				if(this._isPlayerOrSpectator(game)) {
+					this._session.currentGames.push(game);
 				}
 			}
 		}
 		
-		this._user.send("/tables", this._session.currentTables);
+		this._user.send("/tables", this._session.currentGames);
 	}
 	
 	User.prototype.subscribe = function(url, callback) {
@@ -116,8 +116,8 @@ define(function(require) {
 		this._user.send(url, data);
 	}
 	
-	User.prototype._isAtTable = function(table) {
-		return (table.userIsSeated(this) || table.userIsWatching(this));
+	User.prototype._isPlayerOrSpectator = function(game) {
+		return (game.userIsPlaying(this) || game.userIsSpectating(this));
 	}
 	
 	User.prototype.getUsername = function() {
