@@ -38,10 +38,6 @@ define(function(require) {
 		return this._id;
 	}
 	
-	Challenge.prototype.toString = function() {
-		return this._id;
-	}
-	
 	Challenge.prototype.accept = function(user) {
 		if(this._options.ownerPlaysAs === null) {
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();

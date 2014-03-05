@@ -40,10 +40,6 @@ define(function(require) {
 		return this._id;
 	}
 	
-	User.prototype.toString = function() {
-		return this._id;
-	}
-	
 	User.prototype._login = function(username, password) {
 		db.query("select * from users where username = ? and password = ?", [username, password], function(rows) {
 			if(rows.length === 1) {
