@@ -17,6 +17,7 @@ define(function(require) {
 		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
+		this.ClientConnected = new Event(this);
 		
 		this._user.Disconnected.addHandler(this, function() {
 			this.Disconnected.fire();
