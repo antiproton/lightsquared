@@ -69,7 +69,9 @@ define(function(require) {
 		if(id in this._openChallenges) {
 			this._openChallenges[id].accept(user);
 			
-			this._sendToAllUsers("/challenge/expired/" + id);
+			this._sendToAllUsers("/challenge/expired", {
+				id: id
+			});
 			
 			delete this._openChallenges[id];
 		}
