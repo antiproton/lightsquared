@@ -20,6 +20,10 @@ define(function(require) {
 				this._connectUser(user);
 			});
 			
+			user.ClientConnected.addHandler(this, function(data) {
+				this._sendChallengeList(data.client);
+			});
+			
 			this._connectUser(user);
 			
 			user.subscribe("/challenge/create", (function(options) {
@@ -34,16 +38,7 @@ define(function(require) {
 	
 	Application.prototype._connectUser = function(user) {
 		this._users[user.getId()] = user;
-		
-		var openChallenges = [];
-		
-		for(var id in this._openChallenges) {
-			openChallenges.push(this._openChallenges[id]);
-		}
-			
-		user.sendCurrentGames(this._games);
-		user.send("/challenge/new", openChallenges);
-		
+		this._sendChallengeList(user);
 		this._sendToAllUsers("/user/connected", user);
 	}
 	
@@ -51,6 +46,16 @@ define(function(require) {
 		this._sendToAllUsers("/user/disconnected", user.getId());
 		
 		delete this._users[user.getId()];
+	}
+	
+	Application.prototype._sendChallengeList = function(client) {
+		var openChallenges = [];
+		
+		for(var id in this._openChallenges) {
+			openChallenges.push(this._openChallenges[id]);
+		}
+
+		client.send("/challenge/new", openChallenges);
 	}
 	
 	Application.prototype._createChallenge = function(owner, options) {

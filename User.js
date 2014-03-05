@@ -26,12 +26,26 @@ define(function(require) {
 			this.Connected.fire();
 		});
 		
+		this._user.ClientConnected.addHandler(this, function(data) {
+			data.client.send("/games", this._session.currentGames);
+			
+			this.ClientConnected.fire(data);
+		});
+		
 		if(this._session.user) {
 			this._loadJSON(this._session.user);
 			this._isLoggedIn = this._session.isLoggedIn();
 		}
 		
 		this._session.user = this;
+		
+		if(!this._session.currentGames) {
+			this._session.currentGames = [];
+		}
+		
+		if(this._session.currentGames.length > 0) {
+			this._user.send("/games", this._session.currentGames);
+		}
 		
 		this._subscribeToUserMessages();
 	}
@@ -80,24 +94,6 @@ define(function(require) {
 		db.update("users", this, {
 			username: this._username
 		});
-	}
-	
-	User.prototype.sendCurrentGames = function(allGames) {
-		if(!this._session.currentGames) {
-			this._session.currentGames = [];
-			
-			var game;
-			
-			for(var id in allGames) {
-				game = allGames[id];
-				
-				if(this._isPlayerOrSpectator(game)) {
-					this._session.currentGames.push(game);
-				}
-			}
-		}
-		
-		this._user.send("/tables", this._session.currentGames);
 	}
 	
 	User.prototype.subscribe = function(url, callback) {
