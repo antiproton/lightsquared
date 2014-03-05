@@ -34,9 +34,15 @@ define(function(require) {
 	
 	Application.prototype._connectUser = function(user) {
 		this._users[user.getId()] = user;
+		
+		var openChallenges = [];
+		
+		for(var id in this._openChallenges) {
+			openChallenges.push(this._openChallenges[id]);
+		}
 			
-		user.sendCurrentTables(this._tables);
-		user.send("/challenge/new", this._openChallenges);
+		user.sendCurrentGames(this._games);
+		user.send("/challenge/new", openChallenges);
 		
 		this._sendToAllUsers("/user/connected", user);
 	}
@@ -50,7 +56,7 @@ define(function(require) {
 	Application.prototype._createChallenge = function(owner, options) {
 		var challenge = new Challenge(owner, options);
 		
-		this._openChallenges[challenge] = challenge;
+		this._openChallenges[challenge.getId()] = challenge;
 		this._sendToAllUsers("/challenge/new", [challenge]);
 	}
 	
