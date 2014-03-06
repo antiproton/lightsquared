@@ -61,10 +61,16 @@ define(function(require) {
 		var oppColour = Chess.getOppColour(colour);
 		
 		if(this._players[colour] === user) {
+			var index = this._game.getHistory().length;
 			var move = this._game.move(from, to, promoteTo);
 			
 			if(move.isLegal()) {
-				this._sendToAllUsers("/game/" + this._id + "/move", Move.fromMove(move));
+				this._sendToAllUsers("/game/" + this._id + "/move", {
+					from: from,
+					to: to,
+					promoteTo: promoteTo,
+					index: index
+				});
 			}
 		}
 	}
