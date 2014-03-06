@@ -7,7 +7,8 @@ define(function(require) {
 	
 	function Game(white, black, options) {
 		this._id = id();
-		this._game = new ChessGame(options);
+		this._options = options;
+		this._game = new ChessGame(this._options);
 		
 		this._players = [];
 		this._players[Piece.WHITE] = white;
@@ -77,7 +78,6 @@ define(function(require) {
 	}
 	
 	Game.prototype.toJSON = function() {
-		var options = this._game.getOptions();
 		var history = [];
 		
 		this._game.getHistory().forEach(function(move) {
@@ -101,15 +101,7 @@ define(function(require) {
 			blackRatingNew: this._newRatings[Piece.BLACK],
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
-			clockStartHalfmove: options.clockStartHalfmove,
-			clockStartDelay: options.clockStartDelay,
-			timingStyle: options.timingStyle,
-			initialTime: options.initialTime,
-			increment: options.increment,
-			isOvertime: options.isOvertime,
-			overtimeFullmove: options.overtimeFullmove,
-			overtimeBonus: options.overtimeBonus,
-			isRated: options.isRated
+			options: this._options
 		};
 	}
 	

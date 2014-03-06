@@ -70,17 +70,7 @@ define(function(require) {
 		return {
 			id: this._id,
 			owner: this._owner,
-			ownerPlaysAs: this._options.ownerPlaysAs,
-			startingFen: this._options.startingFen,
-			clockStartDelay: this._options.clockStartDelay,
-			clockStartHalfmove: this._options.clockStartHalfmove,
-			initialTime: this._options.initialTime,
-			timeIncrement: this._options.timeIncrement,
-			timingStyle: this._options.timingStyle,
-			isOvertime: this._options.isOvertime,
-			overtimeFullmove: this._options.overtimeFullmove,
-			overtimeBonus: this._options.overtimeBonus,
-			isRated: this._options.isRated
+			options: this._options
 		};
 	}
 	
