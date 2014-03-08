@@ -57,7 +57,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
-		var colour = this._game.getPosition().getActiveColor();
+		var colour = this._game.getPosition().getActiveColour();
 		var oppColour = Chess.getOppColour(colour);
 		
 		if(this._players[colour] === user) {
