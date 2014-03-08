@@ -107,7 +107,8 @@ define(function(require) {
 			blackRatingNew: this._newRatings[Piece.BLACK],
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
-			options: this._options
+			options: this._options,
+			id: this._id
 		};
 	}
 	
