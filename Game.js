@@ -27,26 +27,26 @@ define(function(require) {
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
 		
-		this._players.forEach((function(player) {
-			player.subscribe("/game/" + this._id + "/move", (function(data) {
+		this._players.forEach((function(user) {
+			user.subscribe("/game/" + this._id + "/move", (function(data) {
 				var promoteTo = Piece.QUEEN;
 				
 				if(data.promoteTo !== undefined) {
 					promoteTo = data.promoteTo;
 				}
 				
-				this._move(player, data.from, data.to, promoteTo);
+				this._move(user, data.from, data.to, promoteTo);
 			}).bind(this));
 			
-			player.subscribe("/game/" + this._id + "/resign", (function() {
-				this._resign(player);
+			user.subscribe("/game/" + this._id + "/resign", (function() {
+				this._resign(user);
 			}).bind(this));
 			
-			player.subscribe("/game/" + this._id + "/offer_draw", (function() {
-				this._offerDraw(player);
+			user.subscribe("/game/" + this._id + "/offer_draw", (function() {
+				this._offerDraw(user);
 			}).bind(this));
 			
-			player.send("/game/new", this);
+			user.send("/game/new", this);
 		}).bind(this));
 	}
 	
