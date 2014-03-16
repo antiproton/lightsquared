@@ -26,7 +26,6 @@ define(function(require) {
 			
 			this._sendChallengeList(user);
 			this._subscribeToUserMessages(user);
-			
 		});
 	}
 	
@@ -59,7 +58,7 @@ define(function(require) {
 			this._replaceExistingLoggedInUser(user);
 			
 			if(user.isLoggedIn()) {
-				this._loggedInUsers[username] = user;
+				this._loggedInUsers[user.getUsername()] = user;
 			}
 			
 			this._sendChallengeList(user);
@@ -67,6 +66,7 @@ define(function(require) {
 		
 		user.LoggedIn.addHandler(this, function(data) {
 			this._replaceExistingLoggedInUser(user);
+			this._loggedInUsers[user.getUsername()] = user;
 		});
 		
 		user.ClientConnected.addHandler(this, function(data) {
