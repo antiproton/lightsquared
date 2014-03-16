@@ -18,6 +18,8 @@ define(function(require) {
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
 		this.ClientConnected = new Event(this);
+		this.LoggedIn = new Event(this);
+		this.LoggedOut = new Event(this);
 		
 		this._user.Disconnected.addHandler(this, function() {
 			this.Disconnected.fire();
@@ -29,7 +31,7 @@ define(function(require) {
 		
 		this._user.ClientConnected.addHandler(this, function(data) {
 			data.client.send("/games", this._session.currentGames);
-			
+		
 			this.ClientConnected.fire(data);
 		});
 		
@@ -60,6 +62,11 @@ define(function(require) {
 			if(rows.length === 1) {
 				this._loadJSON(rows[0]);
 				this._isLoggedIn = true;
+				
+				this.LoggedIn.fire({
+					username: username
+				});
+				
 				this._user.send("/user/login/success");
 			}
 			
@@ -73,6 +80,7 @@ define(function(require) {
 		if(this._isLoggedIn) {
 			this._isLoggedIn = false;
 			this._username = "Anonymous";
+			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
 	}
@@ -107,10 +115,6 @@ define(function(require) {
 	
 	User.prototype.send = function(url, data) {
 		this._user.send(url, data);
-	}
-	
-	User.prototype._isPlayerOrSpectator = function(game) {
-		return (game.userIsPlaying(this) || game.userIsSpectating(this));
 	}
 	
 	User.prototype.getUsername = function() {
