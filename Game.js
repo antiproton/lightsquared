@@ -27,26 +27,8 @@ define(function(require) {
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
 		
-		this._players.forEach((function(user) {
-			user.subscribe("/game/" + this._id + "/move", (function(data) {
-				var promoteTo = Piece.QUEEN;
-				
-				if(data.promoteTo !== undefined) {
-					promoteTo = data.promoteTo;
-				}
-				
-				this._move(user, data.from, data.to, promoteTo);
-			}).bind(this));
-			
-			user.subscribe("/game/" + this._id + "/resign", (function() {
-				this._resign(user);
-			}).bind(this));
-			
-			user.subscribe("/game/" + this._id + "/offer_draw", (function() {
-				this._offerDraw(user);
-			}).bind(this));
-			
-			user.send("/game/new", this);
+		this._players.forEach((function(user, colour) {
+			this._setupPlayer(user, colour);
 		}).bind(this));
 	}
 	
@@ -54,6 +36,40 @@ define(function(require) {
 	
 	Game.prototype.getId = function() {
 		return this._id;
+	}
+	
+	Game.prototype._setupPlayer = function(user, colour) {
+		this._subscribeToPlayerMessages(user);
+			
+		user.send("/game/new", this);
+		
+		user.Replaced.addHandler(this, function(data) {
+			var newUser = data.newUser;
+			
+			this._players[colour] = newUser;
+			
+			this._setupPlayer(newUser, colour);
+		});
+	}
+	
+	Game.prototype._subscribeToPlayerMessages = function(user) {
+		user.subscribe("/game/" + this._id + "/move", (function(data) {
+			var promoteTo = Piece.QUEEN;
+			
+			if(data.promoteTo !== undefined) {
+				promoteTo = data.promoteTo;
+			}
+			
+			this._move(user, data.from, data.to, promoteTo);
+		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/resign", (function() {
+			this._resign(user);
+		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/offer_draw", (function() {
+			this._offerDraw(user);
+		}).bind(this));
 	}
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
