@@ -6,46 +6,76 @@ define(function(require) {
 	
 	function Application(server) {
 		this._users = {};
+		this._loggedInUsers = {};
 		this._openChallenges = {};
 		this._publisher = new Publisher();
 		
 		server.UserConnected.addHandler(this, function(data) {
 			var user = new User(data.user);
+			var username = user.getUsername();
 			
-			user.Disconnected.addHandler(this, function() {
-				this._disconnectUser(user);
-			});
+			this._handleUserEvents(user);
 			
-			user.Connected.addHandler(this, function() {
-				this._connectUser(user);
-			});
+			this._replaceExistingLoggedInUser(user);
 			
-			user.ClientConnected.addHandler(this, function(data) {
-				this._sendChallengeList(data.client);
-			});
+			this._users[user.getId()] = user;
 			
-			this._connectUser(user);
+			if(user.isLoggedIn()) {
+				this._loggedInUsers[username] = user;
+			}
 			
-			user.subscribe("/challenge/create", (function(options) {
-				this._createChallenge(user, options);
-			}).bind(this));
+			this._sendChallengeList(user);
+			this._subscribeToUserMessages(user);
 			
-			user.subscribe("/challenge/accept", (function(id) {
-				this._acceptChallenge(user, id);
-			}).bind(this));
 		});
 	}
 	
-	Application.prototype._connectUser = function(user) {
-		this._users[user.getId()] = user;
-		this._sendChallengeList(user);
-		this._sendToAllUsers("/user/connected", user);
+	Application.prototype._replaceExistingLoggedInUser = function(user) {
+		var username = user.getUsername();
+		
+		if(user.isLoggedIn() && username in this._loggedInUsers) {
+			user.replace(this._loggedInUsers[username]);
+		}
 	}
 	
-	Application.prototype._disconnectUser = function(user) {
-		this._sendToAllUsers("/user/disconnected", user.getId());
+	Application.prototype._subscribeToUserMessages = function(user) {
+		user.subscribe("/challenge/create", (function(options) {
+			this._createChallenge(user, options);
+		}).bind(this));
 		
-		delete this._users[user.getId()];
+		user.subscribe("/challenge/accept", (function(id) {
+			this._acceptChallenge(user, id);
+		}).bind(this));
+	}
+	
+	Application.prototype._handleUserEvents = function(user) {
+		user.Disconnected.addHandler(this, function() {
+			delete this._users[user.getId()];
+		});
+		
+		user.Connected.addHandler(this, function() {
+			this._users[user.getId()] = user;
+			
+			this._replaceExistingLoggedInUser(user);
+			
+			if(user.isLoggedIn()) {
+				this._loggedInUsers[username] = user;
+			}
+			
+			this._sendChallengeList(user);
+		});
+		
+		user.LoggedIn.addHandler(this, function(data) {
+			this._replaceExistingLoggedInUser(user);
+		});
+		
+		user.ClientConnected.addHandler(this, function(data) {
+			this._sendChallengeList(data.client);
+		});
+		
+		user.Replaced.addHandler(this, function(data) {
+			this._loggedInUsers[user.getUsername()] = data.newUser;
+		});
 	}
 	
 	Application.prototype._sendChallengeList = function(client) {
