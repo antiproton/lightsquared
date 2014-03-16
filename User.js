@@ -148,17 +148,17 @@ define(function(require) {
 			this._publisher.publish(url, data);
 		}).bind(this));
 		
-		this._user.subscribe("/user/login", function(data) {
+		this._user.subscribe("/user/login", (function(data) {
 			this._login(data.username, data.password);
-		});
+		}).bind(this));
 		
-		this._user.subscribe("/user/logout", function() {
+		this._user.subscribe("/user/logout", (function() {
 			this._logout();
-		});
+		}).bind(this));
 		
-		this._user.subscribe("/user/register", function(data) {
+		this._user.subscribe("/user/register", (function(data) {
 			this._register(data.username, data.password);
-		});
+		}).bind(this));
 	}
 	
 	User.prototype.toJSON = function() {
