@@ -20,6 +20,7 @@ define(function(require) {
 		this.ClientConnected = new Event(this);
 		this.LoggedIn = new Event(this);
 		this.LoggedOut = new Event(this);
+		this.Replaced = new Event(this);
 		
 		this._user.Disconnected.addHandler(this, function() {
 			this.Disconnected.fire();
@@ -51,6 +52,19 @@ define(function(require) {
 		}
 		
 		this._subscribeToUserMessages();
+	}
+	
+	User.prototype.replace = function(user) {
+		user.replaceWith(this);
+	}
+	
+	User.prototype.replaceWith = function(user) {
+		this.Replaced.fire({
+			newUser: user
+		});
+		
+		this._user.send("/user/replaced");
+		this._user.disconnect();
 	}
 	
 	User.prototype.getId = function() {
