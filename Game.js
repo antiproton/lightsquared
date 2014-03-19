@@ -91,6 +91,10 @@ define(function(require) {
 		}
 	}
 	
+	Game.prototype._resign = function(user) {
+		this._game.resign(
+	}
+	
 	Game.prototype._sendToAllUsers = function(url, data) {
 		var allUsers = this._players.concat(this._spectators);
 		
