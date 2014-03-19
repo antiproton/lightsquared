@@ -1,7 +1,7 @@
 define(function(require) {
 	var id = require("lib/id");
 	var Piece = require("chess/Piece");
-	var Chess = require("chess/Chess");
+	var Colour = require("chess/Colour");
 	var Event = require("lib/Event");
 	var Game = require("./Game");
 	var Fen = require("chess/Fen");
@@ -56,7 +56,7 @@ define(function(require) {
 		
 		else {
 			this._players[this._options.ownerPlaysAs] = this._owner;
-			this._players[Chess.getOppColour(this._options.ownerPlaysAs)] = user;
+			this._players[Colour.getOpposite(this._options.ownerPlaysAs)] = user;
 		}
 		
 		var game = new Game(this._players[Piece.WHITE], this._players[Piece.BLACK], this._options);

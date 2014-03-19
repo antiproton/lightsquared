@@ -2,7 +2,7 @@ define(function(require) {
 	var ChessGame = require("chess/Game");
 	var Piece = require("chess/Piece");
 	var id = require("lib/id");
-	var Chess = require("chess/Chess");
+	var Colour = require("chess/Colour");
 	var Move = require("common/Move");
 	
 	function Game(white, black, options) {
@@ -74,7 +74,7 @@ define(function(require) {
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
 		var colour = this._game.getPosition().getActiveColour();
-		var oppColour = Chess.getOppColour(colour);
+		var oppColour = Colour.getOpposite(colour);
 		
 		if(this._players[colour] === user) {
 			var index = this._game.getHistory().length;
