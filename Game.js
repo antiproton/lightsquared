@@ -82,8 +82,8 @@ define(function(require) {
 			
 			if(move.isLegal()) {
 				this._sendToAllUsers("/game/" + this._id + "/move", {
-					from: from,
-					to: to,
+					from: from.squareNo,
+					to: to.squareNo,
 					promoteTo: promoteTo,
 					index: index
 				});
