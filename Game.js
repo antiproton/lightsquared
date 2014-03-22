@@ -92,7 +92,21 @@ define(function(require) {
 	}
 	
 	Game.prototype._resign = function(user) {
-		this._game.resign(
+		var playerColour = null;
+		
+		this._players.forEach(function(player, colour) {
+			if(player === user) {
+				playerColour = colour;
+			}
+		});
+		
+		if(playerColour !== null) {
+			this._game.resign(playerColour);
+			
+			this._sendToAllUsers("/game/" + this._id + "/resignation", {
+				colour: playerColour
+			});
+		}
 	}
 	
 	Game.prototype._sendToAllUsers = function(url, data) {
