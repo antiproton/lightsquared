@@ -1,6 +1,5 @@
 define(function(require) {
 	var id = require("lib/id");
-	var Piece = require("chess/Piece");
 	var Colour = require("chess/Colour");
 	var Event = require("lib/Event");
 	var Game = require("./Game");
@@ -9,9 +8,9 @@ define(function(require) {
 	function Challenge(owner, options) {
 		this._id = id();
 		this._owner = owner;
-		this._players = [];
-		this._players[Piece.WHITE] = null;
-		this._players[Piece.BLACK] = null;
+		this._players = {};
+		this._players[Colour.white] = null;
+		this._players[Colour.black] = null;
 		
 		this.Accepted = new Event(this);
 		
@@ -44,22 +43,30 @@ define(function(require) {
 			var guestRatio = user.getGamesAsWhiteRatio();
 			
 			if(ownerRatio > guestRatio) {
-				this._players[Piece.WHITE] = user;
-				this._players[Piece.BLACK] = this._owner;
+				this._players[Colour.white] = user;
+				this._players[Colour.black] = this._owner;
 			}
 			
 			else {
-				this._players[Piece.WHITE] = this._owner;
-				this._players[Piece.BLACK] = user;
+				this._players[Colour.white] = this._owner;
+				this._players[Colour.black] = user;
 			}
 		}
 		
 		else {
+			/*
+			FIXME the value objects don't survive serialisation - the API should specify
+			that the colour options are to be specified as fen strings, and then the client
+			/server can serialise/deserialise them as appropriate.
+			
+			the below just assumes that the ownerPlaysAs option is a fen string.
+			*/
+			
 			this._players[this._options.ownerPlaysAs] = this._owner;
-			this._players[Colour.getOpposite(this._options.ownerPlaysAs)] = user;
+			this._players[Colour.fromFenString(this._options.ownerPlaysAs).opposite] = user;
 		}
 		
-		var game = new Game(this._players[Piece.WHITE], this._players[Piece.BLACK], this._options);
+		var game = new Game(this._players[Colour.white], this._players[Colour.black], this._options);
 		
 		this.Accepted.fire({
 			game: game

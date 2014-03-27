@@ -1,6 +1,6 @@
 define(function(require) {
 	var ChessGame = require("chess/Game");
-	var Piece = require("chess/Piece");
+	var PieceType = require("chess/PieceType");
 	var id = require("lib/id");
 	var Colour = require("chess/Colour");
 	var Move = require("common/Move");
@@ -10,19 +10,19 @@ define(function(require) {
 		this._options = options;
 		this._game = new ChessGame(this._options);
 		
-		this._players = [];
-		this._players[Piece.WHITE] = white;
-		this._players[Piece.BLACK] = black;
+		this._players = {};
+		this._players[Colour.white] = white;
+		this._players[Colour.black] = black;
 		
 		this._spectators = [];
 		
-		this._oldRatings = [];
-		this._oldRatings[Piece.WHITE] = null;
-		this._oldRatings[Piece.BLACK] = null;
+		this._oldRatings = {};
+		this._oldRatings[Colour.white] = null;
+		this._oldRatings[Colour.black] = null;
 		
-		this._newRatings = [];
-		this._newRatings[Piece.WHITE] = null;
-		this._newRatings[Piece.BLACK] = null;
+		this._newRatings = {};
+		this._newRatings[Colour.white] = null;
+		this._newRatings[Colour.black] = null;
 		
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
@@ -54,7 +54,7 @@ define(function(require) {
 	
 	Game.prototype._subscribeToPlayerMessages = function(user) {
 		user.subscribe("/game/" + this._id + "/move", (function(data) {
-			var promoteTo = Piece.QUEEN;
+			var promoteTo = PieceType.queen;
 			
 			if(data.promoteTo !== undefined) {
 				promoteTo = data.promoteTo;
@@ -74,7 +74,6 @@ define(function(require) {
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
 		var colour = this._game.getPosition().getActiveColour();
-		var oppColour = Colour.getOpposite(colour);
 		
 		if(this._players[colour] === user) {
 			var index = this._game.getHistory().length;
@@ -125,8 +124,8 @@ define(function(require) {
 		});
 		
 		return {
-			white: this._players[Piece.WHITE],
-			black: this._players[Piece.BLACK],
+			white: this._players[Colour.white],
+			black: this._players[Colour.black],
 			history: history,
 			state: this._game.getState(),
 			result: this._game.getResult(),
@@ -135,10 +134,10 @@ define(function(require) {
 			endTime: this._game.getEndTime(),
 			isThreefoldClaimable: this._game.isThreefoldClaimable(),
 			isFiftymoveClaimable: this._game.isFiftymoveClaimable(),
-			whiteRatingOld: this._oldRatings[Piece.WHITE],
-			whiteRatingNew: this._newRatings[Piece.WHITE],
-			blackRatingOld: this._oldRatings[Piece.BLACK],
-			blackRatingNew: this._newRatings[Piece.BLACK],
+			whiteRatingOld: this._oldRatings[Colour.white],
+			whiteRatingNew: this._newRatings[Colour.white],
+			blackRatingOld: this._oldRatings[Colour.black],
+			blackRatingNew: this._newRatings[Colour.black],
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
 			options: this._options,
