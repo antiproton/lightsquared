@@ -54,14 +54,6 @@ define(function(require) {
 		}
 		
 		else {
-			/*
-			FIXME the value objects don't survive serialisation - the API should specify
-			that the colour options are to be specified as fen strings, and then the client
-			/server can serialise/deserialise them as appropriate.
-			
-			the below just assumes that the ownerPlaysAs option is a fen string.
-			*/
-			
 			this._players[this._options.ownerPlaysAs] = this._owner;
 			this._players[Colour.fromFenString(this._options.ownerPlaysAs).opposite] = user;
 		}
