@@ -55,7 +55,7 @@ define(function(require) {
 	
 	Game.prototype._subscribeToPlayerMessages = function(user) {
 		user.subscribe("/game/" + this._id + "/move", (function(data) {
-			var promoteTo = PieceType.queen;
+			var promoteTo;
 			
 			if(data.promoteTo !== undefined) {
 				promoteTo = PieceType.fromSanString(data.promoteTo);
@@ -84,7 +84,7 @@ define(function(require) {
 				this._sendToAllUsers("/game/" + this._id + "/move", {
 					from: from.squareNo,
 					to: to.squareNo,
-					promoteTo: promoteTo,
+					promoteTo: (promoteTo ? promoteTo.sanString : undefined),
 					index: index
 				});
 			}
