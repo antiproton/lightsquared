@@ -3,7 +3,7 @@
 var requirejs = require("requirejs");
 var fs = require("fs");
 
-fs.writeFileSync("/var/run/chessd.pid", process.pid.toString());
+//fs.writeFileSync("/var/run/chessd.pid", process.pid.toString());
 
 requirejs.config({
 	nodeRequire: require,
