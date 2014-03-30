@@ -4,6 +4,7 @@ define(function(require) {
 	var id = require("lib/id");
 	var Colour = require("chess/Colour");
 	var Move = require("common/Move");
+	var Square = require("chess/Square");
 	
 	function Game(white, black, options) {
 		this._id = id();
@@ -27,9 +28,9 @@ define(function(require) {
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
 		
-		this._players.forEach((function(user, colour) {
-			this._setupPlayer(user, colour);
-		}).bind(this));
+		for(var colour in this._players) {
+			this._setupPlayer(this._players[colour], colour);
+		}
 	}
 	
 	Game.timingStyles = ChessGame.timingStyles;
@@ -57,10 +58,10 @@ define(function(require) {
 			var promoteTo = PieceType.queen;
 			
 			if(data.promoteTo !== undefined) {
-				promoteTo = data.promoteTo;
+				promoteTo = PieceType.fromSanString(data.promoteTo);
 			}
 			
-			this._move(user, data.from, data.to, promoteTo);
+			this._move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
 		}).bind(this));
 		
 		user.subscribe("/game/" + this._id + "/resign", (function() {
@@ -109,9 +110,15 @@ define(function(require) {
 	}
 	
 	Game.prototype._sendToAllUsers = function(url, data) {
-		var allUsers = this._players.concat(this._spectators);
+		var users = [];
 		
-		allUsers.forEach(function(user) {
+		for(var colour in this._players) {
+			users.push(this._players[colour]);
+		}
+		
+		users = users.concat(this._spectators);
+		
+		users.forEach(function(user) {
 			user.send(url, data);
 		});
 	}
