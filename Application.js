@@ -15,17 +15,14 @@ define(function(require) {
 			var username = user.getUsername();
 			
 			this._handleUserEvents(user);
-			
 			this._replaceExistingLoggedInUser(user);
-			
 			this._users[user.getId()] = user;
+			this._subscribeToUserMessages(user);
+			this._sendChallengeList(user);
 			
 			if(user.isLoggedIn()) {
 				this._loggedInUsers[username] = user;
 			}
-			
-			this._sendChallengeList(user);
-			this._subscribeToUserMessages(user);
 		});
 	}
 	
@@ -45,6 +42,10 @@ define(function(require) {
 		user.subscribe("/challenge/accept", (function(id) {
 			this._acceptChallenge(user, id);
 		}).bind(this));
+		
+		user.subscribe("/request/challenges", (function() {
+			this._sendChallengeList(user);
+		}).bind(this));
 	}
 	
 	Application.prototype._handleUserEvents = function(user) {
@@ -54,23 +55,17 @@ define(function(require) {
 		
 		user.Connected.addHandler(this, function() {
 			this._users[user.getId()] = user;
-			
 			this._replaceExistingLoggedInUser(user);
+			this._sendChallengeList(user);
 			
 			if(user.isLoggedIn()) {
 				this._loggedInUsers[user.getUsername()] = user;
 			}
-			
-			this._sendChallengeList(user);
 		});
 		
 		user.LoggedIn.addHandler(this, function(data) {
 			this._replaceExistingLoggedInUser(user);
 			this._loggedInUsers[user.getUsername()] = user;
-		});
-		
-		user.ClientConnected.addHandler(this, function(data) {
-			this._sendChallengeList(data.client);
 		});
 		
 		user.Replaced.addHandler(this, function(data) {
@@ -98,7 +93,6 @@ define(function(require) {
 	Application.prototype._acceptChallenge = function(user, id) {
 		if(id in this._openChallenges) {
 			this._openChallenges[id].accept(user);
-			
 			this._sendToAllUsers("/challenge/expired", id);
 			
 			delete this._openChallenges[id];
