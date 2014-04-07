@@ -17,14 +17,8 @@ define(function(require) {
 		this._options = {
 			ownerPlaysAs: null,
 			startingFen: Fen.STARTING_FEN,
-			clockStartHalfmove: 1,
-			clockStartDelay: 0,
-			initialTime: 600,
-			timeIncrement: 0,
-			timingStyle: Game.timingStyles.SUDDEN_DEATH,
-			isOvertime: false,
-			overtimeFullmove: 40,
-			overtimeBonus: 600,
+			initialTime: "10m",
+			timeIncrement: "0",
 			isRated: true
 		};
 		
