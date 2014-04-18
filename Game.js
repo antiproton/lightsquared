@@ -133,7 +133,13 @@ define(function(require) {
 	}
 	
 	Game.prototype._gameOver = function(result) {
-		this._sendToAllUsers("/game/gameOver", {
+		var newRatings = GlickoRating.getNewRatings(this._players, result);
+		
+		Colour.forEach((function(colour) {
+			this._players[colour].updateRating(newRatings[colour]);
+		}).bind(this));
+		
+		this._sendToAllUsers("/game/game_over", {
 			result: result
 		});
 	}
