@@ -104,10 +104,6 @@ define(function(require) {
 		
 		if(playerColour !== null) {
 			this._game.resign(playerColour);
-			
-			this._sendToAllUsers("/game/" + this._id + "/resignation", {
-				colour: playerColour
-			});
 		}
 	}
 	
@@ -122,6 +118,12 @@ define(function(require) {
 		
 		users.forEach(function(user) {
 			user.send(url, data);
+		});
+	}
+	
+	Game.prototype._gameOver = function(result) {
+		this._sendToAllUsers("/game/gameOver", {
+			result: result
 		});
 	}
 	
