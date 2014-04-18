@@ -16,12 +16,14 @@ define(function(require) {
 			acceptsRatingMax: "+100"
 		};
 		
-		this._acceptsRatingMin = this._getAbsolutePlayerRating(this._options.acceptsRatingMin);
-		this._acceptsRatingMax = this._getAbsolutePlayerRating(this._options.acceptsRatingMax);
-		
-		for(var p in options) {
-			this._options[p] = options[p];
+		if(options) {
+			for(var p in options) {
+				this._options[p] = options[p];
+			}
 		}
+		
+		this._acceptsRatingMin = this._getAbsoluteGuestRating (this._options.acceptsRatingMin);
+		this._acceptsRatingMax = this._getAbsoluteGuestRating (this._options.acceptsRatingMax);
 	}
 	
 	Challenge.prototype.getId = function() {
@@ -46,7 +48,10 @@ define(function(require) {
 				black = user;
 			}
 			
-			var game = new Game(white, black, this._options);
+			var game = new Game(white, black, {
+				initialTime: this._options.initialTime,
+				timeIncrement: this._options.timeIncrement
+			});
 			
 			this.Accepted.fire({
 				game: game
@@ -54,7 +59,7 @@ define(function(require) {
 		}
 	}
 	
-	Challenge.prototype._getAbsolutePlayerRating = function(ratingSpecifier) {
+	Challenge.prototype._getAbsoluteGuestRating = function(ratingSpecifier) {
 		var firstChar = ratingSpecifier.charAt(0);
 		
 		if(firstChar === "-" || firstChar === "+") {
