@@ -11,6 +11,10 @@ define(function(require) {
 		this._options = options;
 		this._game = new ChessGame(this._options);
 		
+		this._game.GameOver.addHandler(this, function(data) {
+			this._gameOver(data.result);
+		});
+		
 		this._players = {};
 		this._players[Colour.white] = white;
 		this._players[Colour.black] = black;
