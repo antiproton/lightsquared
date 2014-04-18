@@ -3,6 +3,7 @@ define(function(require) {
 	var id = require("lib/id");
 	var Event = require("lib/Event");
 	var db = require("lib/db/db");
+	var Glicko = require("chess/Glicko");
 	
 	function User(user) {
 		this._id = id();
@@ -14,6 +15,7 @@ define(function(require) {
 		this._publisher = new Publisher();
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
+		this._rating = Glicko.INITIAL_RATING;
 		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
@@ -38,7 +40,11 @@ define(function(require) {
 		
 		if(this._session.user) {
 			this._loadJSON(this._session.user);
-			this._isLoggedIn = this._session.isLoggedIn();
+			this._isLoggedIn = this._session.isLoggedIn;
+		}
+		
+		else {
+			this._session.isLoggedIn = false;
 		}
 		
 		this._session.user = this;
@@ -52,6 +58,10 @@ define(function(require) {
 		}
 		
 		this._subscribeToUserMessages();
+	}
+	
+	User.prototype.updateRating = function(newRating) {
+		this._rating = newRating;
 	}
 	
 	User.prototype.replace = function(user) {
@@ -76,6 +86,7 @@ define(function(require) {
 			if(rows.length === 1) {
 				this._loadJSON(rows[0]);
 				this._isLoggedIn = true;
+				this._session.isLoggedIn = true;
 				
 				this.LoggedIn.fire({
 					username: username
@@ -93,6 +104,7 @@ define(function(require) {
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
 			this._isLoggedIn = false;
+			this._session.isLoggedIn = false;
 			this._username = "Anonymous";
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
@@ -165,7 +177,8 @@ define(function(require) {
 		return {
 			username: this._username,
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
-			gamesPlayedAsBlack: this._gamesPlayedAsBlack
+			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
+			rating: this._rating
 		};
 	}
 	
@@ -175,6 +188,7 @@ define(function(require) {
 		this._username = data.username;
 		this._gamesPlayedAsWhite = data.gamesPlayedAsWhite;
 		this._gamesPlayedAsBlack = data.gamesPlayedAsBlack;
+		this._rating = data.rating;
 	}
 	
 	return User;
