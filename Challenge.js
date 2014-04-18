@@ -3,7 +3,6 @@ define(function(require) {
 	var Colour = require("chess/Colour");
 	var Event = require("lib/Event");
 	var Game = require("./Game");
-	var Fen = require("chess/Fen");
 	
 	function Challenge(owner, options) {
 		this._id = id();
@@ -15,11 +14,8 @@ define(function(require) {
 		this.Accepted = new Event(this);
 		
 		this._options = {
-			ownerPlaysAs: null,
-			startingFen: Fen.STARTING_FEN,
 			initialTime: "10m",
-			timeIncrement: "0",
-			isRated: true
+			timeIncrement: "0"
 		};
 		
 		for(var p in options) {
@@ -32,24 +28,17 @@ define(function(require) {
 	}
 	
 	Challenge.prototype.accept = function(user) {
-		if(this._options.ownerPlaysAs === null) {
-			var ownerRatio = this._owner.getGamesAsWhiteRatio();
-			var guestRatio = user.getGamesAsWhiteRatio();
-			
-			if(ownerRatio > guestRatio) {
-				this._players[Colour.white] = user;
-				this._players[Colour.black] = this._owner;
-			}
-			
-			else {
-				this._players[Colour.white] = this._owner;
-				this._players[Colour.black] = user;
-			}
+		var ownerRatio = this._owner.getGamesAsWhiteRatio();
+		var guestRatio = user.getGamesAsWhiteRatio();
+		
+		if(ownerRatio > guestRatio) {
+			this._players[Colour.white] = user;
+			this._players[Colour.black] = this._owner;
 		}
 		
 		else {
-			this._players[this._options.ownerPlaysAs] = this._owner;
-			this._players[Colour.fromFenString(this._options.ownerPlaysAs).opposite] = user;
+			this._players[Colour.white] = this._owner;
+			this._players[Colour.black] = user;
 		}
 		
 		var game = new Game(this._players[Colour.white], this._players[Colour.black], this._options);
