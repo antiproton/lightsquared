@@ -8,7 +8,18 @@ define(function(require) {
 	
 	function Game(white, black, options) {
 		this._id = id();
-		this._options = options;
+		
+		this._options = {
+			initialTime: "10m",
+			timeIncrement: "0"
+		};
+		
+		if(options) {
+			for(var p in options) {
+				this._options[p] = options[p];
+			}
+		}
+		
 		this._game = new ChessGame(this._options);
 		
 		this._game.GameOver.addHandler(this, function(data) {
