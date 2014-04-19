@@ -33,8 +33,8 @@ define(function(require) {
 		this._spectators = [];
 		
 		this._oldRatings = {};
-		this._oldRatings[Colour.white] = null;
-		this._oldRatings[Colour.black] = null;
+		this._oldRatings[Colour.white] = white.getRating();
+		this._oldRatings[Colour.black] = black.getRating();
 		
 		this._newRatings = {};
 		this._newRatings[Colour.white] = null;
