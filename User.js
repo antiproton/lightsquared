@@ -60,6 +60,10 @@ define(function(require) {
 		this._subscribeToUserMessages();
 	}
 	
+	User.prototype.getRating = function() {
+		return this._rating;
+	}
+	
 	User.prototype.updateRating = function(newRating) {
 		this._rating = newRating;
 	}
