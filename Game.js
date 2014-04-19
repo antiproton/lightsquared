@@ -5,6 +5,7 @@ define(function(require) {
 	var Colour = require("chess/Colour");
 	var Move = require("common/Move");
 	var Square = require("chess/Square");
+	var Glicko = require("chess/Glicko");
 	
 	function Game(white, black, options) {
 		this._id = id();
@@ -133,7 +134,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._gameOver = function(result) {
-		var newRatings = GlickoRating.getNewRatings(this._players, result);
+		var newRatings = Glicko.getNewRatings(this._players, result);
 		
 		Colour.forEach((function(colour) {
 			this._players[colour].updateRating(newRatings[colour]);
