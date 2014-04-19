@@ -12,8 +12,8 @@ define(function(require) {
 		this._options = {
 			initialTime: "10m",
 			timeIncrement: "0",
-			acceptsRatingMin: "-100",
-			acceptsRatingMax: "+100"
+			acceptRatingMin: "-100",
+			acceptRatingMax: "+100"
 		};
 		
 		if(options) {
@@ -22,8 +22,8 @@ define(function(require) {
 			}
 		}
 		
-		this._acceptsRatingMin = this._getAbsoluteGuestRating (this._options.acceptsRatingMin);
-		this._acceptsRatingMax = this._getAbsoluteGuestRating (this._options.acceptsRatingMax);
+		this._acceptRatingMin = this._getAbsoluteGuestRating (this._options.acceptRatingMin);
+		this._acceptRatingMax = this._getAbsoluteGuestRating (this._options.acceptRatingMax);
 	}
 	
 	Challenge.prototype.getId = function() {
@@ -33,7 +33,7 @@ define(function(require) {
 	Challenge.prototype.accept = function(user) {
 		var guestRating = user.getRating();
 		
-		if(guestRating >= this._acceptsRatingMin && guestRating <= this._acceptsRatingMax) {
+		if(guestRating >= this._acceptRatingMin && guestRating <= this._acceptRatingMax) {
 			var white, black;
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();
 			var guestRatio = user.getGamesAsWhiteRatio();
