@@ -6,6 +6,7 @@ define(function(require) {
 	var Move = require("common/Move");
 	var Square = require("chess/Square");
 	var Glicko = require("chess/Glicko");
+	require("lib/Array.remove");
 	
 	function Game(white, black, options) {
 		this._id = id();
@@ -53,6 +54,17 @@ define(function(require) {
 		return this._id;
 	}
 	
+	Game.prototype.spectate = function(user) {
+		if(!(user in this._players)) {
+			this._spectators.push(user);
+			this._setupSpectator(user);
+		}
+	}
+	
+	Game.prototype.leave = function(user) {
+		this._spectators.remove(user);
+	}
+	
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
 			
@@ -62,8 +74,19 @@ define(function(require) {
 			var newUser = data.newUser;
 			
 			this._players[colour] = newUser;
-			
 			this._setupPlayer(newUser, colour);
+		});
+	}
+	
+	Game.prototype._setupSpectator = function(user) {
+		user.send("/game/new", this);
+		
+		user.Replaced.addHandler(this, function(data) {
+			var newUser = data.newUser;
+			
+			this._spectators.remove(user);
+			this._spectators.push(newUser);
+			this._setupSpectator(newUser);
 		});
 	}
 	
