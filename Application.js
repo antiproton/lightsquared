@@ -12,7 +12,7 @@ define(function(require) {
 		this._publisher = new Publisher();
 		
 		server.UserConnected.addHandler(this, function(data) {
-			var user = new User(data.user);
+			var user = new User(data.user, this);
 			
 			this._handleUserEvents(user);
 			this._replaceExistingLoggedInUser(user);

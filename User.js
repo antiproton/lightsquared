@@ -5,9 +5,10 @@ define(function(require) {
 	var db = require("lib/db/db");
 	var Glicko = require("chess/Glicko");
 	
-	function User(user) {
+	function User(user, app) {
 		this._id = id();
 		this._user = user;
+		this._app = app;
 		this._session = user.getSession();
 		this._username = "Anonymous";
 		this._password = null;
