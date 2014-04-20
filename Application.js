@@ -8,20 +8,19 @@ define(function(require) {
 		this._users = {};
 		this._loggedInUsers = {};
 		this._openChallenges = {};
+		this._games = {};
 		this._publisher = new Publisher();
 		
 		server.UserConnected.addHandler(this, function(data) {
 			var user = new User(data.user);
-			var username = user.getUsername();
 			
 			this._handleUserEvents(user);
 			this._replaceExistingLoggedInUser(user);
 			this._users[user.getId()] = user;
 			this._subscribeToUserMessages(user);
-			this._sendChallengeList(user);
 			
 			if(user.isLoggedIn()) {
-				this._loggedInUsers[username] = user;
+				this._loggedInUsers[user.getUsername()] = user;
 			}
 		});
 	}
@@ -46,6 +45,10 @@ define(function(require) {
 		user.subscribe("/request/challenges", (function() {
 			this._sendChallengeList(user);
 		}).bind(this));
+		
+		user.subscribe("/game/spectate", (function(id) {
+			this._spectateGame(id, user);
+		}).bind(this));
 	}
 	
 	Application.prototype._handleUserEvents = function(user) {
@@ -56,7 +59,6 @@ define(function(require) {
 		user.Connected.addHandler(this, function() {
 			this._users[user.getId()] = user;
 			this._replaceExistingLoggedInUser(user);
-			this._sendChallengeList(user);
 			
 			if(user.isLoggedIn()) {
 				this._loggedInUsers[user.getUsername()] = user;
@@ -79,7 +81,7 @@ define(function(require) {
 		for(var id in this._openChallenges) {
 			openChallenges.push(this._openChallenges[id]);
 		}
-
+		
 		client.send("/challenge/new", openChallenges);
 	}
 	
@@ -92,10 +94,20 @@ define(function(require) {
 	
 	Application.prototype._acceptChallenge = function(user, id) {
 		if(id in this._openChallenges) {
-			this._openChallenges[id].accept(user);
-			this._sendToAllUsers("/challenge/expired", id);
+			var game = this._openChallenges[id].accept(user);
 			
-			delete this._openChallenges[id];
+			if(game !== null) {
+				this._games[game.getId()] = game;
+				this._sendToAllUsers("/challenge/expired", id);
+				
+				delete this._openChallenges[id];
+			}
+		}
+	}
+	
+	Application.prototype._spectateGame = function(id, user) {
+		if(id in this._games) {
+			this._games[id].spectate(user);
 		}
 	}
 	
