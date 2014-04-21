@@ -17,7 +17,6 @@ define(function(require) {
 			this._handleUserEvents(user);
 			this._replaceExistingLoggedInUser(user);
 			this._users[user.getId()] = user;
-			this._subscribeToUserMessages(user);
 			
 			if(user.isLoggedIn()) {
 				this._loggedInUsers[user.getUsername()] = user;
@@ -70,12 +69,6 @@ define(function(require) {
 		}
 	}
 	
-	Application.prototype._subscribeToUserMessages = function(user) {
-		user.subscribe("/request/challenges", (function() {
-			this._sendChallengeList(user);
-		}).bind(this));
-	}
-	
 	Application.prototype._handleUserEvents = function(user) {
 		user.Disconnected.addHandler(this, function() {
 			delete this._users[user.getId()];
@@ -100,14 +93,14 @@ define(function(require) {
 		});
 	}
 	
-	Application.prototype._sendChallengeList = function(client) {
+	Application.prototype.getOpenChallenges = function() {
 		var openChallenges = [];
 		
 		for(var id in this._openChallenges) {
 			openChallenges.push(this._openChallenges[id]);
 		}
 		
-		client.send("/challenge/new", openChallenges);
+		return openChallenges;
 	}
 	
 	Application.prototype._sendToAllUsers = function(url, data) {

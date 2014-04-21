@@ -200,6 +200,10 @@ define(function(require) {
 		this._user.subscribe("/request/games", (function() {
 			this._user.send("/games", this._session.currentGames);
 		}).bind(this));
+		
+		this._user.subscribe("/request/challenges", (function() {
+			this._user.send("/challenge/new", this._app.getOpenChallenges());
+		}).bind(this));
 	}
 	
 	User.prototype.toJSON = function() {
