@@ -159,9 +159,9 @@ define(function(require) {
 	Game.prototype._gameOver = function(result) {
 		var newRatings = Glicko.getNewRatings(this._players, result);
 		
-		Colour.forEach((function(colour) {
+		Colour.forEach(function(colour) {
 			this._players[colour].updateRating(newRatings[colour]);
-		}).bind(this));
+		}, this);
 		
 		this._sendToAllUsers("/game/game_over", {
 			result: result
