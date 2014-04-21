@@ -195,7 +195,7 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/request/challenges", (function() {
-			this._user.send("/challenge/new", this._app.getOpenChallenges());
+			this._user.send("/challenges", this._app.getOpenChallenges());
 		}).bind(this));
 	}
 	

@@ -40,7 +40,7 @@ define(function(require) {
 		});
 		
 		this._openChallenges[id] = challenge;
-		this._sendToAllUsers("/challenge/new", [challenge]);
+		this._sendToAllUsers("/challenges", [challenge]);
 		
 		return challenge;
 	}
