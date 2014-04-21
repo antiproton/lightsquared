@@ -169,6 +169,18 @@ define(function(require) {
 		this._user.subscribe("/user/register", (function(data) {
 			this._register(data.username, data.password);
 		}).bind(this));
+		
+		this._user.subscribe("/challenge/create", (function(options) {
+			var challenge = this._app.createChallenge(options);
+			
+			challenge.Accepted.addHandler(this, function(data) {
+				var game = data.game;
+				
+				this._session.currentGames.push(game);
+				
+				return true;
+			});
+		}).bind(this));
 	}
 	
 	User.prototype.toJSON = function() {

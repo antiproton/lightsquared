@@ -34,10 +34,6 @@ define(function(require) {
 	}
 	
 	Application.prototype._subscribeToUserMessages = function(user) {
-		user.subscribe("/challenge/create", (function(options) {
-			this._createChallenge(user, options);
-		}).bind(this));
-		
 		user.subscribe("/challenge/accept", (function(id) {
 			this._acceptChallenge(user, id);
 		}).bind(this));
@@ -85,23 +81,28 @@ define(function(require) {
 		client.send("/challenge/new", openChallenges);
 	}
 	
-	Application.prototype._createChallenge = function(owner, options) {
+	Application.prototype.createChallenge = function(owner, options) {
 		var challenge = new Challenge(owner, options);
+		var id = challenge.getId();
 		
-		this._openChallenges[challenge.getId()] = challenge;
+		challenge.Accepted.addHandler(this, function(data) {
+			this._games[game.getId()] = data.game;
+			this._sendToAllUsers("/challenge/expired", id);
+			
+			delete this._openChallenges[id];
+			
+			return true;
+		});
+		
+		this._openChallenges[id] = challenge;
 		this._sendToAllUsers("/challenge/new", [challenge]);
+		
+		return challenge;
 	}
 	
 	Application.prototype._acceptChallenge = function(user, id) {
 		if(id in this._openChallenges) {
-			var game = this._openChallenges[id].accept(user);
-			
-			if(game !== null) {
-				this._games[game.getId()] = game;
-				this._sendToAllUsers("/challenge/expired", id);
-				
-				delete this._openChallenges[id];
-			}
+			this._openChallenges[id].accept(user);
 		}
 	}
 	
