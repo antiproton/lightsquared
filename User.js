@@ -20,7 +20,6 @@ define(function(require) {
 		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
-		this.ClientConnected = new Event(this);
 		this.LoggedIn = new Event(this);
 		this.LoggedOut = new Event(this);
 		this.Replaced = new Event(this);
@@ -31,12 +30,6 @@ define(function(require) {
 		
 		this._user.Connected.addHandler(this, function() {
 			this.Connected.fire();
-		});
-		
-		this._user.ClientConnected.addHandler(this, function(data) {
-			data.client.send("/games", this._session.currentGames);
-		
-			this.ClientConnected.fire(data);
 		});
 		
 		if(this._session.user) {
