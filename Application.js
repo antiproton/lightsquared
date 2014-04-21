@@ -86,7 +86,9 @@ define(function(require) {
 		var id = challenge.getId();
 		
 		challenge.Accepted.addHandler(this, function(data) {
-			this._games[game.getId()] = data.game;
+			var game = data.game;
+			
+			this._games[game.getId()] = game;
 			this._sendToAllUsers("/challenge/expired", id);
 			
 			delete this._openChallenges[id];
