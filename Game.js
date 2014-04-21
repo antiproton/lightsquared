@@ -163,7 +163,7 @@ define(function(require) {
 			this._players[colour].updateRating(newRatings[colour]);
 		}, this);
 		
-		this._sendToAllUsers("/game/game_over", {
+		this._sendToAllUsers("/game/" + this._id + "/game_over", {
 			result: result
 		});
 	}
