@@ -171,7 +171,7 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/create", (function(options) {
-			var challenge = this._app.createChallenge(options);
+			var challenge = this._app.createChallenge(this, options);
 			
 			challenge.Accepted.addHandler(this, function(data) {
 				var game = data.game;
