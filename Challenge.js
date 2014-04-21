@@ -33,7 +33,7 @@ define(function(require) {
 	Challenge.prototype.accept = function(user) {
 		var guestRating = user.getRating();
 		
-		if(guestRating >= this._acceptRatingMin && guestRating <= this._acceptRatingMax) {
+		if(user !== this._owner && guestRating >= this._acceptRatingMin && guestRating <= this._acceptRatingMax) {
 			var white, black;
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();
 			var guestRatio = user.getGamesAsWhiteRatio();
