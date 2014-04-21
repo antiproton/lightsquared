@@ -68,7 +68,7 @@ define(function(require) {
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
 			
-		user.send("/game/new", this);
+		user.send("/game", this);
 		
 		user.Replaced.addHandler(this, function(data) {
 			var newUser = data.newUser;
@@ -79,7 +79,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._setupSpectator = function(user) {
-		user.send("/game/new", this);
+		user.send("/game", this);
 		
 		user.Replaced.addHandler(this, function(data) {
 			var newUser = data.newUser;
