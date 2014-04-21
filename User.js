@@ -181,6 +181,20 @@ define(function(require) {
 				return true;
 			});
 		}).bind(this));
+		
+		this._user.subscribe("/game/spectate", (function(id) {
+			var game = this._app.getGame(id);
+			
+			if(game !== null) {
+				game.spectate(this);
+				
+				this._session.currentGames.push(game);
+			}
+		}).bind(this));
+		
+		this._user.subscribe("/challenge/accept", (function(id) {
+			this._app.acceptChallenge(this, id);
+		}).bind(this));
 	}
 	
 	User.prototype.toJSON = function() {

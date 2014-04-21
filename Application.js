@@ -25,6 +25,43 @@ define(function(require) {
 		});
 	}
 	
+	Application.prototype.createChallenge = function(owner, options) {
+		var challenge = new Challenge(owner, options);
+		var id = challenge.getId();
+		
+		challenge.Accepted.addHandler(this, function(data) {
+			var game = data.game;
+			
+			this._games[game.getId()] = game;
+			this._sendToAllUsers("/challenge/expired", id);
+			
+			delete this._openChallenges[id];
+			
+			return true;
+		});
+		
+		this._openChallenges[id] = challenge;
+		this._sendToAllUsers("/challenge/new", [challenge]);
+		
+		return challenge;
+	}
+	
+	Application.prototype.acceptChallenge = function(user, id) {
+		if(id in this._openChallenges) {
+			this._openChallenges[id].accept(user);
+		}
+	}
+	
+	Application.prototype.getGame = function(id) {
+		if(id in this._games) {
+			return this._games[id];
+		}
+		
+		else {
+			return null;
+		}
+	}
+	
 	Application.prototype._replaceExistingLoggedInUser = function(user) {
 		var username = user.getUsername();
 		
@@ -34,16 +71,8 @@ define(function(require) {
 	}
 	
 	Application.prototype._subscribeToUserMessages = function(user) {
-		user.subscribe("/challenge/accept", (function(id) {
-			this._acceptChallenge(user, id);
-		}).bind(this));
-		
 		user.subscribe("/request/challenges", (function() {
 			this._sendChallengeList(user);
-		}).bind(this));
-		
-		user.subscribe("/game/spectate", (function(id) {
-			this._spectateGame(id, user);
 		}).bind(this));
 	}
 	
@@ -79,39 +108,6 @@ define(function(require) {
 		}
 		
 		client.send("/challenge/new", openChallenges);
-	}
-	
-	Application.prototype.createChallenge = function(owner, options) {
-		var challenge = new Challenge(owner, options);
-		var id = challenge.getId();
-		
-		challenge.Accepted.addHandler(this, function(data) {
-			var game = data.game;
-			
-			this._games[game.getId()] = game;
-			this._sendToAllUsers("/challenge/expired", id);
-			
-			delete this._openChallenges[id];
-			
-			return true;
-		});
-		
-		this._openChallenges[id] = challenge;
-		this._sendToAllUsers("/challenge/new", [challenge]);
-		
-		return challenge;
-	}
-	
-	Application.prototype._acceptChallenge = function(user, id) {
-		if(id in this._openChallenges) {
-			this._openChallenges[id].accept(user);
-		}
-	}
-	
-	Application.prototype._spectateGame = function(id, user) {
-		if(id in this._games) {
-			this._games[id].spectate(user);
-		}
 	}
 	
 	Application.prototype._sendToAllUsers = function(url, data) {
