@@ -33,12 +33,7 @@ define(function(require) {
 		});
 		
 		if(this._session.user) {
-			this._loadJSON(this._session.user);
-			this._isLoggedIn = this._session.isLoggedIn;
-		}
-		
-		else {
-			this._session.isLoggedIn = false;
+			this._loadFromSession(this._session.user);
 		}
 		
 		this._session.user = this;
@@ -56,6 +51,14 @@ define(function(require) {
 	
 	User.prototype.getRating = function() {
 		return this._rating;
+	}
+	
+	User.prototype.getGamesPlayedAsWhite = function() {
+		return this._gamesPlayedAsWhite;
+	}
+	
+	User.prototype.getGamesPlayedAsBlack = function() {
+		return this._gamesPlayedAsBlack;
 	}
 	
 	User.prototype.updateRating = function(newRating) {
@@ -82,9 +85,8 @@ define(function(require) {
 	User.prototype._login = function(username, password) {
 		db.query("select * from users where username = ? and password = ?", [username, password], function(rows) {
 			if(rows.length === 1) {
-				this._loadJSON(rows[0]);
+				this._loadRow(rows[0]);
 				this._isLoggedIn = true;
-				this._session.isLoggedIn = true;
 				
 				this.LoggedIn.fire({
 					username: username
@@ -102,7 +104,6 @@ define(function(require) {
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
 			this._isLoggedIn = false;
-			this._session.isLoggedIn = false;
 			this._username = "Anonymous";
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
@@ -110,9 +111,9 @@ define(function(require) {
 	}
 	
 	User.prototype._register = function(username, password) {
-		db.query("select username from users where username = ?", [username], function(rows) {
+		db.query("select username from users where username = ?", [username], (function(rows) {
 			if(rows.length === 0) {
-				db.insert("users", this);
+				db.insert("users", this._toRow());
 				
 				this._user.send("/user/register/success", this);
 			}
@@ -120,11 +121,11 @@ define(function(require) {
 			else {
 				this._user.send("/user/register/failure");
 			}
-		});
+		}).bind(this));
 	}
 	
 	User.prototype._save = function() {
-		db.update("users", this, {
+		db.update("users", this._toRow(), {
 			username: this._username
 		});
 	}
@@ -195,24 +196,50 @@ define(function(require) {
 		this._user.subscribe("/challenge/accept", (function(id) {
 			this._app.acceptChallenge(this, id);
 		}).bind(this));
+		
+		this._user.subscribe("/request/games", (function() {
+			this._user.send("/games", this._session.currentGames);
+		}).bind(this));
 	}
 	
 	User.prototype.toJSON = function() {
 		return {
 			username: this._username,
+			isLoggedIn: this._isLoggedIn,
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._rating
 		};
 	}
 	
-	User.prototype._loadJSON = function(data) {
-		data = (data.toJSON instanceof Function ? data.toJSON() : data);
-		
-		this._username = data.username;
-		this._gamesPlayedAsWhite = data.gamesPlayedAsWhite;
-		this._gamesPlayedAsBlack = data.gamesPlayedAsBlack;
-		this._rating = data.rating;
+	User.prototype._toRow = function() {
+		return {
+			username: this._username,
+			password: this._password,
+			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
+			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
+			rating: this._rating
+		};
+	}
+	
+	User.prototype._loadRow = function(row) {
+		this._username = row.username;
+		this._password = row.password;
+		this._gamesPlayedAsWhite = row.gamesPlayedAsWhite;
+		this._gamesPlayedAsBlack = row.gamesPlayedAsBlack;
+		this._rating = row.rating;
+	}
+	
+	User.prototype._loadFromSession = function() {
+		if(this._session.user) {
+			var user = this._session.user;
+			
+			this._username = user.getUsername();
+			this._gamesPlayedAsWhite = user.getGamesPlayedAsWhite();
+			this._gamesPlayedAsBlack = user.getGamesPlayedAsBlack();
+			this._rating = user.getRating();
+			this._isLoggedIn = user.isLoggedIn();
+		}
 	}
 	
 	return User;
