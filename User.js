@@ -32,18 +32,11 @@ define(function(require) {
 			this.Connected.fire();
 		});
 		
-		if(this._session.user) {
-			this._loadFromSession(this._session.user);
-		}
-		
+		this._loadFromSession();
 		this._session.user = this;
 		
 		if(!this._session.currentGames) {
 			this._session.currentGames = [];
-		}
-		
-		if(this._session.currentGames.length > 0) {
-			this._user.send("/games", this._session.currentGames);
 		}
 		
 		this._subscribeToUserMessages();
