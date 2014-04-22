@@ -85,7 +85,7 @@ define(function(require) {
 					username: username
 				});
 				
-				this._user.send("/user/login/success");
+				this._user.send("/user/login/success", this);
 			}
 			
 			else {
