@@ -64,7 +64,7 @@ define(function(require) {
 	Application.prototype._replaceExistingLoggedInUser = function(user) {
 		var username = user.getUsername();
 		
-		if(user.isLoggedIn() && username in this._loggedInUsers) {
+		if(user.isLoggedIn() && username in this._loggedInUsers && this._loggedInUsers[username] !== user) {
 			user.replace(this._loggedInUsers[username]);
 		}
 	}
