@@ -68,7 +68,6 @@ define(function(require) {
 		});
 		
 		this._user.send("/user/replaced");
-		this._user.disconnect();
 	}
 	
 	User.prototype.getId = function() {
