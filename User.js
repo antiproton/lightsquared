@@ -2,11 +2,12 @@ define(function(require) {
 	var Publisher = require("lib/Publisher");
 	var id = require("lib/id");
 	var Event = require("lib/Event");
-	var db = require("lib/db/db");
+	var Mysql = require("lib/Mysql");
 	var Glicko = require("chess/Glicko");
 	
 	function User(user, app) {
 		this._id = id();
+		this._db = null;
 		this._user = user;
 		this._app = app;
 		this._session = user.getSession();
@@ -75,7 +76,9 @@ define(function(require) {
 	}
 	
 	User.prototype._login = function(username, password) {
-		db.query("select * from users where username = ? and password = ?", [username, password], function(rows) {
+		this._setupDb();
+		
+		this._db.query("select * from lightsquare.users where username = ? and password = ?", [username, password], (function(rows) {
 			if(rows.length === 1) {
 				this._loadRow(rows[0]);
 				this._isLoggedIn = true;
@@ -90,7 +93,7 @@ define(function(require) {
 			else {
 				this._user.send("/user/login/failure");
 			}
-		});
+		}).bind(this));
 	}
 	
 	User.prototype._logout = function() {
@@ -103,9 +106,11 @@ define(function(require) {
 	}
 	
 	User.prototype._register = function(username, password) {
-		db.query("select username from users where username = ?", [username], (function(rows) {
+		this._setupDb();
+		
+		this._db.query("select username from lightsquare.users where username = ?", [username], (function(rows) {
 			if(rows.length === 0) {
-				db.insert("users", this._toRow());
+				this._db.insert("lightsquare.users", this._toRow());
 				
 				this._user.send("/user/register/success", this);
 			}
@@ -117,7 +122,9 @@ define(function(require) {
 	}
 	
 	User.prototype._save = function() {
-		db.update("users", this._toRow(), {
+		this._setupDb();
+		
+		this._db.update("users", this._toRow(), {
 			username: this._username
 		});
 	}
@@ -212,8 +219,8 @@ define(function(require) {
 		return {
 			username: this._username,
 			password: this._password,
-			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
-			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
+			games_played_as_white: this._gamesPlayedAsWhite,
+			games_played_as_black: this._gamesPlayedAsBlack,
 			rating: this._rating
 		};
 	}
@@ -221,8 +228,8 @@ define(function(require) {
 	User.prototype._loadRow = function(row) {
 		this._username = row.username;
 		this._password = row.password;
-		this._gamesPlayedAsWhite = row.gamesPlayedAsWhite;
-		this._gamesPlayedAsBlack = row.gamesPlayedAsBlack;
+		this._gamesPlayedAsWhite = row.games_played_as_white;
+		this._gamesPlayedAsBlack = row.games_played_as_black;
 		this._rating = row.rating;
 	}
 	
@@ -235,6 +242,12 @@ define(function(require) {
 			this._gamesPlayedAsBlack = user.getGamesPlayedAsBlack();
 			this._rating = user.getRating();
 			this._isLoggedIn = user.isLoggedIn();
+		}
+	}
+	
+	User.prototype._setupDb = function() {
+		if(this._db === null) {
+			this._db = new Mysql();
 		}
 	}
 	
