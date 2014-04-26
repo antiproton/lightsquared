@@ -50,13 +50,7 @@ define(function(require) {
 	}
 	
 	Application.prototype.getGame = function(id) {
-		if(id in this._games) {
-			return this._games[id];
-		}
-		
-		else {
-			return null;
-		}
+		return this._games[id] || null;
 	}
 	
 	Application.prototype._replaceExistingLoggedInUser = function(user) {
