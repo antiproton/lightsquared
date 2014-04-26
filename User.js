@@ -68,6 +68,7 @@ define(function(require) {
 			newUser: user
 		});
 		
+		this._logout();
 		this._user.send("/user/replaced");
 	}
 	
