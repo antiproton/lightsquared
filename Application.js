@@ -45,10 +45,8 @@ define(function(require) {
 		return challenge;
 	}
 	
-	Application.prototype.acceptChallenge = function(user, id) {
-		if(id in this._openChallenges) {
-			this._openChallenges[id].accept(user);
-		}
+	Application.prototype.getChallenge = function(id) {
+		return this._openChallenges[id] || null;
 	}
 	
 	Application.prototype.getGame = function(id) {

@@ -175,9 +175,7 @@ define(function(require) {
 			var challenge = this._app.createChallenge(this, options);
 			
 			challenge.Accepted.addHandler(this, function(data) {
-				var game = data.game;
-				
-				this._session.currentGames.push(game);
+				this._session.currentGames.push(data.game);
 				
 				return true;
 			});
@@ -194,7 +192,17 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/accept", (function(id) {
-			this._app.acceptChallenge(this, id);
+			var challenge = this._app.getChallenge(id);
+			
+			if(challenge !== null) {
+				challenge.Accepted.addHandler(this, function(data) {
+					this._session.currentGames.push(data.game);
+					
+					return true;
+				});
+				
+				challenge.accept(this);
+			}
 		}).bind(this));
 		
 		this._user.subscribe("/request/games", (function() {
