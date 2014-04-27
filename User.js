@@ -4,6 +4,7 @@ define(function(require) {
 	var Event = require("lib/Event");
 	var Mysql = require("lib/Mysql");
 	var Glicko = require("chess/Glicko");
+	require("lib/Array.getShallowCopy");
 	
 	function User(user, app) {
 		this._id = id();
@@ -43,6 +44,10 @@ define(function(require) {
 		this._subscribeToUserMessages();
 	}
 	
+	User.prototype.getCurrentGames = function() {
+		return this._session.currentGames.getShallowCopy();
+	}
+	
 	User.prototype.getRating = function() {
 		return this._rating;
 	}
@@ -61,6 +66,10 @@ define(function(require) {
 	
 	User.prototype.replace = function(user) {
 		user.replaceWith(this);
+		
+		user.getCurrentGames().forEach((function(game) {
+			this._session.currentGames.push(game);
+		}).bind(this));
 	}
 	
 	User.prototype.replaceWith = function(user) {
