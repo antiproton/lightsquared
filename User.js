@@ -218,6 +218,10 @@ define(function(require) {
 			this._user.send("/games", this._session.currentGames);
 		}).bind(this));
 		
+		this._user.subscribe("/request/user", (function() {
+			this._user.send("/user", this);
+		}).bind(this));
+		
 		this._user.subscribe("/request/challenges", (function() {
 			this._user.send("/challenges", this._app.getOpenChallenges());
 		}).bind(this));
