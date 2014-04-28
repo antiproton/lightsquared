@@ -134,7 +134,7 @@ define(function(require) {
 	User.prototype._save = function() {
 		this._setupDb();
 		
-		this._db.update("users", this._toRow(), {
+		this._db.update("lightsquare.users", this._toRow(), {
 			username: this._username
 		});
 	}
