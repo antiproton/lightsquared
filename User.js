@@ -120,6 +120,8 @@ define(function(require) {
 		
 		this._db.query("select username from lightsquare.users where username = ?", [username], (function(rows) {
 			if(rows.length === 0) {
+				this._username = username;
+				this._password = password;
 				this._db.insert("lightsquare.users", this._toRow());
 				this._isLoggedIn = true;
 				this._user.send("/user/login/success", this);
