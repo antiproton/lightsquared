@@ -110,6 +110,7 @@ define(function(require) {
 		if(this._isLoggedIn) {
 			this._isLoggedIn = false;
 			this._username = "Anonymous";
+			this._rating = Glicko.INITIAL_RATING;
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
