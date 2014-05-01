@@ -121,26 +121,32 @@ define(function(require) {
 		
 		this._db.query("select username from lightsquare.users where username = ?", [username], (function(rows) {
 			if(rows.length === 0) {
-				if(this._isLoggedIn) {
-					this._logout();
+				if(!this._isLoggedIn) {
+					this._username = username;
+					this._password = password;
+					this._isLoggedIn = true;
+					
+					this._db.insert("lightsquare.users", this._toRow());
+					
+					this._user.send("/user/login/success", this);
+					this._user.send("/user/register/success", this);
+					
+					this.LoggedIn.fire({
+						username: username
+					});
 				}
 				
-				this._username = username;
-				this._password = password;
-				this._isLoggedIn = true;
-				
-				this._db.insert("lightsquare.users", this._toRow());
-				
-				this._user.send("/user/login/success", this);
-				this._user.send("/user/register/success", this);
-				
-				this.LoggedIn.fire({
-					username: username
-				});
+				else {
+					this._user.send("/user/register/failure", {
+						reason: "You must be logged out to register an account"
+					});
+				}
 			}
 			
 			else {
-				this._user.send("/user/register/failure");
+				this._user.send("/user/register/failure", {
+					reason: "The username '" + username + "' is already registered"
+				});
 			}
 		}).bind(this));
 	}
