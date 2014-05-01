@@ -76,6 +76,10 @@ define(function(require) {
 			this._players[colour] = newUser;
 			this._setupPlayer(newUser, colour);
 		});
+		
+		user.LoggedOut.addHandler(this, function() {
+			this._resign(user);
+		});
 	}
 	
 	Game.prototype._setupSpectator = function(user) {
