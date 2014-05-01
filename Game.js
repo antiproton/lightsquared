@@ -131,8 +131,8 @@ define(function(require) {
 	Game.prototype._resign = function(user) {
 		var playerColour = null;
 		
-		this._players.forEach(function(player, colour) {
-			if(player === user) {
+		Colour.forEach(function(colour) {
+			if(this._players[colour] === user) {
 				playerColour = colour;
 			}
 		});
