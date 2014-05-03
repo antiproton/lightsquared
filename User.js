@@ -5,6 +5,7 @@ define(function(require) {
 	var Mysql = require("lib/Mysql");
 	var Glicko = require("chess/Glicko");
 	require("lib/Array.getShallowCopy");
+	require("lib/Array.contains");
 	
 	function User(user, app) {
 		this._id = id();
@@ -213,7 +214,7 @@ define(function(require) {
 		this._user.subscribe("/game/spectate", (function(id) {
 			var game = this._app.getGame(id);
 			
-			if(game !== null) {
+			if(game !== null && !this._session.currentGames.contains(game)) {
 				game.spectate(this);
 				
 				this._session.currentGames.push(game);
