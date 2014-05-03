@@ -7,6 +7,7 @@ define(function(require) {
 	var Square = require("chess/Square");
 	var Glicko = require("chess/Glicko");
 	require("lib/Array.remove");
+	require("lib/Array.contains");
 	
 	function Game(white, black, options) {
 		this._id = id();
@@ -55,7 +56,7 @@ define(function(require) {
 	}
 	
 	Game.prototype.spectate = function(user) {
-		if(!(user in this._players)) {
+		if(!(user in this._players) && !this._spectators.contains(user)) {
 			this._spectators.push(user);
 			this._setupSpectator(user);
 		}
