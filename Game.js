@@ -43,7 +43,7 @@ define(function(require) {
 		this._newRatings[Colour.black] = null;
 		
 		this._isUndoRequested = false;
-		this._isDrawOffered = false;
+		this._drawOfferedBy = null;
 		
 		for(var colour in this._players) {
 			this._setupPlayer(this._players[colour], colour);
@@ -112,6 +112,14 @@ define(function(require) {
 		user.subscribe("/game/" + this._id + "/offer_draw", (function() {
 			this._offerDraw(user);
 		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/claim_draw", (function() {
+			this._claimDraw(user);
+		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/accept_draw", (function() {
+			this._acceptDraw(user);
+		}).bind(this));
 	}
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
@@ -133,16 +141,35 @@ define(function(require) {
 	}
 	
 	Game.prototype._resign = function(user) {
-		var playerColour = null;
-		
-		Colour.forEach(function(colour) {
-			if(this._players[colour] === user) {
-				playerColour = colour;
-			}
-		});
+		var playerColour = this._getPlayerColour(user);
 		
 		if(playerColour !== null) {
 			this._game.resign(playerColour);
+		}
+	}
+	
+	Game.prototype._offerDraw = function(user) {
+		var playerColour = this._getPlayerColour(user);
+		
+		if(playerColour === this._game.getPosition().getActiveColour().opposite) {
+			this._drawOfferedBy = playerColour;
+			this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour);
+		}
+	}
+	
+	Game.prototype._claimDraw = function(user) {
+		var playerColour = this._getPlayerColour(user);
+		
+		if(playerColour !== null) {
+			this._game.claimDraw();
+		}
+	}
+	
+	Game.prototype._acceptDraw = function(user) {
+		var playerColour = this._getPlayerColour(user);
+		
+		if(playerColour === this._game.getPosition().getActiveColour() && this._drawOfferedBy === playerColour.opposite) {
+			this._game.drawByAgreement();
 		}
 	}
 	
@@ -170,6 +197,18 @@ define(function(require) {
 		this._sendToAllUsers("/game/" + this._id + "/game_over", {
 			result: result
 		});
+	}
+	
+	Game.prototype._getPlayerColour = function(user) {
+		var playerColour = null;
+		
+		Colour.forEach(function(colour) {
+			if(this._players[colour] === user) {
+				playerColour = colour;
+			}
+		}, this);
+		
+		return playerColour;
 	}
 	
 	Game.prototype.toJSON = function() {
