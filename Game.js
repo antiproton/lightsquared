@@ -91,6 +91,8 @@ define(function(require) {
 	}
 	
 	Game.prototype._setupSpectator = function(user) {
+		this._subscribeToUserMessages(user);
+		
 		user.send("/game", this);
 		
 		user.Replaced.addHandler(this, function(data) {
@@ -102,7 +104,30 @@ define(function(require) {
 		});
 	}
 	
+	Game.prototype._subscribeToUserMessages = function(user) {
+		user.subscribe("/game/" + this._id + "/request/moves", (function(data) {
+			var index = data.startingIndex;
+			var promoteTo;
+			
+			this._game.getHistory().slice(index).forEach(function(move) {
+				promoteTo = move.getPromoteTo();
+				
+				user.send("/game/" + this._id + "/move", {
+					from: move.getFrom(),
+					to: move.getTo(),
+					promoteTo: promoteTo ? promoteTo.sanString : undefined,
+					index: index
+				});
+			
+				index++;
+			});
+			
+		}).bind(this));
+	}
+	
 	Game.prototype._subscribeToPlayerMessages = function(user) {
+		this._subscribeToUserMessages(user);
+		
 		user.subscribe("/game/" + this._id + "/move", (function(data) {
 			var promoteTo;
 			
