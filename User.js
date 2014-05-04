@@ -88,24 +88,44 @@ define(function(require) {
 	}
 	
 	User.prototype._login = function(username, password) {
-		this._setupDb();
+		var error = null;
 		
-		this._db.query("select * from lightsquare.users where username = ? and password = ?", [username, password], (function(rows) {
-			if(rows.length === 1) {
-				this._loadRow(rows[0]);
-				this._isLoggedIn = true;
-				
-				this.LoggedIn.fire({
-					username: username
-				});
-				
-				this._user.send("/user/login/success", this);
-			}
+		if(this._isLoggedIn) {
+			error = "You are already logged in";
+		}
+		
+		else if(this._hasGamesInProgress()) {
+			error = "You must finish all current games before logging in";
+		}
+		
+		if(error === null) {
+			this._setupDb();
 			
-			else {
-				this._user.send("/user/login/failure");
-			}
-		}).bind(this));
+			this._db.query("select * from lightsquare.users where username = ? and password = ?", [username, password], (function(rows) {
+				if(rows.length === 1) {
+					this._loadRow(rows[0]);
+					this._isLoggedIn = true;
+					
+					this.LoggedIn.fire({
+						username: username
+					});
+					
+					this._user.send("/user/login/success", this);
+				}
+				
+				else {
+					this._user.send("/user/login/failure", {
+						reason: "Username/password combination not recognised"
+					});
+				}
+			}).bind(this));
+		}
+		
+		else {
+			this._user.send("/user/login/failure", {
+				reason: error
+			});
+		}
 	}
 	
 	User.prototype._logout = function() {
