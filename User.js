@@ -225,13 +225,11 @@ define(function(require) {
 			var challenge = this._app.getChallenge(id);
 			
 			if(challenge !== null) {
-				challenge.Accepted.addHandler(this, function(data) {
-					this._session.currentGames.push(data.game);
-					
-					return true;
-				});
+				var game = challenge.accept(this);
 				
-				challenge.accept(this);
+				if(game !== null) {
+					this._session.currentGames.push(game);
+				}
 			}
 		}).bind(this));
 		

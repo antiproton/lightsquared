@@ -32,6 +32,7 @@ define(function(require) {
 	
 	Challenge.prototype.accept = function(user) {
 		var guestRating = user.getRating();
+		var game = null;
 		
 		if(user !== this._owner && guestRating >= this._acceptRatingMin && guestRating <= this._acceptRatingMax) {
 			var white, black;
@@ -48,7 +49,7 @@ define(function(require) {
 				black = user;
 			}
 			
-			var game = new Game(white, black, {
+			game = new Game(white, black, {
 				initialTime: this._options.initialTime,
 				timeIncrement: this._options.timeIncrement
 			});
@@ -57,6 +58,8 @@ define(function(require) {
 				game: game
 			});
 		}
+		
+		return game;
 	}
 	
 	Challenge.prototype._getAbsoluteGuestRating = function(ratingSpecifier) {
