@@ -68,6 +68,10 @@ define(function(require) {
 		this._spectators.remove(user);
 	}
 	
+	Game.prototype.userIsPlaying = function(user) {
+		return (this._players[Colour.white] === user || this._players[Colour.black] === user);
+	}
+	
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
 			
