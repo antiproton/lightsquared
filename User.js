@@ -139,11 +139,21 @@ define(function(require) {
 	}
 	
 	User.prototype._register = function(username, password) {
-		this._setupDb();
+		var error = null;
 		
-		this._db.query("select username from lightsquare.users where username = ?", [username], (function(rows) {
-			if(rows.length === 0) {
-				if(!this._isLoggedIn) {
+		if(this._isLoggedIn) {
+			error = "You must be logged out to register an account";
+		}
+		
+		else if(this._hasGamesInProgress()) {
+			error = "You must finish all current games before registering an account";
+		}
+		
+		if(error === null) {
+			this._setupDb();
+			
+			this._db.query("select username from lightsquare.users where username = ?", [username], (function(rows) {
+				if(rows.length === 0) {
 					this._username = username;
 					this._password = password;
 					this._isLoggedIn = true;
@@ -160,17 +170,17 @@ define(function(require) {
 				
 				else {
 					this._user.send("/user/register/failure", {
-						reason: "You must be logged out to register an account"
+						reason: "The username '" + username + "' is already registered"
 					});
 				}
-			}
-			
-			else {
-				this._user.send("/user/register/failure", {
-					reason: "The username '" + username + "' is already registered"
-				});
-			}
-		}).bind(this));
+			}).bind(this));
+		}
+		
+		else {
+			this._user.send("/user/register/failure", {
+				reason: error
+			});
+		}
 	}
 	
 	User.prototype._save = function() {
