@@ -12,6 +12,8 @@ define(function(require) {
 	function Game(white, black, options) {
 		this._id = id();
 		
+		this.GameOver = new Event(this);
+		
 		this._options = {
 			initialTime: "10m",
 			timeIncrement: "0"
@@ -196,6 +198,10 @@ define(function(require) {
 		}, this);
 		
 		this._sendToAllUsers("/game/" + this._id + "/game_over", {
+			result: result
+		});
+		
+		this.GameOver.fire({
 			result: result
 		});
 	}
