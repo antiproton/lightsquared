@@ -224,10 +224,8 @@ define(function(require) {
 	}
 	
 	Game.prototype.toJSON = function() {
-		var history = [];
-		
-		this._game.getHistory().forEach(function(move) {
-			history.push(Move.fromMove(move));
+		var history = this._game.getHistory().map(function(move) {
+			return Move.fromMove(move);
 		});
 		
 		return {
