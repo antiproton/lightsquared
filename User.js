@@ -293,6 +293,7 @@ define(function(require) {
 	
 	User.prototype.toJSON = function() {
 		return {
+			id: this._id,
 			username: this._username,
 			isLoggedIn: this._isLoggedIn,
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
