@@ -6,6 +6,7 @@ define(function(require) {
 	var Move = require("common/Move");
 	var Square = require("chess/Square");
 	var Glicko = require("chess/Glicko");
+	var Event = require("lib/Event");
 	require("lib/Array.remove");
 	require("lib/Array.contains");
 	
