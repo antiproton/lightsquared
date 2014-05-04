@@ -6,6 +6,7 @@ define(function(require) {
 	var Glicko = require("chess/Glicko");
 	require("lib/Array.getShallowCopy");
 	require("lib/Array.contains");
+	require("lib/Array.remove");
 	
 	function User(user, app) {
 		this._id = id();
@@ -205,7 +206,7 @@ define(function(require) {
 			var challenge = this._app.createChallenge(this, options);
 			
 			challenge.Accepted.addHandler(this, function(data) {
-				this._session.currentGames.push(data.game);
+				this._addGame(data.game);
 				
 				return true;
 			});
@@ -217,7 +218,7 @@ define(function(require) {
 			if(game !== null && !this._session.currentGames.contains(game)) {
 				game.spectate(this);
 				
-				this._session.currentGames.push(game);
+				this._addGame(game);
 			}
 		}).bind(this));
 		
@@ -228,7 +229,7 @@ define(function(require) {
 				var game = challenge.accept(this);
 				
 				if(game !== null) {
-					this._session.currentGames.push(game);
+					this._addGame(game);
 				}
 			}
 		}).bind(this));
@@ -243,6 +244,20 @@ define(function(require) {
 		
 		this._user.subscribe("/request/challenges", (function() {
 			this._user.send("/challenges", this._app.getOpenChallenges());
+		}).bind(this));
+	}
+	
+	User.prototype._addGame = function(game) {
+		this._session.currentGames.push(game);
+		
+		game.GameOver.addHandler(this, function() {
+			this._session.currentGames.remove(game);
+		});
+	}
+	
+	User.prototype._hasGamesInProgress = function() {
+		return this._session.currentGames.some((function(game) {
+			return game.userIsPlaying(this);
 		}).bind(this));
 	}
 	
