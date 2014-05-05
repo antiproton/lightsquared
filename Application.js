@@ -3,6 +3,7 @@ define(function(require) {
 	require("lib/Array.remove");
 	var User = require("./User");
 	var Challenge = require("./Challenge");
+	var time = require("lib/time");
 	
 	function Application(server) {
 		this._users = {};
@@ -14,7 +15,7 @@ define(function(require) {
 		server.UserConnected.addHandler(this, function(data) {
 			var user = new User(data.user, this);
 			
-			this._handleUserEvents(user);
+			this._setupUser(user);
 			this._replaceExistingLoggedInUser(user);
 			this._users[user.getId()] = user;
 			
@@ -61,7 +62,7 @@ define(function(require) {
 		}
 	}
 	
-	Application.prototype._handleUserEvents = function(user) {
+	Application.prototype._setupUser = function(user) {
 		user.Disconnected.addHandler(this, function() {
 			delete this._users[user.getId()];
 		});
@@ -82,6 +83,10 @@ define(function(require) {
 		
 		user.Replaced.addHandler(this, function(data) {
 			this._loggedInUsers[user.getUsername()] = data.newUser;
+		});
+		
+		user.subscribe("/request/time", function() {
+			user.send("/time", time());
 		});
 	}
 	
