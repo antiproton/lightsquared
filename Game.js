@@ -162,7 +162,7 @@ define(function(require) {
 			var index = this._game.getHistory().length;
 			var move = this._game.move(from, to, promoteTo);
 			
-			if(move.isLegal()) {
+			if(move !== null && move.isLegal()) {
 				this._sendToAllUsers("/game/" + this._id + "/move", {
 					from: from.squareNo,
 					to: to.squareNo,
