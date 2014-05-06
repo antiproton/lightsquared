@@ -107,17 +107,9 @@ define(function(require) {
 	Game.prototype._subscribeToUserMessages = function(user) {
 		user.subscribe("/game/" + this._id + "/request/moves", (function(data) {
 			var index = data.startingIndex;
-			var promoteTo;
 			
 			this._game.getHistory().slice(index).forEach(function(move) {
-				promoteTo = move.getPromoteTo();
-				
-				user.send("/game/" + this._id + "/move", {
-					from: move.getFrom(),
-					to: move.getTo(),
-					promoteTo: promoteTo ? promoteTo.sanString : undefined,
-					index: index
-				});
+				user.send("/game/" + this._id + "/move", this._getMoveJson(move));
 			
 				index++;
 			});
@@ -163,14 +155,21 @@ define(function(require) {
 			var move = this._game.move(from, to, promoteTo);
 			
 			if(move !== null && move.isLegal()) {
-				this._sendToAllUsers("/game/" + this._id + "/move", {
-					from: from.squareNo,
-					to: to.squareNo,
-					promoteTo: (promoteTo ? promoteTo.sanString : undefined),
-					index: index
-				});
+				this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
 			}
 		}
+	}
+	
+	Game.prototype._getMoveJson = function(move, index) {
+		var promoteTo = move.getPromoteTo();
+		
+		return {
+			from: move.getFrom(),
+			to: move.getTo(),
+			promoteTo: promoteTo ? promoteTo.sanString : undefined,
+			index: index,
+			time: move.getTime()
+		};
 	}
 	
 	Game.prototype._resign = function(user) {
