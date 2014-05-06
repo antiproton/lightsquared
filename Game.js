@@ -164,9 +164,9 @@ define(function(require) {
 		var promoteTo = move.getPromoteTo();
 		
 		return {
-			from: move.getFrom(),
-			to: move.getTo(),
-			promoteTo: promoteTo ? promoteTo.sanString : undefined,
+			from: move.getFrom().squareNo,
+			to: move.getTo().squareNo,
+			promoteTo: promoteTo === PieceType.queen ? undefined : promoteTo.sanString,
 			index: index,
 			time: move.getTime()
 		};
