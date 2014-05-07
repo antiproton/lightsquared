@@ -3,7 +3,7 @@ define(function(require) {
 	var PieceType = require("chess/PieceType");
 	var id = require("lib/id");
 	var Colour = require("chess/Colour");
-	var Move = require("common/Move");
+	var Move = require("jsonchess/Move");
 	var Square = require("chess/Square");
 	var Glicko = require("chess/Glicko");
 	var Event = require("lib/Event");

@@ -12,8 +12,8 @@ requirejs.config({
 	},
 	map: {
 		"*": {
-			"common": "..",
-			"chess": "lib/chess"
+			"chess": "lib/chess",
+			"jsonchess": "lib/jsonchess"
 		}
 	}
 });
