@@ -1,9 +1,6 @@
 #!/usr/bin/js
 
 var requirejs = require("requirejs");
-var fs = require("fs");
-
-//fs.writeFileSync("/var/run/lightsquare.pid", process.pid.toString());
 
 requirejs.config({
 	nodeRequire: require,
