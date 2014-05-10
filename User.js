@@ -17,7 +17,7 @@ define(function(require) {
 		this._username = "Anonymous";
 		this._password = null;
 		this._isLoggedIn = false;
-		this._publisher = new Publisher();
+		this._publisher = new Publisher(this);
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
 		this._rating = Glicko.INITIAL_RATING;
@@ -216,8 +216,8 @@ define(function(require) {
 	}
 	
 	User.prototype._subscribeToUserMessages = function() {
-		this._user.subscribe("*", (function(url, data) {
-			this._publisher.publish(url, data);
+		this._user.subscribe("*", (function(url, data, client) {
+			this._publisher.publish(url, data, client);
 		}).bind(this));
 		
 		this._user.subscribe("/user/login", (function(data) {
@@ -264,16 +264,16 @@ define(function(require) {
 			}
 		}).bind(this));
 		
-		this._user.subscribe("/request/games", (function() {
-			this._user.send("/games", this._session.currentGames);
+		this._user.subscribe("/request/games", (function(data, client) {
+			client.send("/games", this._session.currentGames);
 		}).bind(this));
 		
-		this._user.subscribe("/request/user", (function() {
-			this._user.send("/user", this);
+		this._user.subscribe("/request/user", (function(data, client) {
+			client.send("/user", this);
 		}).bind(this));
 		
-		this._user.subscribe("/request/challenges", (function() {
-			this._user.send("/challenges", this._app.getOpenChallenges());
+		this._user.subscribe("/request/challenges", (function(data, client) {
+			client.send("/challenges", this._app.getOpenChallenges());
 		}).bind(this));
 	}
 	

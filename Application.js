@@ -85,8 +85,8 @@ define(function(require) {
 			this._loggedInUsers[user.getUsername()] = data.newUser;
 		});
 		
-		user.subscribe("/request/time", function() {
-			user.send("/time", time());
+		user.subscribe("/request/time", function(data, client) {
+			client.send("/time", time());
 		});
 	}
 	
