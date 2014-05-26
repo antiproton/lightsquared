@@ -40,6 +40,12 @@ define(function(require) {
 			return true;
 		});
 		
+		challenge.Expired.addHandler(this, function() {
+			this._sendToAllUsers("/challenge/expired", id);
+			
+			delete this._openChallenges[id];
+		});
+		
 		this._openChallenges[id] = challenge;
 		this._sendToAllUsers("/challenges", [challenge]);
 		

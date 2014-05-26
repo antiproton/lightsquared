@@ -3,11 +3,14 @@ define(function(require) {
 	var Event = require("lib/Event");
 	var Game = require("./Game");
 	
+	var TIME_BEFORE_EXPIRY = 60000;
+	
 	function Challenge(owner, options) {
 		this._id = id();
 		this._owner = owner;
 		
 		this.Accepted = new Event(this);
+		this.Expired = new Event(this);
 		
 		this._options = {
 			initialTime: "10m",
@@ -24,6 +27,10 @@ define(function(require) {
 		
 		this._acceptRatingMin = this._getAbsoluteGuestRating(this._options.acceptRatingMin);
 		this._acceptRatingMax = this._getAbsoluteGuestRating(this._options.acceptRatingMax);
+		
+		this._expireTimer = setTimeout((function() {
+			this.Expired.fire();
+		}).bind(this), TIME_BEFORE_EXPIRY);
 	}
 	
 	Challenge.prototype.getId = function() {
@@ -53,6 +60,8 @@ define(function(require) {
 				initialTime: this._options.initialTime,
 				timeIncrement: this._options.timeIncrement
 			});
+			
+			clearTimeout(this._expireTimer);
 			
 			this.Accepted.fire({
 				game: game
