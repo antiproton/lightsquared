@@ -21,6 +21,7 @@ define(function(require) {
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
 		this._rating = Glicko.INITIAL_RATING;
+		this._currentlyWaitingChallenge = null;
 		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
@@ -233,6 +234,8 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/create", (function(options) {
+			this._cancelCurrentlyWaitingChallenge();
+			
 			var challenge = this._app.createChallenge(this, options);
 			
 			challenge.Accepted.addHandler(this, function(data) {
@@ -240,6 +243,12 @@ define(function(require) {
 				
 				return true;
 			});
+			
+			this._currentlyWaitingChallenge = challenge;
+		}).bind(this));
+		
+		this._user.subscribe("/challenge/cancel", (function() {
+			this._cancelCurrentlyWaitingChallenge();
 		}).bind(this));
 		
 		this._user.subscribe("/game/spectate", (function(id) {
@@ -275,6 +284,12 @@ define(function(require) {
 		this._user.subscribe("/request/challenges", (function(data, client) {
 			client.send("/challenges", this._app.getOpenChallenges());
 		}).bind(this));
+	}
+	
+	User.prototype._cancelCurrentlyWaitingChallenge = function() {
+		if(this._currentlyWaitingChallenge !== null) {
+			this._currentlyWaitingChallenge.cancel();
+		}
 	}
 	
 	User.prototype._addGame = function(game) {

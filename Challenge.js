@@ -61,7 +61,7 @@ define(function(require) {
 				timeIncrement: this._options.timeIncrement
 			});
 			
-			clearTimeout(this._expireTimer);
+			this._clearExpireTimer();
 			
 			this.Accepted.fire({
 				game: game
@@ -69,6 +69,19 @@ define(function(require) {
 		}
 		
 		return game;
+	}
+	
+	Challenge.prototype.cancel = function() {
+		this._clearExpireTimer();
+		this.Expired.fire();
+	}
+	
+	Challenge.prototype._clearExpireTimer = function() {
+		if(this._expireTimer !== null) {
+			clearTimeout(this._expireTimer);
+			
+			this._expireTimer = null;
+		}
 	}
 	
 	Challenge.prototype._getAbsoluteGuestRating = function(ratingSpecifier) {
