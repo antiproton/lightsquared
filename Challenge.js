@@ -2,8 +2,7 @@ define(function(require) {
 	var id = require("lib/id");
 	var Event = require("lib/Event");
 	var Game = require("./Game");
-	
-	var TIME_BEFORE_EXPIRY = 60000;
+	var jsonChessConstants = require("jsonchess/constants");
 	
 	function Challenge(owner, options) {
 		this._id = id();
@@ -30,7 +29,7 @@ define(function(require) {
 		
 		this._expireTimer = setTimeout((function() {
 			this.Expired.fire();
-		}).bind(this), TIME_BEFORE_EXPIRY);
+		}).bind(this), jsonChessConstants.CHALLENGE_TIMEOUT);
 	}
 	
 	Challenge.prototype.getId = function() {
