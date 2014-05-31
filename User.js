@@ -274,6 +274,7 @@ define(function(require) {
 				
 				if(game !== null) {
 					this._addGame(game);
+					this._cancelCurrentChallenge();
 				}
 			}
 		}).bind(this));
