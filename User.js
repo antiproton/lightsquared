@@ -176,7 +176,7 @@ define(function(require) {
 				
 				else {
 					this._user.send("/user/register/failure", {
-						reason: "The username '" + username + "' is already registered"
+						reason: "Sorry, '" + username + "' is already registered"
 					});
 				}
 			}).bind(this));
