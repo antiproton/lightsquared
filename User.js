@@ -284,7 +284,13 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/request/user", (function(data, client) {
-			client.send("/user", this);
+			client.send("/user", {
+				id: this._id,
+				username: this._username,
+				isLoggedIn: this._isLoggedIn,
+				rating: this._rating,
+				currentChallenge: this._currentChallenge
+			});
 		}).bind(this));
 		
 		this._user.subscribe("/request/challenges", (function(data, client) {
