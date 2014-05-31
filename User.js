@@ -21,7 +21,7 @@ define(function(require) {
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
 		this._rating = Glicko.INITIAL_RATING;
-		this._currentlyWaitingChallenge = null;
+		this._currentChallenge = null;
 		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
@@ -107,6 +107,8 @@ define(function(require) {
 					this._loadRow(rows[0]);
 					this._isLoggedIn = true;
 					
+					this._cancelCurrentChallenge();
+					
 					this.LoggedIn.fire({
 						username: username
 					});
@@ -132,6 +134,7 @@ define(function(require) {
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
 			this._isLoggedIn = false;
+			this._cancelCurrentChallenge();
 			this._username = "Anonymous";
 			this._rating = Glicko.INITIAL_RATING;
 			this.LoggedOut.fire();
@@ -158,6 +161,8 @@ define(function(require) {
 					this._username = username;
 					this._password = password;
 					this._isLoggedIn = true;
+					
+					this._cancelCurrentChallenge();
 					
 					this._db.insert("lightsquare.users", this._toRow());
 					
@@ -234,7 +239,7 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/create", (function(options) {
-			this._cancelCurrentlyWaitingChallenge();
+			this._cancelCurrentChallenge();
 			
 			var challenge = this._app.createChallenge(this, options);
 			
@@ -244,11 +249,11 @@ define(function(require) {
 				return true;
 			});
 			
-			this._currentlyWaitingChallenge = challenge;
+			this._currentChallenge = challenge;
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/cancel", (function() {
-			this._cancelCurrentlyWaitingChallenge();
+			this._cancelCurrentChallenge();
 		}).bind(this));
 		
 		this._user.subscribe("/game/spectate", (function(id) {
@@ -286,9 +291,9 @@ define(function(require) {
 		}).bind(this));
 	}
 	
-	User.prototype._cancelCurrentlyWaitingChallenge = function() {
-		if(this._currentlyWaitingChallenge !== null) {
-			this._currentlyWaitingChallenge.cancel();
+	User.prototype._cancelCurrentChallenge = function() {
+		if(this._currentChallenge !== null) {
+			this._currentChallenge.cancel();
 		}
 	}
 	
