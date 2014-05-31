@@ -28,8 +28,10 @@ define(function(require) {
 		this._acceptRatingMax = this._getAbsoluteGuestRating(this._options.acceptRatingMax);
 		
 		this._expireTimer = setTimeout((function() {
-			this.Expired.fire();
+			this._expire();
 		}).bind(this), jsonChessConstants.CHALLENGE_TIMEOUT);
+		
+		this._owner.send("/current_challenge", this);
 	}
 	
 	Challenge.prototype.getId = function() {
@@ -65,6 +67,8 @@ define(function(require) {
 			this.Accepted.fire({
 				game: game
 			});
+			
+			this._owner.send("/current_challenge/expired");
 		}
 		
 		return game;
@@ -72,6 +76,11 @@ define(function(require) {
 	
 	Challenge.prototype.cancel = function() {
 		this._clearExpireTimer();
+		this._expire();
+	}
+	
+	Challenge.prototype._expire = function() {
+		this._owner.send("/current_challenge/expired");
 		this.Expired.fire();
 	}
 	
