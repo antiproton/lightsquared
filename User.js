@@ -96,7 +96,7 @@ define(function(require) {
 		}
 		
 		else if(this._hasGamesInProgress()) {
-			error = "You must finish all current games before logging in";
+			error = "You must finish all games before logging in";
 		}
 		
 		if(error === null) {
