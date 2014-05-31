@@ -8,8 +8,10 @@ define(function(require) {
 		this._id = id();
 		this._owner = owner;
 		
-		this.Accepted = new Event(this);
 		this.Expired = new Event(this);
+		this.Accepted = new Event(this);
+		this.Timeout = new Event(this);
+		this.Canceled = new Event(this);
 		
 		this._options = {
 			initialTime: "10m",
@@ -27,8 +29,8 @@ define(function(require) {
 		this._acceptRatingMin = this._getAbsoluteGuestRating(this._options.acceptRatingMin);
 		this._acceptRatingMax = this._getAbsoluteGuestRating(this._options.acceptRatingMax);
 		
-		this._expireTimer = setTimeout((function() {
-			this._expire();
+		this._timeoutTimer = setTimeout((function() {
+			this._timeout();
 		}).bind(this), jsonChessConstants.CHALLENGE_TIMEOUT);
 		
 		this._owner.send("/current_challenge", this);
@@ -62,33 +64,38 @@ define(function(require) {
 				timeIncrement: this._options.timeIncrement
 			});
 			
-			this._clearExpireTimer();
+			this._clearTimeoutTimer();
 			
 			this.Accepted.fire({
 				game: game
 			});
 			
-			this._owner.send("/current_challenge/expired");
+			this.Expired.fire();
+			
+			this._owner.send("/current_challenge/accepted");
 		}
 		
 		return game;
 	}
 	
 	Challenge.prototype.cancel = function() {
-		this._clearExpireTimer();
-		this._expire();
-	}
-	
-	Challenge.prototype._expire = function() {
-		this._owner.send("/current_challenge/expired");
+		this._clearTimeoutTimer();
+		this._owner.send("/current_challenge/canceled");
+		this.Canceled.fire();
 		this.Expired.fire();
 	}
 	
-	Challenge.prototype._clearExpireTimer = function() {
-		if(this._expireTimer !== null) {
-			clearTimeout(this._expireTimer);
+	Challenge.prototype._timeout = function() {
+		this._owner.send("/current_challenge/timeout");
+		this.Timeout.fire();
+		this.Expired.fire();
+	}
+	
+	Challenge.prototype._clearTimeoutTimer = function() {
+		if(this._timeoutTimer !== null) {
+			clearTimeout(this._timeoutTimer);
 			
-			this._expireTimer = null;
+			this._timeoutTimer = null;
 		}
 	}
 	
