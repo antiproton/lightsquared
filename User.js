@@ -249,6 +249,10 @@ define(function(require) {
 				return true;
 			});
 			
+			challenge.Expired.addHandler(this, function() {
+				this._currentChallenge = null;
+			});
+			
 			this._currentChallenge = challenge;
 		}).bind(this));
 		
