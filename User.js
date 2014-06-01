@@ -245,14 +245,22 @@ define(function(require) {
 			
 			challenge.Accepted.addHandler(this, function(data) {
 				this._addGame(data.game);
-				
-				return true;
+				this._user.send("/current_challenge/accepted");
 			});
 			
 			challenge.Expired.addHandler(this, function() {
 				this._currentChallenge = null;
 			});
 			
+			challenge.Canceled.addHandler(this, function() {
+				this._user.send("/current_challenge/canceled");
+			});
+			
+			challenge.Timeout.addHandler(this, function() {
+				this._user.send("/current_challenge/timeout");
+			});
+			
+			this._user.send("/current_challenge", challenge);
 			this._currentChallenge = challenge;
 		}).bind(this));
 		

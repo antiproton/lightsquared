@@ -32,8 +32,6 @@ define(function(require) {
 		this._timeoutTimer = setTimeout((function() {
 			this._timeout();
 		}).bind(this), jsonChessConstants.CHALLENGE_TIMEOUT);
-		
-		this._owner.send("/current_challenge", this);
 	}
 	
 	Challenge.prototype.getId = function() {
@@ -71,8 +69,6 @@ define(function(require) {
 			});
 			
 			this.Expired.fire();
-			
-			this._owner.send("/current_challenge/accepted");
 		}
 		
 		return game;
@@ -80,13 +76,11 @@ define(function(require) {
 	
 	Challenge.prototype.cancel = function() {
 		this._clearTimeoutTimer();
-		this._owner.send("/current_challenge/canceled");
 		this.Canceled.fire();
 		this.Expired.fire();
 	}
 	
 	Challenge.prototype._timeout = function() {
-		this._owner.send("/current_challenge/timeout");
 		this.Timeout.fire();
 		this.Expired.fire();
 	}
