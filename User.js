@@ -21,7 +21,7 @@ define(function(require) {
 		this._gamesPlayedAsBlack = 0;
 		this._rating = Glicko.INITIAL_RATING;
 		this._currentChallenge = null;
-		this._lastChallengeCreated = null;
+		this._lastChallengeOptions = null;
 		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
@@ -269,7 +269,8 @@ define(function(require) {
 				username: this._username,
 				isLoggedIn: this._isLoggedIn,
 				rating: this._rating,
-				currentChallenge: this._currentChallenge
+				currentChallenge: this._currentChallenge,
+				lastChallengeOptions: this._lastChallengeOptions
 			});
 		}).bind(this));
 		
@@ -302,7 +303,7 @@ define(function(require) {
 		
 		this._user.send("/current_challenge", challenge);
 		this._currentChallenge = challenge;
-		this._lastChallengeCreated = challenge;
+		this._lastChallengeOptions = options;
 	}
 	
 	User.prototype._cancelCurrentChallenge = function() {
@@ -366,7 +367,7 @@ define(function(require) {
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._rating,
-			lastChallengeCreated: this._lastChallengeCreated
+			lastChallengeOptions: this._lastChallengeOptions
 		};
 	}
 	
@@ -376,7 +377,7 @@ define(function(require) {
 		this._gamesPlayedAsWhite = user.gamesPlayedAsWhite;
 		this._gamesPlayedAsBlack = user.gamesPlayedAsBlack;
 		this._rating = user.rating;
-		this._lastChallengeCreated = user.lastChallengeCreated;
+		this._lastChallengeOptions = user.lastChallengeOptions;
 	}
 	
 	User.prototype._loadFromSession = function() {
