@@ -5,7 +5,7 @@ define(function(require) {
 	var Challenge = require("./Challenge");
 	var time = require("lib/time");
 	
-	function Application(server) {
+	function Application(server, db) {
 		this._users = {};
 		this._loggedInUsers = {};
 		this._openChallenges = {};
@@ -13,7 +13,7 @@ define(function(require) {
 		this._publisher = new Publisher();
 		
 		server.UserConnected.addHandler(this, function(data) {
-			var user = new User(data.user, this);
+			var user = new User(data.user, this, db);
 			
 			this._setupUser(user);
 			this._replaceExistingLoggedInUser(user);

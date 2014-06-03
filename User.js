@@ -2,15 +2,14 @@ define(function(require) {
 	var Publisher = require("lib/Publisher");
 	var id = require("lib/id");
 	var Event = require("lib/Event");
-	var Mysql = require("lib/Mysql");
 	var Glicko = require("chess/Glicko");
 	require("lib/Array.getShallowCopy");
 	require("lib/Array.contains");
 	require("lib/Array.remove");
 	
-	function User(user, app) {
+	function User(user, app, db) {
 		this._id = id();
-		this._db = null;
+		this._collection = db.collection("users");
 		this._user = user;
 		this._app = app;
 		this._session = user.getSession();
@@ -22,6 +21,7 @@ define(function(require) {
 		this._gamesPlayedAsBlack = 0;
 		this._rating = Glicko.INITIAL_RATING;
 		this._currentChallenge = null;
+		this._lastChallengeCreated = null;
 		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
@@ -100,11 +100,12 @@ define(function(require) {
 		}
 		
 		if(error === null) {
-			this._setupDb();
-			
-			this._db.query("select * from lightsquare.users where username = ? and password = ?", [username, password], (function(rows) {
-				if(rows.length === 1) {
-					this._loadRow(rows[0]);
+			this._collection.findOne({
+				username: username,
+				password: password
+			}, (function(error, user) {
+				if(user) {
+					this._loadFromDb(user);
 					this._isLoggedIn = true;
 					
 					this._cancelCurrentChallenge();
@@ -154,24 +155,36 @@ define(function(require) {
 		}
 		
 		if(error === null) {
-			this._setupDb();
-			
-			this._db.query("select username from lightsquare.users where username = ?", [username], (function(rows) {
-				if(rows.length === 0) {
+			this._collection.findOne({
+				username: username
+			}, (function(error, existingUser) {
+				if(!existingUser) {
+					var oldUsername = this._username;
+					
 					this._username = username;
 					this._password = password;
-					this._isLoggedIn = true;
 					
-					this._cancelCurrentChallenge();
-					
-					this._db.insert("lightsquare.users", this._toRow());
-					
-					this._user.send("/user/login/success", this);
-					this._user.send("/user/register/success", this);
-					
-					this.LoggedIn.fire({
-						username: username
-					});
+					this._collection.save(this.toDbObject(), (function(error) {
+						if(!error) {
+							this._isLoggedIn = true;
+							this._cancelCurrentChallenge();
+							
+							this._user.send("/user/login/success", this);
+							this._user.send("/user/register/success", this);
+							
+							this.LoggedIn.fire({
+								username: username
+							});
+						}
+						
+						else {
+							this._username = oldUsername;
+							
+							this._user.send("/user/register/failure", {
+								reason: "MongoDB error: " + error
+							});
+						}
+					}).bind(this));
 				}
 				
 				else {
@@ -187,14 +200,6 @@ define(function(require) {
 				reason: error
 			});
 		}
-	}
-	
-	User.prototype._save = function() {
-		this._setupDb();
-		
-		this._db.update("lightsquare.users", this._toRow(), {
-			username: this._username
-		});
 	}
 	
 	User.prototype.subscribe = function(url, callback) {
@@ -218,7 +223,7 @@ define(function(require) {
 	}
 	
 	User.prototype.getGamesAsWhiteRatio = function() {
-		Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
+		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
 	}
 	
 	User.prototype._subscribeToUserMessages = function() {
@@ -239,29 +244,7 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/create", (function(options) {
-			this._cancelCurrentChallenge();
-			
-			var challenge = this._app.createChallenge(this, options);
-			
-			challenge.Accepted.addHandler(this, function(data) {
-				this._addGame(data.game);
-				this._user.send("/current_challenge/accepted");
-			});
-			
-			challenge.Expired.addHandler(this, function() {
-				this._currentChallenge = null;
-			});
-			
-			challenge.Canceled.addHandler(this, function() {
-				this._user.send("/current_challenge/canceled");
-			});
-			
-			challenge.Timeout.addHandler(this, function() {
-				this._user.send("/current_challenge/timeout");
-			});
-			
-			this._user.send("/current_challenge", challenge);
-			this._currentChallenge = challenge;
+			this._createChallenge(options);
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/cancel", (function() {
@@ -269,26 +252,11 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/game/spectate", (function(id) {
-			var game = this._app.getGame(id);
-			
-			if(game !== null && !this._session.currentGames.contains(game)) {
-				game.spectate(this);
-				
-				this._addGame(game);
-			}
+			this._spectateGame(id);
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/accept", (function(id) {
-			var challenge = this._app.getChallenge(id);
-			
-			if(challenge !== null) {
-				var game = challenge.accept(this);
-				
-				if(game !== null) {
-					this._addGame(game);
-					this._cancelCurrentChallenge();
-				}
-			}
+			this._acceptChallenge(id);
 		}).bind(this));
 		
 		this._user.subscribe("/request/games", (function(data, client) {
@@ -310,9 +278,49 @@ define(function(require) {
 		}).bind(this));
 	}
 	
+	User.prototype._createChallenge = function(options) {
+		this._cancelCurrentChallenge();
+		
+		var challenge = this._app.createChallenge(this, options);
+		
+		challenge.Accepted.addHandler(this, function(data) {
+			this._addGame(data.game);
+			this._user.send("/current_challenge/accepted");
+		});
+		
+		challenge.Expired.addHandler(this, function() {
+			this._currentChallenge = null;
+		});
+		
+		challenge.Canceled.addHandler(this, function() {
+			this._user.send("/current_challenge/canceled");
+		});
+		
+		challenge.Timeout.addHandler(this, function() {
+			this._user.send("/current_challenge/timeout");
+		});
+		
+		this._user.send("/current_challenge", challenge);
+		this._currentChallenge = challenge;
+		this._lastChallengeCreated = challenge;
+	}
+	
 	User.prototype._cancelCurrentChallenge = function() {
 		if(this._currentChallenge !== null) {
 			this._currentChallenge.cancel();
+		}
+	}
+	
+	User.prototype._acceptChallenge = function(id) {
+		var challenge = this._app.getChallenge(id);
+			
+		if(challenge !== null) {
+			var game = challenge.accept(this);
+			
+			if(game !== null) {
+				this._addGame(game);
+				this._cancelCurrentChallenge();
+			}
 		}
 	}
 	
@@ -322,6 +330,16 @@ define(function(require) {
 		game.GameOver.addHandler(this, function() {
 			this._session.currentGames.remove(game);
 		});
+	}
+	
+	User.prototype._spectateGame = function(id) {
+		var game = this._app.getGame(id);
+			
+		if(game !== null && !this._session.currentGames.contains(game)) {
+			game.spectate(this);
+			
+			this._addGame(game);
+		}
 	}
 	
 	User.prototype._hasGamesInProgress = function() {
@@ -341,39 +359,30 @@ define(function(require) {
 		};
 	}
 	
-	User.prototype._toRow = function() {
+	User.prototype.toDbObject = function() {
 		return {
 			username: this._username,
 			password: this._password,
-			games_played_as_white: this._gamesPlayedAsWhite,
-			games_played_as_black: this._gamesPlayedAsBlack,
-			rating: this._rating
+			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
+			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
+			rating: this._rating,
+			lastChallengeCreated: this._lastChallengeCreated
 		};
 	}
 	
-	User.prototype._loadRow = function(row) {
-		this._username = row.username;
-		this._password = row.password;
-		this._gamesPlayedAsWhite = row.games_played_as_white;
-		this._gamesPlayedAsBlack = row.games_played_as_black;
-		this._rating = row.rating;
+	User.prototype._loadFromDb = function(user) {
+		this._username = user.username;
+		this._password = user.password;
+		this._gamesPlayedAsWhite = user.gamesPlayedAsWhite;
+		this._gamesPlayedAsBlack = user.gamesPlayedAsBlack;
+		this._rating = user.rating;
+		this._lastChallengeCreated = user.lastChallengeCreated;
 	}
 	
 	User.prototype._loadFromSession = function() {
 		if(this._session.user) {
-			var user = this._session.user;
-			
-			this._username = user.getUsername();
-			this._gamesPlayedAsWhite = user.getGamesPlayedAsWhite();
-			this._gamesPlayedAsBlack = user.getGamesPlayedAsBlack();
-			this._rating = user.getRating();
-			this._isLoggedIn = user.isLoggedIn();
-		}
-	}
-	
-	User.prototype._setupDb = function() {
-		if(this._db === null) {
-			this._db = new Mysql();
+			this._loadFromDb(this._session.user.toDbObject());
+			this._isLoggedIn = this._session.user.isLoggedIn();
 		}
 	}
 	

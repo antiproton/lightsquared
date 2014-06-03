@@ -1,6 +1,7 @@
 #!/usr/bin/js
 
 var requirejs = require("requirejs");
+var mongodb = require("mongodb");
 
 requirejs.config({
 	nodeRequire: require,
@@ -16,6 +17,14 @@ requirejs.config({
 });
 
 requirejs(["lib/websocket/server/Server", "./Application"], function(Server, Application) {
-	var server = new Server(8080);
-	var app = new Application(server);
+	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
+		if(error === null) {
+			var server = new Server(8080);
+			var app = new Application(server, db);
+		}
+		
+		else {
+			process.exit(1);
+		}
+	});
 });
