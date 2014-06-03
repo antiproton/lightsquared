@@ -37,6 +37,12 @@ define(function(require) {
 			this.Connected.fire();
 		});
 		
+		this._user.CheckingActivity.addHandler(this, function(activityCheck) {
+			if(this._isLoggedIn || this._hasGamesInProgress()) {
+				activityCheck.registerActivity();
+			}
+		});
+		
 		this._loadFromSession();
 		this._session.user = this;
 		
