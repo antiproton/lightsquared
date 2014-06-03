@@ -79,6 +79,8 @@ define(function(require) {
 		user.getCurrentGames().forEach((function(game) {
 			this._session.currentGames.push(game);
 		}).bind(this));
+		
+		this._loadFromDb(user.toDbObject());
 	}
 	
 	User.prototype.replaceWith = function(user) {
