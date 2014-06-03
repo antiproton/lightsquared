@@ -9,7 +9,7 @@ define(function(require) {
 	
 	function User(user, app, db) {
 		this._id = id();
-		this._collection = db.collection("users");
+		this._db = db.collection("users");
 		this._user = user;
 		this._app = app;
 		this._session = user.getSession();
@@ -100,7 +100,7 @@ define(function(require) {
 		}
 		
 		if(error === null) {
-			this._collection.findOne({
+			this._db.findOne({
 				username: username,
 				password: password
 			}, (function(error, user) {
@@ -155,7 +155,7 @@ define(function(require) {
 		}
 		
 		if(error === null) {
-			this._collection.findOne({
+			this._db.findOne({
 				username: username
 			}, (function(error, existingUser) {
 				if(!existingUser) {
@@ -164,7 +164,7 @@ define(function(require) {
 					this._username = username;
 					this._password = password;
 					
-					this._collection.save(this.toDbObject(), (function(error) {
+					this._db.save(this.toDbObject(), (function(error) {
 						if(!error) {
 							this._isLoggedIn = true;
 							this._cancelCurrentChallenge();
