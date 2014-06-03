@@ -113,7 +113,7 @@ define(function(require) {
 				password: password
 			}, (function(error, user) {
 				if(user) {
-					this._loadFromDb(user);
+					this._loadFromDbObject(user);
 					this._isLoggedIn = true;
 					
 					this._cancelCurrentChallenge();
@@ -379,7 +379,7 @@ define(function(require) {
 		};
 	}
 	
-	User.prototype._loadFromDb = function(user) {
+	User.prototype._loadFromDbObject = function(user) {
 		this._username = user.username;
 		this._password = user.password;
 		this._gamesPlayedAsWhite = user.gamesPlayedAsWhite;
@@ -390,7 +390,7 @@ define(function(require) {
 	
 	User.prototype._loadFromSession = function() {
 		if(this._session.user) {
-			this._loadFromDb(this._session.user.toDbObject());
+			this._loadFromDbObject(this._session.user.toDbObject());
 			this._isLoggedIn = this._session.user.isLoggedIn();
 		}
 	}
