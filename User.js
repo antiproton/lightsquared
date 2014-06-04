@@ -1,6 +1,7 @@
 define(function(require) {
 	var Publisher = require("lib/Publisher");
 	var id = require("lib/id");
+	var time = require("lib/time");
 	var Event = require("lib/Event");
 	var Glicko = require("chess/Glicko");
 	require("lib/Array.getShallowCopy");
@@ -8,6 +9,8 @@ define(function(require) {
 	require("lib/Array.remove");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
+	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
+	var MAX_IDLE_TIME_LOGGED_IN = 1000 * 60 * 60 * 24 * 30;
 	
 	function User(user, app, db) {
 		this._id = id();
@@ -39,7 +42,7 @@ define(function(require) {
 		});
 		
 		this._user.CheckingActivity.addHandler(this, function(activityCheck) {
-			if(this._isLoggedIn || this._hasGamesInProgress()) {
+			if(this._isActive()) {
 				activityCheck.registerActivity();
 			}
 		});
@@ -240,6 +243,13 @@ define(function(require) {
 	
 	User.prototype.isLoggedIn = function() {
 		return this._isLoggedIn;
+	}
+	
+	User.prototype._isActive = function() {
+		var timeLastActive = this._user.getTimeLastActive();
+		var maxIdleTime = this._isLoggedIn ? MAX_IDLE_TIME_LOGGED_IN : MAX_IDLE_TIME_ANONYMOUS;
+		
+		return (timeLastActive >= time() - maxIdleTime || this._hasGamesInProgress());
 	}
 	
 	User.prototype.getGamesAsWhiteRatio = function() {
