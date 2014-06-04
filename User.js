@@ -218,11 +218,13 @@ define(function(require) {
 	}
 	
 	User.prototype._updateDb = function() {
-		this._db.update({
-			username: this._username
-		}, {
-			$set: this.getPersistentJson()
-		}, function() {});
+		if(this._isLoggedIn) {
+			this._db.update({
+				username: this._username
+			}, {
+				$set: this.getPersistentJson()
+			}, function() {});
+		}
 	}
 	
 	User.prototype.subscribe = function(url, callback) {
@@ -266,10 +268,8 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/user/logout", (function() {
-			if(this._isLoggedIn) {
-				this._updateDb();
-				this._logout();
-			}
+			this._updateDb();
+			this._logout();
 		}).bind(this));
 		
 		this._user.subscribe("/user/register", (function(data) {
