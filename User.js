@@ -80,7 +80,7 @@ define(function(require) {
 			this._session.currentGames.push(game);
 		}).bind(this));
 		
-		this._loadFromDb(user.toDbObject());
+		this._loadFromDbObject(user.toDbObject());
 	}
 	
 	User.prototype.replaceWith = function(user) {
@@ -197,7 +197,7 @@ define(function(require) {
 				
 				else {
 					this._user.send("/user/register/failure", {
-						reason: "Sorry, '" + username + "' is already registered"
+						reason: "The username '" + username + "' is already registered"
 					});
 				}
 			}).bind(this));
