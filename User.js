@@ -45,6 +45,7 @@ define(function(require) {
 		});
 		
 		this._user.Deregistering.addHandler(this, function() {
+			this._updateDb();
 			this._logout();
 		});
 		
@@ -93,6 +94,7 @@ define(function(require) {
 			newUser: user
 		});
 		
+		this._logout();
 		this._user.send("/user/replaced");
 		this._user.disconnect();
 	}
@@ -147,7 +149,6 @@ define(function(require) {
 	
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
-			this._updateDb();
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._username = ANONYMOUS_USERNAME;
@@ -192,7 +193,7 @@ define(function(require) {
 							this._username = ANONYMOUS_USERNAME;
 							
 							this._user.send("/user/register/failure", {
-								reason: "MongoDB error: " + error
+								reason: "Server error: " + error
 							});
 						}
 					}).bind(this));
@@ -218,7 +219,7 @@ define(function(require) {
 			username: this._username
 		}, {
 			$set: this.getPersistentJson()
-		});
+		}, function() {});
 	}
 	
 	User.prototype.subscribe = function(url, callback) {
@@ -255,7 +256,10 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/user/logout", (function() {
-			this._logout();
+			if(this._isLoggedIn) {
+				this._updateDb();
+				this._logout();
+			}
 		}).bind(this));
 		
 		this._user.subscribe("/user/register", (function(data) {
@@ -373,14 +377,19 @@ define(function(require) {
 	}
 	
 	User.prototype.getPersistentJson = function(password) {
-		return {
+		var data = {
 			username: this._username,
-			password: password,
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._rating,
 			lastChallengeOptions: this._lastChallengeOptions
 		};
+		
+		if(password) {
+			data.password = password;
+		}
+		
+		return data;
 	}
 	
 	User.prototype._getPrivateJson = function() {
