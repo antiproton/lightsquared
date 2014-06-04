@@ -26,8 +26,8 @@ define(function(require) {
 			}
 		}
 		
-		this._acceptRatingMin = this._getAbsoluteGuestRating(this._options.acceptRatingMin);
-		this._acceptRatingMax = this._getAbsoluteGuestRating(this._options.acceptRatingMax);
+		this._acceptRatingMin = this._getAbsoluteRating(this._options.acceptRatingMin);
+		this._acceptRatingMax = this._getAbsoluteRating(this._options.acceptRatingMax);
 		
 		this._timeoutTimer = setTimeout((function() {
 			this._timeout();
@@ -93,7 +93,7 @@ define(function(require) {
 		}
 	}
 	
-	Challenge.prototype._getAbsoluteGuestRating = function(ratingSpecifier) {
+	Challenge.prototype._getAbsoluteRating = function(ratingSpecifier) {
 		var firstChar = ratingSpecifier.charAt(0);
 		
 		if(firstChar === "-" || firstChar === "+") {
