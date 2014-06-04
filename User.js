@@ -7,14 +7,15 @@ define(function(require) {
 	require("lib/Array.contains");
 	require("lib/Array.remove");
 	
+	var ANONYMOUS_USERNAME = "Anonymous";
+	
 	function User(user, app, db) {
 		this._id = id();
 		this._db = db.collection("users");
 		this._user = user;
 		this._app = app;
 		this._session = user.getSession();
-		this._username = "Anonymous";
-		this._password = null;
+		this._username = ANONYMOUS_USERNAME;
 		this._isLoggedIn = false;
 		this._publisher = new Publisher(this);
 		this._gamesPlayedAsWhite = 0;
@@ -74,13 +75,13 @@ define(function(require) {
 	}
 	
 	User.prototype.replace = function(user) {
+		this._loadJson(user.getPersistentJson());
+		
 		user.replaceWith(this);
 		
 		user.getCurrentGames().forEach((function(game) {
 			this._session.currentGames.push(game);
 		}).bind(this));
-		
-		this._loadFromDbObject(user.toDbObject());
 	}
 	
 	User.prototype.replaceWith = function(user) {
@@ -113,7 +114,7 @@ define(function(require) {
 				password: password
 			}, (function(error, user) {
 				if(user) {
-					this._loadFromDbObject(user);
+					this._loadJson(user);
 					this._isLoggedIn = true;
 					
 					this._cancelCurrentChallenge();
@@ -144,7 +145,7 @@ define(function(require) {
 		if(this._isLoggedIn) {
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
-			this._username = "Anonymous";
+			this._username = ANONYMOUS_USERNAME;
 			this._rating = Glicko.INITIAL_RATING;
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
@@ -167,18 +168,15 @@ define(function(require) {
 				username: username
 			}, (function(error, existingUser) {
 				if(!existingUser) {
-					var oldUsername = this._username;
-					
 					this._username = username;
-					this._password = password;
 					
-					this._db.save(this.toDbObject(), (function(error) {
+					this._db.save(this.getPersistentJson(password), (function(error) {
 						if(!error) {
 							this._isLoggedIn = true;
 							this._cancelCurrentChallenge();
 							
 							this._user.send("/user/login/success", this);
-							this._user.send("/user/register/success", this);
+							this._user.send("/user/register/success");
 							
 							this.LoggedIn.fire({
 								username: username
@@ -186,7 +184,7 @@ define(function(require) {
 						}
 						
 						else {
-							this._username = oldUsername;
+							this._username = ANONYMOUS_USERNAME;
 							
 							this._user.send("/user/register/failure", {
 								reason: "MongoDB error: " + error
@@ -368,10 +366,10 @@ define(function(require) {
 		};
 	}
 	
-	User.prototype.toDbObject = function() {
+	User.prototype.getPersistentJson = function(password) {
 		return {
 			username: this._username,
-			password: this._password,
+			password: password,
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._rating,
@@ -379,9 +377,8 @@ define(function(require) {
 		};
 	}
 	
-	User.prototype._loadFromDbObject = function(user) {
+	User.prototype._loadJson = function(user) {
 		this._username = user.username;
-		this._password = user.password;
 		this._gamesPlayedAsWhite = user.gamesPlayedAsWhite;
 		this._gamesPlayedAsBlack = user.gamesPlayedAsBlack;
 		this._rating = user.rating;
@@ -390,7 +387,7 @@ define(function(require) {
 	
 	User.prototype._loadFromSession = function() {
 		if(this._session.user) {
-			this._loadFromDbObject(this._session.user.toDbObject());
+			this._loadJson(this._session.user.getPersistentJson());
 			this._isLoggedIn = this._session.user.isLoggedIn();
 		}
 	}
