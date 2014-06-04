@@ -123,7 +123,7 @@ define(function(require) {
 						username: username
 					});
 					
-					this._user.send("/user/login/success", this);
+					this._user.send("/user/login/success", this._getPrivateJson());
 				}
 				
 				else {
@@ -175,7 +175,7 @@ define(function(require) {
 							this._isLoggedIn = true;
 							this._cancelCurrentChallenge();
 							
-							this._user.send("/user/login/success", this);
+							this._user.send("/user/login/success", this._getPrivateJson());
 							this._user.send("/user/register/success");
 							
 							this.LoggedIn.fire({
@@ -270,14 +270,7 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/request/user", (function(data, client) {
-			client.send("/user", {
-				id: this._id,
-				username: this._username,
-				isLoggedIn: this._isLoggedIn,
-				rating: this._rating,
-				currentChallenge: this._currentChallenge,
-				lastChallengeOptions: this._lastChallengeOptions
-			});
+			client.send("/user", this._getPrivateJson());
 		}).bind(this));
 		
 		this._user.subscribe("/request/challenges", (function(data, client) {
@@ -373,6 +366,17 @@ define(function(require) {
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._rating,
+			lastChallengeOptions: this._lastChallengeOptions
+		};
+	}
+	
+	User.prototype._getPrivateJson = function() {
+		return {
+			id: this._id,
+			username: this._username,
+			isLoggedIn: this._isLoggedIn,
+			rating: this._rating,
+			currentChallenge: this._currentChallenge,
 			lastChallengeOptions: this._lastChallengeOptions
 		};
 	}
