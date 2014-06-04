@@ -44,6 +44,10 @@ define(function(require) {
 			}
 		});
 		
+		this._user.Deregistering.addHandler(this, function() {
+			this._logout();
+		});
+		
 		this._loadFromSession();
 		this._session.user = this;
 		
@@ -89,8 +93,8 @@ define(function(require) {
 			newUser: user
 		});
 		
-		this._logout();
 		this._user.send("/user/replaced");
+		this._user.disconnect();
 	}
 	
 	User.prototype.getId = function() {
@@ -143,6 +147,7 @@ define(function(require) {
 	
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
+			this._updateDb();
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._username = ANONYMOUS_USERNAME;
@@ -206,6 +211,14 @@ define(function(require) {
 				reason: error
 			});
 		}
+	}
+	
+	User.prototype._updateDb = function() {
+		this._db.update({
+			username: this._username
+		}, {
+			$set: this.getPersistentJson()
+		});
 	}
 	
 	User.prototype.subscribe = function(url, callback) {
