@@ -120,7 +120,10 @@ define(function(require) {
 			var url = "/game/" + this._id + "/chat";
 			
 			if(this.userIsPlaying(user) || !this._game.isInProgress()) {
-				this._sendToAllUsers(url, message);
+				this._sendToAllUsers(url, {
+					from: user.getUsername(),
+					body: message
+				});
 			}
 			
 			else {
