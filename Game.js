@@ -115,6 +115,18 @@ define(function(require) {
 			});
 			
 		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/chat", (function(message) {
+			var url = "/game/" + this._id + "/chat";
+			
+			if(this.userIsPlaying(user) || !this._game.isInProgress()) {
+				this._sendToAllUsers(url, message);
+			}
+			
+			else {
+				this._sendToSpectators(url, message);
+			}
+		}).bind(this));
 	}
 	
 	Game.prototype._subscribeToPlayerMessages = function(user) {
@@ -215,6 +227,12 @@ define(function(require) {
 		users = users.concat(this._spectators);
 		
 		users.forEach(function(user) {
+			user.send(url, data);
+		});
+	}
+	
+	Game.prototype._sendToSpectators = function(url, data) {
+		this._spectators.forEach(function(user) {
 			user.send(url, data);
 		});
 	}
