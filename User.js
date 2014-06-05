@@ -27,6 +27,11 @@ define(function(require) {
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
 		
+		this._preferences = {
+			alwaysQueen: false,
+			pieceStyle: null
+		};
+		
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
 		this.LoggedIn = new Event(this);
@@ -303,6 +308,14 @@ define(function(require) {
 		this._user.subscribe("/request/challenges", (function(data, client) {
 			client.send("/challenges", this._app.getOpenChallenges());
 		}).bind(this));
+		
+		this._user.subscribe("/user/preferences/update", (function(preferences) {
+			for(var preference in this._preferences) {
+				if(preference in preferences) {
+					this._preferences[preference] = preferences[preference];
+				}
+			}
+		}).bind(this));
 	}
 	
 	User.prototype._createChallenge = function(options) {
@@ -392,7 +405,8 @@ define(function(require) {
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._rating,
-			lastChallengeOptions: this._lastChallengeOptions
+			lastChallengeOptions: this._lastChallengeOptions,
+			preferences: this._preferences
 		};
 		
 		if(password) {
@@ -409,7 +423,8 @@ define(function(require) {
 			isLoggedIn: this._isLoggedIn,
 			rating: this._rating,
 			currentChallenge: this._currentChallenge,
-			lastChallengeOptions: this._lastChallengeOptions
+			lastChallengeOptions: this._lastChallengeOptions,
+			preferences: this._preferences
 		};
 	}
 	
@@ -419,6 +434,7 @@ define(function(require) {
 		this._gamesPlayedAsBlack = user.gamesPlayedAsBlack;
 		this._rating = user.rating;
 		this._lastChallengeOptions = user.lastChallengeOptions;
+		this._preferences = user.preferences;
 	}
 	
 	User.prototype._loadFromSession = function() {
