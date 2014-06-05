@@ -14,7 +14,7 @@ define(function(require) {
 	
 	function User(user, app, db) {
 		this._id = id();
-		this._db = db.collection("users");
+		this._db = db;
 		this._user = user;
 		this._app = app;
 		this._session = user.getSession();
