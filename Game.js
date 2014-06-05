@@ -275,6 +275,7 @@ define(function(require) {
 			white: this._players[Colour.white],
 			black: this._players[Colour.black],
 			history: history,
+			isInProgress: this._game.isInProgress(),
 			result: this._game.getResult(),
 			startTime: this._game.getStartTime(),
 			endTime: this._game.getEndTime(),
