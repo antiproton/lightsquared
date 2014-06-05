@@ -37,7 +37,7 @@ define(function(require) {
 			this._sendToAllUsers("/challenge/expired", id);
 			
 			game.GameOver.addHandler(this, function() {
-				this._db.collection("games").insert(game.toJSON());
+				this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
 			});
 			
 			delete this._openChallenges[id];
