@@ -119,15 +119,17 @@ define(function(require) {
 		user.subscribe("/game/" + this._id + "/chat", (function(message) {
 			var url = "/game/" + this._id + "/chat";
 			
+			var chatMessage = {
+				from: user.getUsername(),
+				body: message
+			};
+			
 			if(this.userIsPlaying(user) || !this._game.isInProgress()) {
-				this._sendToAllUsers(url, {
-					from: user.getUsername(),
-					body: message
-				});
+				this._sendToAllUsers(url, chatMessage);
 			}
 			
 			else {
-				this._sendToSpectators(url, message);
+				this._sendToSpectators(url, chatMessage);
 			}
 		}).bind(this));
 	}
