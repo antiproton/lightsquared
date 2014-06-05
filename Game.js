@@ -47,7 +47,7 @@ define(function(require) {
 		this._newRatings[Colour.black] = null;
 		
 		this._isUndoRequested = false;
-		this._drawOfferedBy = null;
+		this._isDrawOffered = false;
 		
 		for(var colour in this._players) {
 			this._setupPlayer(this._players[colour], colour);
@@ -170,6 +170,8 @@ define(function(require) {
 			var move = this._game.move(from, to, promoteTo);
 			
 			if(move !== null && move.isLegal()) {
+				this._isDrawOffered = false;
+				this._isUndoRequested = false;
 				this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
 			}
 		}
@@ -199,23 +201,19 @@ define(function(require) {
 		var playerColour = this._getPlayerColour(user);
 		
 		if(playerColour === this._game.getPosition().getActiveColour().opposite) {
-			this._drawOfferedBy = playerColour;
+			this._isDrawOffered = true;
 			this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour);
 		}
 	}
 	
 	Game.prototype._claimDraw = function(user) {
-		var playerColour = this._getPlayerColour(user);
-		
-		if(playerColour !== null) {
+		if(this.userIsPlaying(user)) {
 			this._game.claimDraw();
 		}
 	}
 	
 	Game.prototype._acceptDraw = function(user) {
-		var playerColour = this._getPlayerColour(user);
-		
-		if(playerColour === this._game.getPosition().getActiveColour() && this._drawOfferedBy === playerColour.opposite) {
+		if(this._getPlayerColour(user) === this._game.getPosition().getActiveColour() && this._isDrawOffered) {
 			this._game.drawByAgreement();
 		}
 	}
