@@ -11,9 +11,10 @@ define(function(require) {
 		this._openChallenges = {};
 		this._games = {};
 		this._publisher = new Publisher();
+		this._db = db;
 		
 		server.UserConnected.addHandler(this, function(data) {
-			var user = new User(data.user, this, db.collection("users"));
+			var user = new User(data.user, this, this._db.collection("users"));
 			
 			this._setupUser(user);
 			this._replaceExistingLoggedInUser(user);
@@ -34,6 +35,10 @@ define(function(require) {
 			
 			this._games[game.getId()] = game;
 			this._sendToAllUsers("/challenge/expired", id);
+			
+			game.GameOver.addHandler(this, function() {
+				this._db.collection("games").insert(game.toJSON());
+			});
 			
 			delete this._openChallenges[id];
 			
