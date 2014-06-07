@@ -206,7 +206,7 @@ define(function(require) {
 		
 		if(playerColour === this._game.getPosition().getActiveColour().opposite) {
 			this._isDrawOffered = true;
-			this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour);
+			this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour.fenString);
 		}
 	}
 	
