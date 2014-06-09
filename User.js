@@ -29,7 +29,9 @@ define(function(require) {
 		
 		this._prefs = {
 			alwaysQueen: false,
-			pieceStyle: null
+			pieceStyle: null,
+			boardSize: null,
+			boardStyle: null
 		};
 		
 		this.Connected = new Event(this);
