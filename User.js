@@ -27,7 +27,7 @@ define(function(require) {
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
 		
-		this._preferences = {
+		this._prefs = {
 			alwaysQueen: false,
 			pieceStyle: null
 		};
@@ -309,10 +309,10 @@ define(function(require) {
 			client.send("/challenges", this._app.getOpenChallenges());
 		}).bind(this));
 		
-		this._user.subscribe("/user/preferences/update", (function(preferences) {
-			for(var preference in this._preferences) {
-				if(preference in preferences) {
-					this._preferences[preference] = preferences[preference];
+		this._user.subscribe("/user/prefs/update", (function(prefs) {
+			for(var pref in this._prefs) {
+				if(pref in prefs) {
+					this._prefs[pref] = prefs[pref];
 				}
 			}
 		}).bind(this));
@@ -406,7 +406,7 @@ define(function(require) {
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._rating,
 			lastChallengeOptions: this._lastChallengeOptions,
-			preferences: this._preferences
+			prefs: this._prefs
 		};
 		
 		if(password) {
@@ -424,7 +424,7 @@ define(function(require) {
 			rating: this._rating,
 			currentChallenge: this._currentChallenge,
 			lastChallengeOptions: this._lastChallengeOptions,
-			preferences: this._preferences
+			prefs: this._prefs
 		};
 	}
 	
@@ -434,7 +434,7 @@ define(function(require) {
 		this._gamesPlayedAsBlack = user.gamesPlayedAsBlack;
 		this._rating = user.rating;
 		this._lastChallengeOptions = user.lastChallengeOptions;
-		this._preferences = user.preferences;
+		this._prefs = user.prefs;
 	}
 	
 	User.prototype._loadFromSession = function() {
