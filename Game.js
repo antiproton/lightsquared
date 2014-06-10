@@ -167,7 +167,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
-		var colour = this._game.getPosition().getActiveColour();
+		var colour = this._game.getActiveColour();
 		
 		if(this._players[colour] === user) {
 			var index = this._game.getHistory().length;
@@ -204,7 +204,7 @@ define(function(require) {
 	Game.prototype._offerDraw = function(user) {
 		var playerColour = this._getPlayerColour(user);
 		
-		if(playerColour === this._game.getPosition().getActiveColour().opposite) {
+		if(playerColour === this._game.getActiveColour().opposite) {
 			this._isDrawOffered = true;
 			this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour.fenString);
 		}
@@ -217,7 +217,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._acceptDraw = function(user) {
-		if(this._getPlayerColour(user) === this._game.getPosition().getActiveColour() && this._isDrawOffered) {
+		if(this._getPlayerColour(user) === this._game.getActiveColour() && this._isDrawOffered) {
 			this._game.drawByAgreement();
 		}
 	}
