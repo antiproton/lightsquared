@@ -11,6 +11,7 @@ define(function(require) {
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
 	var MAX_IDLE_TIME_LOGGED_IN = 1000 * 60 * 60 * 24 * 30;
+	var INACTIVE_GAMES_EXPIRE = 1000 * 60 * 5;
 	
 	function User(user, app, db) {
 		this._id = id();
@@ -41,6 +42,7 @@ define(function(require) {
 		this.Replaced = new Event(this);
 		
 		this._user.Disconnected.addHandler(this, function() {
+			this._removeInactiveGames();
 			this.Disconnected.fire();
 		});
 		
@@ -369,17 +371,15 @@ define(function(require) {
 	User.prototype._addGame = function(game) {
 		this._session.currentGames.push(game);
 		
-		game.GameOver.addHandler(this, function() {
-			this._removeGame(game);
-		});
-		
 		game.Aborted.addHandler(this, function() {
-			this._removeGame(game);
+			this._session.currentGames.remove(game);
 		});
 	}
 	
-	User.prototype._removeGame = function(game) {
-		this._session.currentGames.remove(game);
+	User.prototype._removeInactiveGames = function() {
+		this._session.currentGames = this._session.currentGames.filter((function(game) {
+			return (game.isInProgress() || time() - game.getEndTime() > INACTIVE_GAMES_EXPIRE);
+		}).bind(this));
 	}
 	
 	User.prototype._spectateGame = function(id) {
