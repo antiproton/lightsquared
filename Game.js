@@ -14,6 +14,7 @@ define(function(require) {
 		this._id = id();
 		
 		this.GameOver = new Event(this);
+		this.Aborted = new Event(this);
 		
 		this._options = {
 			initialTime: "10m",
@@ -52,7 +53,12 @@ define(function(require) {
 		for(var colour in this._players) {
 			this._setupPlayer(this._players[colour], colour);
 		}
+		
+		this._isAborted = false;
+		this._setAbortTimer();
 	}
+	
+	Game.WAIT_BEFORE_ABORTING_NONSTARTED = 1000 * 30;
 	
 	Game.prototype.getId = function() {
 		return this._id;
@@ -167,16 +173,24 @@ define(function(require) {
 	}
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
-		var colour = this._game.getActiveColour();
-		
-		if(this._players[colour] === user) {
-			var index = this._game.getHistory().length;
-			var move = this._game.move(from, to, promoteTo);
+		if(!this._isAborted) {
+			var colour = this._game.getActiveColour();
 			
-			if(move !== null && move.isLegal()) {
-				this._isDrawOffered = false;
-				this._isUndoRequested = false;
-				this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
+			if(this._players[colour] === user) {
+				var index = this._game.getHistory().length;
+				var move = this._game.move(from, to, promoteTo);
+				
+				if(move !== null && move.isLegal()) {
+					this._isDrawOffered = false;
+					this._isUndoRequested = false;
+					this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
+					
+					this._clearAbortTimer();
+					
+					if(!this._game.timingHasStarted()) {
+						this._setAbortTimer();
+					}
+				}
 			}
 		}
 	}
@@ -194,31 +208,39 @@ define(function(require) {
 	}
 	
 	Game.prototype._resign = function(user) {
-		var playerColour = this._getPlayerColour(user);
-		
-		if(playerColour !== null) {
-			this._game.resign(playerColour);
+		if(!this._isAborted) {
+			var playerColour = this._getPlayerColour(user);
+			
+			if(playerColour !== null) {
+				this._game.resign(playerColour);
+			}
 		}
 	}
 	
 	Game.prototype._offerDraw = function(user) {
-		var playerColour = this._getPlayerColour(user);
-		
-		if(playerColour === this._game.getActiveColour().opposite) {
-			this._isDrawOffered = true;
-			this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour.fenString);
+		if(!this._isAborted) {
+			var playerColour = this._getPlayerColour(user);
+			
+			if(playerColour === this._game.getActiveColour().opposite) {
+				this._isDrawOffered = true;
+				this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour.fenString);
+			}
 		}
 	}
 	
 	Game.prototype._claimDraw = function(user) {
-		if(this.userIsPlaying(user)) {
-			this._game.claimDraw();
+		if(!this._isAborted) {
+			if(this.userIsPlaying(user)) {
+				this._game.claimDraw();
+			}
 		}
 	}
 	
 	Game.prototype._acceptDraw = function(user) {
-		if(this._getPlayerColour(user) === this._game.getActiveColour() && this._isDrawOffered) {
-			this._game.drawByAgreement();
+		if(!this._isAborted) {
+			if(this._getPlayerColour(user) === this._game.getActiveColour() && this._isDrawOffered) {
+				this._game.drawByAgreement();
+			}
 		}
 	}
 	
@@ -240,6 +262,21 @@ define(function(require) {
 		this._spectators.forEach(function(user) {
 			user.send(url, data);
 		});
+	}
+	
+	Game.prototype._setAbortTimer = function() {
+		this._abortTimer = setTimeout((function() {
+			this._abort();
+		}).bind(this), Game.WAIT_BEFORE_ABORTING_NONSTARTED);
+	}
+	
+	Game.prototype._clearAbortTimer = function() {
+		clearTimeout(this._abortTimer);
+	}
+	
+	Game.prototype._abort = function() {
+		this.Aborted.fire();
+		this._sendToAllUsers("/game/" + this._id + "/aborted");
 	}
 	
 	Game.prototype._gameOver = function(result) {
