@@ -78,6 +78,10 @@ define(function(require) {
 		return (this._players[Colour.white] === user || this._players[Colour.black] === user);
 	}
 	
+	Game.prototype.isInProgress = function() {
+		return this._game.isInProgress();
+	}
+	
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
 			
@@ -130,7 +134,7 @@ define(function(require) {
 					body: message
 				};
 				
-				if(this.userIsPlaying(user) || !this._game.isInProgress()) {
+				if(this.userIsPlaying(user) || !this.isInProgress()) {
 					this._sendToAllUsers(url, chatMessage);
 				}
 				
@@ -316,7 +320,7 @@ define(function(require) {
 			white: this._players[Colour.white],
 			black: this._players[Colour.black],
 			history: history,
-			isInProgress: this._game.isInProgress(),
+			isInProgress: this.isInProgress(),
 			result: this._game.getResult(),
 			startTime: this._game.getStartTime(),
 			endTime: this._game.getEndTime(),
