@@ -43,6 +43,10 @@ define(function(require) {
 				delete this._games[gameId];
 			});
 			
+			game.Aborted.addHandler(this, function() {
+				delete this._games[gameId];
+			});
+			
 			delete this._openChallenges[id];
 			
 			return true;
