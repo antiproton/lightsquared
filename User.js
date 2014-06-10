@@ -363,7 +363,7 @@ define(function(require) {
 	
 	User.prototype._removeInactiveGames = function() {
 		this._currentGames = this._currentGames.filter((function(game) {
-			return (game.isInProgress() || time() - game.getEndTime() > INACTIVE_GAMES_EXPIRE);
+			return (game.isInProgress() || time() - game.getEndTime() < INACTIVE_GAMES_EXPIRE);
 		}).bind(this));
 	}
 	
