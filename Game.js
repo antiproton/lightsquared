@@ -7,6 +7,7 @@ define(function(require) {
 	var Square = require("chess/Square");
 	var Glicko = require("chess/Glicko");
 	var Event = require("lib/Event");
+	var jsonchess = require("jsonchess/constants");
 	require("lib/Array.remove");
 	require("lib/Array.contains");
 	
@@ -57,8 +58,6 @@ define(function(require) {
 		this._isAborted = false;
 		this._setAbortTimer();
 	}
-	
-	Game.WAIT_BEFORE_ABORTING_NONSTARTED = 1000 * 30;
 	
 	Game.prototype.getId = function() {
 		return this._id;
@@ -267,7 +266,7 @@ define(function(require) {
 	Game.prototype._setAbortTimer = function() {
 		this._abortTimer = setTimeout((function() {
 			this._abort();
-		}).bind(this), Game.WAIT_BEFORE_ABORTING_NONSTARTED);
+		}).bind(this), jsonchess.TIME_FOR_MOVES_BEFORE_CLOCK_START);
 	}
 	
 	Game.prototype._clearAbortTimer = function() {
