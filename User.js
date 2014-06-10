@@ -18,13 +18,13 @@ define(function(require) {
 		this._db = db;
 		this._user = user;
 		this._app = app;
-		this._session = user.getSession();
 		this._username = ANONYMOUS_USERNAME;
 		this._isLoggedIn = false;
 		this._publisher = new Publisher(this);
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
 		this._rating = Glicko.INITIAL_RATING;
+		this._currentGames = [];
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
 		
@@ -61,18 +61,11 @@ define(function(require) {
 			this._logout();
 		});
 		
-		this._loadFromSession();
-		this._session.user = this;
-		
-		if(!this._session.currentGames) {
-			this._session.currentGames = [];
-		}
-		
 		this._subscribeToUserMessages();
 	}
 	
 	User.prototype.getCurrentGames = function() {
-		return this._session.currentGames.getShallowCopy();
+		return this._currentGames.getShallowCopy();
 	}
 	
 	User.prototype.getRating = function() {
@@ -97,7 +90,7 @@ define(function(require) {
 		user.replaceWith(this);
 		
 		user.getCurrentGames().forEach((function(game) {
-			this._session.currentGames.push(game);
+			this._currentGames.push(game);
 		}).bind(this));
 	}
 	
@@ -302,7 +295,7 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/request/games", (function(data, client) {
-			client.send("/games", this._session.currentGames);
+			client.send("/games", this._currentGames);
 		}).bind(this));
 		
 		this._user.subscribe("/request/user", (function(data, client) {
@@ -369,15 +362,15 @@ define(function(require) {
 	}
 	
 	User.prototype._addGame = function(game) {
-		this._session.currentGames.push(game);
+		this._currentGames.push(game);
 		
 		game.Aborted.addHandler(this, function() {
-			this._session.currentGames.remove(game);
+			this._currentGames.remove(game);
 		});
 	}
 	
 	User.prototype._removeInactiveGames = function() {
-		this._session.currentGames = this._session.currentGames.filter((function(game) {
+		this._currentGames = this._currentGames.filter((function(game) {
 			return (game.isInProgress() || time() - game.getEndTime() > INACTIVE_GAMES_EXPIRE);
 		}).bind(this));
 	}
@@ -385,7 +378,7 @@ define(function(require) {
 	User.prototype._spectateGame = function(id) {
 		var game = this._app.getGame(id);
 			
-		if(game !== null && !this._session.currentGames.contains(game)) {
+		if(game !== null && !this._currentGames.contains(game)) {
 			game.spectate(this);
 			
 			this._addGame(game);
@@ -393,7 +386,7 @@ define(function(require) {
 	}
 	
 	User.prototype._hasGamesInProgress = function() {
-		return this._session.currentGames.some((function(game) {
+		return this._currentGames.some((function(game) {
 			return game.userIsPlaying(this);
 		}).bind(this));
 	}
@@ -445,13 +438,6 @@ define(function(require) {
 		this._rating = user.rating;
 		this._lastChallengeOptions = user.lastChallengeOptions;
 		this._prefs = user.prefs;
-	}
-	
-	User.prototype._loadFromSession = function() {
-		if(this._session.user) {
-			this._loadJson(this._session.user.getPersistentJson());
-			this._isLoggedIn = this._session.user.isLoggedIn();
-		}
 	}
 	
 	return User;
