@@ -279,9 +279,11 @@ define(function(require) {
 	}
 	
 	Game.prototype._abort = function() {
-		this._isAborted = true;
-		this.Aborted.fire();
-		this._sendToAllUsers("/game/" + this._id + "/aborted");
+		if(this.isInProgress()) {
+			this._isAborted = true;
+			this.Aborted.fire();
+			this._sendToAllUsers("/game/" + this._id + "/aborted");
+		}
 	}
 	
 	Game.prototype._gameOver = function(result) {
