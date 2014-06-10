@@ -92,6 +92,7 @@ define(function(require) {
 			
 			this._players[colour] = newUser;
 			this._setupPlayer(newUser, colour);
+			this.spectate(user);
 		});
 		
 		user.LoggedOut.addHandler(this, function() {
