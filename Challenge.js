@@ -10,8 +10,6 @@ define(function(require) {
 		
 		this.Expired = new Event(this);
 		this.Accepted = new Event(this);
-		this.Timeout = new Event(this);
-		this.Canceled = new Event(this);
 		
 		this._options = {
 			initialTime: "10m",
@@ -76,12 +74,10 @@ define(function(require) {
 	
 	Challenge.prototype.cancel = function() {
 		this._clearTimeoutTimer();
-		this.Canceled.fire();
 		this.Expired.fire();
 	}
 	
 	Challenge.prototype._timeout = function() {
-		this.Timeout.fire();
 		this.Expired.fire();
 	}
 	

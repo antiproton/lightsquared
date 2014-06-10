@@ -35,7 +35,6 @@ define(function(require) {
 			var gameId = game.getId();
 			
 			this._games[gameId] = game;
-			this._sendToAllUsers("/challenge/expired", id);
 			
 			game.GameOver.addHandler(this, function() {
 				this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
