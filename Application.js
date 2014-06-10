@@ -32,12 +32,15 @@ define(function(require) {
 		
 		challenge.Accepted.addHandler(this, function(data) {
 			var game = data.game;
+			var gameId = game.getId();
 			
-			this._games[game.getId()] = game;
+			this._games[gameId] = game;
 			this._sendToAllUsers("/challenge/expired", id);
 			
 			game.GameOver.addHandler(this, function() {
 				this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
+				
+				delete this._games[gameId];
 			});
 			
 			delete this._openChallenges[id];
