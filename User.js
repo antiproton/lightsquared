@@ -370,8 +370,16 @@ define(function(require) {
 		this._session.currentGames.push(game);
 		
 		game.GameOver.addHandler(this, function() {
-			this._session.currentGames.remove(game);
+			this._removeGame(game);
 		});
+		
+		game.Aborted.addHandler(this, function() {
+			this._removeGame(game);
+		});
+	}
+	
+	User.prototype._removeGame = function(game) {
+		this._session.currentGames.remove(game);
 	}
 	
 	User.prototype._spectateGame = function(id) {
