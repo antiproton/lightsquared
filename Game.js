@@ -78,6 +78,18 @@ define(function(require) {
 		return (this._players[Colour.white] === user || this._players[Colour.black] === user);
 	}
 	
+	Game.prototype._getPlayerColour = function(user) {
+		var playerColour = null;
+		
+		Colour.forEach(function(colour) {
+			if(this._players[colour] === user) {
+				playerColour = colour;
+			}
+		}, this);
+		
+		return playerColour;
+	}
+	
 	Game.prototype.isInProgress = function() {
 		return this._game.isInProgress();
 	}
@@ -300,18 +312,6 @@ define(function(require) {
 		this.GameOver.fire({
 			result: result
 		});
-	}
-	
-	Game.prototype._getPlayerColour = function(user) {
-		var playerColour = null;
-		
-		Colour.forEach(function(colour) {
-			if(this._players[colour] === user) {
-				playerColour = colour;
-			}
-		}, this);
-		
-		return playerColour;
 	}
 	
 	Game.prototype.toJSON = function() {
