@@ -60,6 +60,10 @@ define(function(require) {
 				timeIncrement: this._options.timeIncrement
 			});
 			
+			[white, black].forEach(function(player) {
+				player.send("/game", game);
+			});
+			
 			this._clearTimeoutTimer();
 			
 			this.Accepted.fire({

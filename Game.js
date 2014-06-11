@@ -101,14 +101,15 @@ define(function(require) {
 	
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
-			
-		user.send("/game", this);
 		
 		user.Replaced.addHandler(this, function(data) {
 			var newUser = data.newUser;
 			
 			this._players[colour] = newUser;
 			this._setupPlayer(newUser, colour);
+			
+			newUser.send("/game", this);
+			
 			this.spectate(user);
 		});
 		
