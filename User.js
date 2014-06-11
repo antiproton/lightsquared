@@ -356,9 +356,13 @@ define(function(require) {
 	User.prototype._addGame = function(game) {
 		this._currentGames.push(game);
 		
-		game.Aborted.addHandler(this, function() {
+		game.Aborted.addHandler(this, (function() {
 			this._currentGames.remove(game);
-		});
+		}));
+		
+		game.Rematch.addHandler(this, (function(data) {
+			this._addGame(data.game);
+		}).bind(this));
 	}
 	
 	User.prototype._removeInactiveGames = function() {
