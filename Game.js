@@ -16,6 +16,7 @@ define(function(require) {
 		
 		this.GameOver = new Event(this);
 		this.Aborted = new Event(this);
+		this.Rematch = new Event(this);
 		
 		this._options = {
 			initialTime: "10m",
@@ -242,6 +243,39 @@ define(function(require) {
 				this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour.fenString);
 			}
 		}
+	}
+	
+	Game.prototype._offerOrAcceptRematch = function(user) {
+		var colour = this._getPlayerColour(user);
+		
+		if(colour !== null) {
+			if(this._rematchOfferedBy === colour.opposite) {
+				this._rematch();
+			}
+			
+			else {
+				this._rematchOfferedBy = colour;
+				this._players[colour.opposite].send("/game/" + this._id + "/rematch_offer");
+			}
+		}
+	}
+	
+	Game.prototype._declineRematch = function(user) {
+		var colour = this._getPlayerColour(user);
+		
+		if(colour !== null && this._rematchOfferedBy === colour.opposite) {
+			this._players[colour.opposite].send("/game/" + this._id + "/rematch_declined");
+		}
+	}
+	
+	Game.prototype._rematch = function() {
+		var game = new Game(this._players[Colour.black], this._players[Colour.white], this._options);
+		
+		this.Rematch.fire({
+			game: game
+		});
+		
+		this._sendToAllUsers("/game/" + this._id + "/rematch", game);
 	}
 	
 	Game.prototype._claimDraw = function(user) {
