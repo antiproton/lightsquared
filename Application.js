@@ -87,6 +87,8 @@ define(function(require) {
 	}
 	
 	Application.prototype._setupUser = function(user) {
+		var loggedInUsername;
+		
 		user.Disconnected.addHandler(this, function() {
 			delete this._users[user.getId()];
 		});
@@ -96,13 +98,21 @@ define(function(require) {
 			this._replaceExistingLoggedInUser(user);
 			
 			if(user.isLoggedIn()) {
-				this._loggedInUsers[user.getUsername()] = user;
+				loggedInUsername = user.getUsername();
+				
+				this._loggedInUsers[loggedInUsername] = user;
 			}
 		});
 		
 		user.LoggedIn.addHandler(this, function(data) {
+			loggedInUsername = user.getUsername();
+			
 			this._replaceExistingLoggedInUser(user);
-			this._loggedInUsers[user.getUsername()] = user;
+			this._loggedInUsers[loggedInUsername] = user;
+		});
+		
+		user.LoggedOut.addHandler(this, function() {
+			delete this._loggedInUsers[loggedInUsername];
 		});
 		
 		user.Replaced.addHandler(this, function(data) {
