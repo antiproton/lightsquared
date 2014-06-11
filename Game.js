@@ -95,6 +95,10 @@ define(function(require) {
 		return this._game.isInProgress();
 	}
 	
+	Game.prototype.getEndTime = function() {
+		return this._game.getEndTime();
+	}
+	
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
 			
