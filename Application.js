@@ -31,20 +31,7 @@ define(function(require) {
 		var id = challenge.getId();
 		
 		challenge.Accepted.addHandler(this, function(data) {
-			var game = data.game;
-			var gameId = game.getId();
-			
-			this._games[gameId] = game;
-			
-			game.GameOver.addHandler(this, function() {
-				this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
-				
-				delete this._games[gameId];
-			});
-			
-			game.Aborted.addHandler(this, function() {
-				delete this._games[gameId];
-			});
+			this._addGame(data.game);
 			
 			delete this._openChallenges[id];
 			
@@ -61,6 +48,26 @@ define(function(require) {
 		this._sendToAllUsers("/challenges", [challenge]);
 		
 		return challenge;
+	}
+	
+	Application.prototype._addGame = function(game) {
+		var gameId = game.getId();
+		
+		this._games[gameId] = game;
+		
+		game.GameOver.addHandler(this, function() {
+			this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
+			
+			delete this._games[gameId];
+		});
+		
+		game.Aborted.addHandler(this, function() {
+			delete this._games[gameId];
+		});
+		
+		game.Rematch.addHandler(this, function(data) {
+			this._addGame(data.game);
+		});
 	}
 	
 	Application.prototype.getChallenge = function(id) {
