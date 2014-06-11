@@ -374,6 +374,7 @@ define(function(require) {
 			game.spectate(this);
 			
 			this._addGame(game);
+			this._user.send("/game", game);
 		}
 	}
 	

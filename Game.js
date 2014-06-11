@@ -121,14 +121,14 @@ define(function(require) {
 	Game.prototype._setupSpectator = function(user) {
 		this._subscribeToUserMessages(user);
 		
-		user.send("/game", this);
-		
 		user.Replaced.addHandler(this, function(data) {
 			var newUser = data.newUser;
 			
 			this._spectators.remove(user);
 			this._spectators.push(newUser);
 			this._setupSpectator(newUser);
+			
+			newUser.send("/game", this);
 		});
 	}
 	
