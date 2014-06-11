@@ -373,11 +373,24 @@ define(function(require) {
 	
 	User.prototype._spectateGame = function(id) {
 		var game = this._app.getGame(id);
+		
+		if(game === null) {
+			this._currentGames.some(function(sessionGame) {
+				if(sessionGame.getId() === id) {
+					game = sessionGame;
+					
+					return true;
+				}
+			});
+		}
 			
-		if(game !== null && !this._currentGames.contains(game)) {
-			game.spectate(this);
+		if(game !== null) {
+			if(!this._currentGames.contains(game)) {
+				game.spectate(this);
 			
-			this._addGame(game);
+				this._addGame(game);
+			}
+			
 			this._user.send("/game", game);
 		}
 	}
