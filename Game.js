@@ -187,6 +187,14 @@ define(function(require) {
 		user.subscribe("/game/" + this._id + "/accept_draw", (function() {
 			this._acceptDraw(user);
 		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/offer_or_accept_rematch", (function() {
+			this._offerOrAcceptRematch(user);
+		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/decline_rematch", (function() {
+			this._declineRematch(user);
+		}).bind(this));
 	}
 	
 	Game.prototype._move = function(user, from, to, promoteTo) {
