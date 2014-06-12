@@ -65,8 +65,8 @@ define(function(require) {
 			delete this._games[gameId];
 		});
 		
-		game.Rematch.addHandler(this, function(data) {
-			this._addGame(data.game);
+		game.Rematch.addHandler(this, function(game) {
+			this._addGame(game);
 		});
 	}
 	

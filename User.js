@@ -360,8 +360,8 @@ define(function(require) {
 			this._currentGames.remove(game);
 		}));
 		
-		game.Rematch.addHandler(this, (function(data) {
-			this._addGame(data.game);
+		game.Rematch.addHandler(this, (function(game) {
+			this._addGame(game);
 		}).bind(this));
 	}
 	

@@ -284,10 +284,7 @@ define(function(require) {
 	Game.prototype._rematch = function() {
 		var game = new Game(this._players[Colour.black], this._players[Colour.white], this._options);
 		
-		this.Rematch.fire({
-			game: game
-		});
-		
+		this.Rematch.fire(game);
 		this._sendToAllUsers("/game/" + this._id + "/rematch", game);
 	}
 	
