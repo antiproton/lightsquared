@@ -97,7 +97,7 @@ define(function(require) {
 			this._users[user.getId()] = user;
 		});
 		
-		user.LoggedIn.addHandler(this, function(data) {
+		user.LoggedIn.addHandler(this, function() {
 			loggedInUsername = user.getUsername();
 			
 			this._replaceExistingLoggedInUser(user);

@@ -124,28 +124,19 @@ define(function(require) {
 				if(user) {
 					this._loadJson(user);
 					this._isLoggedIn = true;
-					
 					this._cancelCurrentChallenge();
-					
-					this.LoggedIn.fire({
-						username: username
-					});
-					
+					this.LoggedIn.fire();
 					this._user.send("/user/login/success", this._getPrivateJson());
 				}
 				
 				else {
-					this._user.send("/user/login/failure", {
-						reason: "Username/password combination not recognised"
-					});
+					this._user.send("/user/login/failure", "Username/password combination not recognised");
 				}
 			}).bind(this));
 		}
 		
 		else {
-			this._user.send("/user/login/failure", {
-				reason: error
-			});
+			this._user.send("/user/login/failure", error);
 		}
 	}
 	
@@ -194,25 +185,19 @@ define(function(require) {
 						else {
 							this._username = ANONYMOUS_USERNAME;
 							
-							this._user.send("/user/register/failure", {
-								reason: "Server error: " + error
-							});
+							this._user.send("/user/register/failure", "Server error: " + error);
 						}
 					}).bind(this));
 				}
 				
 				else {
-					this._user.send("/user/register/failure", {
-						reason: "The username '" + username + "' is already registered"
-					});
+					this._user.send("/user/register/failure", "The username '" + username + "' is already registered");
 				}
 			}).bind(this));
 		}
 		
 		else {
-			this._user.send("/user/register/failure", {
-				reason: error
-			});
+			this._user.send("/user/register/failure", error);
 		}
 	}
 	
