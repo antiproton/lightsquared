@@ -349,9 +349,7 @@ define(function(require) {
 			result: result
 		});
 		
-		this.GameOver.fire({
-			result: result
-		});
+		this.GameOver.fire();
 	}
 	
 	Game.prototype.toJSON = function() {
