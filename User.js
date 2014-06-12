@@ -95,10 +95,7 @@ define(function(require) {
 	}
 	
 	User.prototype.replaceWith = function(user) {
-		this.Replaced.fire({
-			newUser: user
-		});
-		
+		this.Replaced.fire(user);
 		this._logout();
 		this._user.send("/user/replaced");
 		this._user.disconnect();

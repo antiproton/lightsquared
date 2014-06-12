@@ -108,8 +108,8 @@ define(function(require) {
 			delete this._loggedInUsers[loggedInUsername];
 		});
 		
-		user.Replaced.addHandler(this, function(data) {
-			this._loggedInUsers[user.getUsername()] = data.newUser;
+		user.Replaced.addHandler(this, function(newUser) {
+			this._loggedInUsers[loggedInUsername] = newUser;
 		});
 		
 		user.subscribe("/request/time", function(data, client) {

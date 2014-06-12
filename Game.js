@@ -102,9 +102,7 @@ define(function(require) {
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
 		
-		user.Replaced.addHandler(this, function(data) {
-			var newUser = data.newUser;
-			
+		user.Replaced.addHandler(this, function(newUser) {
 			this._players[colour] = newUser;
 			this._setupPlayer(newUser, colour);
 			
@@ -121,9 +119,7 @@ define(function(require) {
 	Game.prototype._setupSpectator = function(user) {
 		this._subscribeToUserMessages(user);
 		
-		user.Replaced.addHandler(this, function(data) {
-			var newUser = data.newUser;
-			
+		user.Replaced.addHandler(this, function(newUser) {
 			this._spectators.remove(user);
 			this._spectators.push(newUser);
 			this._setupSpectator(newUser);
