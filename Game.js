@@ -31,8 +31,8 @@ define(function(require) {
 		
 		this._game = new ChessGame(this._options);
 		
-		this._game.GameOver.addHandler(this, function(data) {
-			this._gameOver(data.result);
+		this._game.GameOver.addHandler(this, function(result) {
+			this._gameOver(result);
 		});
 		
 		this._players = {};
