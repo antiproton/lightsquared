@@ -95,13 +95,6 @@ define(function(require) {
 		
 		user.Connected.addHandler(this, function() {
 			this._users[user.getId()] = user;
-			this._replaceExistingLoggedInUser(user);
-			
-			if(user.isLoggedIn()) {
-				loggedInUsername = user.getUsername();
-				
-				this._loggedInUsers[loggedInUsername] = user;
-			}
 		});
 		
 		user.LoggedIn.addHandler(this, function(data) {
