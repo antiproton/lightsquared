@@ -397,7 +397,7 @@ define(function(require) {
 	
 	User.prototype._hasGamesInProgress = function() {
 		return this._currentGames.some((function(game) {
-			return game.userIsPlaying(this);
+			return (game.isInProgress() && game.userIsPlaying(this));
 		}).bind(this));
 	}
 	
