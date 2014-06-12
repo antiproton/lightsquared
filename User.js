@@ -320,8 +320,8 @@ define(function(require) {
 		
 		var challenge = this._app.createChallenge(this, options);
 		
-		challenge.Accepted.addHandler(this, function(data) {
-			this._addGame(data.game);
+		challenge.Accepted.addHandler(this, function(game) {
+			this._addGame(game);
 		});
 		
 		challenge.Expired.addHandler(this, function() {

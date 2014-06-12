@@ -30,8 +30,8 @@ define(function(require) {
 		var challenge = new Challenge(owner, options);
 		var id = challenge.getId();
 		
-		challenge.Accepted.addHandler(this, function(data) {
-			this._addGame(data.game);
+		challenge.Accepted.addHandler(this, function(game) {
+			this._addGame(game);
 			
 			delete this._openChallenges[id];
 			

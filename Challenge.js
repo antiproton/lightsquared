@@ -65,11 +65,7 @@ define(function(require) {
 			});
 			
 			this._clearTimeoutTimer();
-			
-			this.Accepted.fire({
-				game: game
-			});
-			
+			this.Accepted.fire(game);
 			this.Expired.fire();
 		}
 		
