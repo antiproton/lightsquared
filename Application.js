@@ -10,6 +10,7 @@ define(function(require) {
 		this._loggedInUsers = {};
 		this._openChallenges = {};
 		this._games = {};
+		this._promises = {};
 		this._publisher = new Publisher();
 		this._db = db;
 		
@@ -76,6 +77,44 @@ define(function(require) {
 	
 	Application.prototype.getGame = function(id) {
 		return this._games[id] || null;
+	}
+	
+	Application.prototype.getArchivedGameDetails = function(id) {
+		var promiseId = "/game/" + id;
+		
+		if(promiseId in this._promises) {
+			return this._promises[promiseId];
+		}
+		
+		else {
+			var promise = new Promise();
+			
+			promise.then(null, null, (function() {
+				delete this._promises[promiseId];
+			}).bind(this));
+			
+			if(id in this._games) {
+				promise.resolve(JSON.parse(JSON.stringify(this._games[id])));
+			}
+			
+			else {
+				this._db.collection("games").findOne({
+					id: id
+				}, (function(error, gameDetails) {
+					if(error) {
+						promise.fail(error);
+					}
+					
+					else {
+						promise.resolve(gameDetails);
+					}
+				}).bind(this));
+			}
+			
+			this._promises[promiseId] = promise;
+			
+			return promise;
+		}
 	}
 	
 	Application.prototype._replaceExistingLoggedInUser = function(user) {
