@@ -150,6 +150,10 @@ define(function(require) {
 		user.Replaced.addHandler(this, function(newUser) {
 			this._loggedInUsers[loggedInUsername] = newUser;
 		});
+		
+		user.subscribe("/request/time", function(data, client) {
+			client.send("/time", time());
+		});
 	}
 	
 	Application.prototype.getOpenChallenges = function() {
