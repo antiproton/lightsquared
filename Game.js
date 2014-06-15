@@ -129,11 +129,11 @@ define(function(require) {
 	}
 	
 	Game.prototype._subscribeToUserMessages = function(user) {
-		user.subscribe("/game/" + this._id + "/request/moves", (function(data) {
-			var index = data.startingIndex;
+		user.subscribe("/game/" + this._id + "/request/moves", (function(startingIndex) {
+			var index = startingIndex;
 			
 			this._game.getHistory().slice(index).forEach(function(move) {
-				user.send("/game/" + this._id + "/move", this._getMoveJson(move));
+				user.send("/game/" + this._id + "/move", this._getMoveJson(move, index));
 			
 				index++;
 			});
