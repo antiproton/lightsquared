@@ -158,6 +158,10 @@ define(function(require) {
 				}
 			}
 		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/request/time", function(data, client) {
+			client.send("/game/" + this._id + "/time", time());
+		});
 	}
 	
 	Game.prototype._subscribeToPlayerMessages = function(user) {
