@@ -151,8 +151,8 @@ define(function(require) {
 			this._loggedInUsers[loggedInUsername] = newUser;
 		});
 		
-		user.subscribe("/request/time", function(data, client) {
-			client.send("/time", time());
+		user.subscribe("/request/time", function(requestId, client) {
+			client.send("/time/" + requestId, time());
 		});
 	}
 	
