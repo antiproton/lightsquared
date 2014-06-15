@@ -353,20 +353,24 @@ define(function(require) {
 		}).bind(this));
 	}
 	
-	User.prototype._spectateGame = function(id) {
-		var game = this._app.getGame(id);
+	User.prototype._getGame = function(id) {
+		var game = null;
 		
-		if(game === null) {
-			this._currentGames.some(function(sessionGame) {
-				if(sessionGame.getId() === id) {
-					game = sessionGame;
-					
-					return true;
-				}
-			});
-		}
-			
-		if(game !== null) {
+		this._currentGames.some(function(sessionGame) {
+			if(sessionGame.getId() === id) {
+				game = sessionGame;
+				
+				return true;
+			}
+		});
+		
+		return (game || this._app.getGame(id));
+	}
+	
+	User.prototype._spectateGame = function(id) {
+		var game = this._getGame(id);
+		
+		if(game) {
 			if(!this._currentGames.contains(game)) {
 				game.spectate(this);
 			
