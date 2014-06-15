@@ -269,7 +269,15 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/game/spectate", (function(id) {
-			this._spectateGame(id);
+			var game = this._spectateGame(id);
+			
+			if(game) {
+				this._user.send("/game", game);
+			}
+			
+			else {
+				this._user.send("/game/not_found", id);
+			}
 		}).bind(this));
 		
 		this._user.subscribe("/challenge/accept", (function(id) {
@@ -370,15 +378,13 @@ define(function(require) {
 	User.prototype._spectateGame = function(id) {
 		var game = this._getGame(id);
 		
-		if(game) {
-			if(!this._currentGames.contains(game)) {
-				game.spectate(this);
-			
-				this._addGame(game);
-			}
-			
-			this._user.send("/game", game);
+		if(game && !this._currentGames.contains(game)) {
+			game.spectate(this);
+		
+			this._addGame(game);
 		}
+		
+		return game;
 	}
 	
 	User.prototype._hasGamesInProgress = function() {
