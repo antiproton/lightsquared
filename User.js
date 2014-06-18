@@ -27,13 +27,7 @@ define(function(require) {
 		this._currentGames = [];
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
-		
-		this._glicko2 = {
-			rating: glicko2Constants.defaults.RATING,
-			rd: glicko2Constants.defaults.RD,
-			vol: glicko2Constants.defaults.VOL
-		};
-		
+		this._glicko2 = this._getInitialGlicko2();
 		this._recentRatedResults = [];
 		
 		this._prefs = {
@@ -153,7 +147,7 @@ define(function(require) {
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._username = ANONYMOUS_USERNAME;
-			this._rating = Glicko.INITIAL_RATING;
+			this._glicko2 = this._getInitialGlicko2();
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
@@ -450,6 +444,14 @@ define(function(require) {
 			rating: glicko2Player.getRating(),
 			rd: glicko2Player.getRd(),
 			vol: glicko2Player.getVol()
+		};
+	}
+	
+	User.prototype._getInitialGlicko2 = function() {
+		return {
+			rating: glicko2Constants.defaults.RATING,
+			rd: glicko2Constants.defaults.RD,
+			vol: glicko2Constants.defaults.VOL
 		};
 	}
 	
