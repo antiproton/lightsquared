@@ -242,7 +242,7 @@ define(function(require) {
 	
 	Game.prototype._resign = function(user) {
 		if(!this._isAborted) {
-			var playerColour = this._getPlayerColour(user);
+			var playerColour = this.getPlayerColour(user);
 			
 			if(playerColour !== null) {
 				this._game.resign(playerColour);
@@ -252,7 +252,7 @@ define(function(require) {
 	
 	Game.prototype._offerDraw = function(user) {
 		if(!this._isAborted) {
-			var playerColour = this._getPlayerColour(user);
+			var playerColour = this.getPlayerColour(user);
 			
 			if(playerColour === this._game.getActiveColour().opposite) {
 				this._isDrawOffered = true;
@@ -262,7 +262,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._offerOrAcceptRematch = function(user) {
-		var colour = this._getPlayerColour(user);
+		var colour = this.getPlayerColour(user);
 		
 		if(colour !== null) {
 			if(this._rematchOfferedBy === colour.opposite) {
@@ -277,7 +277,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._declineRematch = function(user) {
-		var colour = this._getPlayerColour(user);
+		var colour = this.getPlayerColour(user);
 		
 		if(colour !== null && this._rematchOfferedBy === colour.opposite) {
 			this._players[colour.opposite].send("/game/" + this._id + "/rematch_declined");
@@ -301,7 +301,7 @@ define(function(require) {
 	
 	Game.prototype._acceptDraw = function(user) {
 		if(!this._isAborted) {
-			if(this._getPlayerColour(user) === this._game.getActiveColour() && this._isDrawOffered) {
+			if(this.getPlayerColour(user) === this._game.getActiveColour() && this._isDrawOffered) {
 				this._game.drawByAgreement();
 			}
 		}
