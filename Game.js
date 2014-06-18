@@ -78,7 +78,11 @@ define(function(require) {
 		return (this._players[Colour.white] === user || this._players[Colour.black] === user);
 	}
 	
-	Game.prototype._getPlayerColour = function(user) {
+	Game.prototype.getPlayer = function(colour) {
+		return this._players[colour];
+	}
+	
+	Game.prototype.getPlayerColour = function(user) {
 		var playerColour = null;
 		
 		Colour.forEach(function(colour) {
