@@ -50,6 +50,7 @@ define(function(require) {
 		
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
+		this._rematchOfferedBy = null;
 		
 		for(var colour in this._players) {
 			this._setupPlayer(this._players[colour], colour);
@@ -269,7 +270,7 @@ define(function(require) {
 				this._rematch();
 			}
 			
-			else {
+			else if(this._rematchOfferedBy === null) {
 				this._rematchOfferedBy = colour;
 				this._players[colour.opposite].send("/game/" + this._id + "/rematch_offer");
 			}
