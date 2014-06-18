@@ -102,6 +102,10 @@ define(function(require) {
 		return this._game.getEndTime();
 	}
 	
+	Game.prototype.getResult = function() {
+		return this._game.getResult();
+	}
+	
 	Game.prototype._setupPlayer = function(user, colour) {
 		this._subscribeToPlayerMessages(user);
 		
