@@ -119,7 +119,7 @@ define(function(require) {
 			this.spectate(user);
 		});
 		
-		user.LoggedOut.addHandler(this, function() {
+		user.LoggingOut.addHandler(this, function() {
 			this._resign(user);
 		});
 	}
