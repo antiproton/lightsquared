@@ -3,7 +3,8 @@ define(function(require) {
 	var id = require("lib/id");
 	var time = require("lib/time");
 	var Event = require("lib/Event");
-	var Glicko = require("chess/Glicko");
+	var Glicko2 = require("glicko2").Glicko2;
+	var glicko2Defaults = require("jsonchess/glicko2Defaults");
 	require("lib/Array.getShallowCopy");
 	require("lib/Array.contains");
 	require("lib/Array.remove");
@@ -12,6 +13,7 @@ define(function(require) {
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
 	var MAX_IDLE_TIME_LOGGED_IN = 1000 * 60 * 60 * 24 * 30;
 	var INACTIVE_GAMES_EXPIRE = 1000 * 60 * 5;
+	var GAMES_PER_GLICKO2_RATING_PERIOD = 10;
 	
 	function User(user, app, db) {
 		this._id = id();
@@ -23,10 +25,17 @@ define(function(require) {
 		this._publisher = new Publisher(this);
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
-		this._rating = Glicko.INITIAL_RATING;
 		this._currentGames = [];
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
+		
+		this._glicko2 = {
+			rating: glicko2Defaults.RATING,
+			rd: glicko2Defaults.RD,
+			vol: glicko2Defaults.VOL
+		};
+		
+		this._recentRatedResults = [];
 		
 		this._prefs = {
 			alwaysQueen: false,
@@ -69,7 +78,11 @@ define(function(require) {
 	}
 	
 	User.prototype.getRating = function() {
-		return this._rating;
+		return this._glicko2.rating;
+	}
+	
+	User.prototype.getGlicko2 = function() {
+		return this._glicko2;
 	}
 	
 	User.prototype.getGamesPlayedAsWhite = function() {
@@ -78,10 +91,6 @@ define(function(require) {
 	
 	User.prototype.getGamesPlayedAsBlack = function() {
 		return this._gamesPlayedAsBlack;
-	}
-	
-	User.prototype.updateRating = function(newRating) {
-		this._rating = newRating;
 	}
 	
 	User.prototype.replace = function(user) {
@@ -353,6 +362,12 @@ define(function(require) {
 		game.Rematch.addHandler(this, (function(game) {
 			this._addGame(game);
 		}).bind(this));
+		
+		if(game.userIsPlaying(this)) {
+			game.GameOver.addHandler(this, function() {
+				this._registerCompletedRatedGame(game);
+			});
+		}
 	}
 	
 	User.prototype._removeInactiveGames = function() {
@@ -393,6 +408,52 @@ define(function(require) {
 		}).bind(this));
 	}
 	
+	User.prototype._registerCompletedRatedGame = function(game) {
+		var colour = game.getPlayerColour(this);
+		var opponentGlicko2 = game.getPlayer(colour.opposite).getGlicko2();
+		var result = game.getResult();
+		
+		this._recentRatedResults.push({
+			opponentGlicko2: {
+				rating: opponentGlicko2.rating,
+				rd: opponentGlicko2.rd,
+				vol: opponentGlicko2.vol
+			},
+			playerScore: result.scores[colour]
+		});
+		
+		if(this._recentRatedResults.length === GAMES_PER_GLICKO2_RATING_PERIOD) {
+			this._updateGlicko2();
+			this._recentRatedResults = [];
+		}
+	}
+	
+	User.prototype._updateGlicko2 = function() {
+		var glicko2 = new Glicko2({
+			rating: glicko2Defaults.RATING,
+			rd: glicko2Defaults.RD,
+			vol: glicko2Defaults.VOL
+		});
+		
+		var matches = [];
+		var glicko2Player = glicko2.makePlayer(this._glicko2.rating, this._glicko2.rd, this._glicko2.vol);
+		
+		this._recentRatedResults.forEach(function(result) {
+			var opponentGlicko2 = result.opponentGlicko2;
+			var glicko2Opponent = glicko2.makePlayer(opponentGlicko2.rating, opponentGlicko2.rd, opponentGlicko2.vol);
+			
+			matches.push([glicko2Player, glicko2Opponent, result.playerScore]);
+		});
+		
+		glicko2.updateRatings(matches);
+		
+		this._glicko2 = {
+			rating: glicko2Player.getRating(),
+			rd: glicko2Player.getRd(),
+			vol: glicko2Player.getVol()
+		};
+	}
+	
 	User.prototype.toJSON = function() {
 		return {
 			id: this._id,
@@ -400,7 +461,7 @@ define(function(require) {
 			isLoggedIn: this._isLoggedIn,
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
-			rating: this._rating
+			rating: this._glicko2.rating
 		};
 	}
 	
@@ -409,9 +470,10 @@ define(function(require) {
 			username: this._username,
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
-			rating: this._rating,
+			glicko2: this._glicko2,
 			lastChallengeOptions: this._lastChallengeOptions,
-			prefs: this._prefs
+			prefs: this._prefs,
+			recentRatedResults: this._recentRatedResults
 		};
 		
 		if(password) {
@@ -426,7 +488,7 @@ define(function(require) {
 			id: this._id,
 			username: this._username,
 			isLoggedIn: this._isLoggedIn,
-			rating: this._rating,
+			rating: this._glicko2.rating,
 			currentChallenge: this._currentChallenge,
 			lastChallengeOptions: this._lastChallengeOptions,
 			prefs: this._prefs
@@ -437,9 +499,10 @@ define(function(require) {
 		this._username = user.username;
 		this._gamesPlayedAsWhite = user.gamesPlayedAsWhite;
 		this._gamesPlayedAsBlack = user.gamesPlayedAsBlack;
-		this._rating = user.rating;
+		this._glicko2 = user.glicko2;
 		this._lastChallengeOptions = user.lastChallengeOptions;
 		this._prefs = user.prefs;
+		this._recentRatedResults = user.recentRatedResults;
 	}
 	
 	return User;
