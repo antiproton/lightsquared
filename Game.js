@@ -5,7 +5,6 @@ define(function(require) {
 	var Colour = require("chess/Colour");
 	var Move = require("jsonchess/Move");
 	var Square = require("chess/Square");
-	var Glicko = require("chess/Glicko");
 	var Event = require("lib/Event");
 	var jsonchess = require("jsonchess/constants");
 	require("lib/Array.remove");
@@ -339,12 +338,6 @@ define(function(require) {
 	}
 	
 	Game.prototype._gameOver = function(result) {
-		var newRatings = Glicko.getNewRatings(this._players, result);
-		
-		Colour.forEach(function(colour) {
-			this._players[colour].updateRating(newRatings[colour]);
-		}, this);
-		
 		this._sendToAllUsers("/game/" + this._id + "/game_over", {
 			result: result
 		});
