@@ -40,6 +40,7 @@ define(function(require) {
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
 		this.LoggedIn = new Event(this);
+		this.LoggingOut = new Event(this);
 		this.LoggedOut = new Event(this);
 		this.Replaced = new Event(this);
 		
@@ -144,6 +145,7 @@ define(function(require) {
 	
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
+			this.LoggingOut.fire();
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._username = ANONYMOUS_USERNAME;
