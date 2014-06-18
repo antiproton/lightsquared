@@ -4,7 +4,7 @@ define(function(require) {
 	var time = require("lib/time");
 	var Event = require("lib/Event");
 	var Glicko2 = require("glicko2").Glicko2;
-	var glicko2Defaults = require("jsonchess/glicko2Defaults");
+	var glicko2Constants = require("jsonchess/glicko2");
 	require("lib/Array.getShallowCopy");
 	require("lib/Array.contains");
 	require("lib/Array.remove");
@@ -13,7 +13,6 @@ define(function(require) {
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
 	var MAX_IDLE_TIME_LOGGED_IN = 1000 * 60 * 60 * 24 * 30;
 	var INACTIVE_GAMES_EXPIRE = 1000 * 60 * 5;
-	var GAMES_PER_GLICKO2_RATING_PERIOD = 10;
 	
 	function User(user, app, db) {
 		this._id = id();
@@ -30,9 +29,9 @@ define(function(require) {
 		this._lastChallengeOptions = null;
 		
 		this._glicko2 = {
-			rating: glicko2Defaults.RATING,
-			rd: glicko2Defaults.RD,
-			vol: glicko2Defaults.VOL
+			rating: glicko2Constants.defaults.RATING,
+			rd: glicko2Constants.defaults.RD,
+			vol: glicko2Constants.defaults.VOL
 		};
 		
 		this._recentRatedResults = [];
@@ -422,7 +421,7 @@ define(function(require) {
 			playerScore: result.scores[colour]
 		});
 		
-		if(this._recentRatedResults.length === GAMES_PER_GLICKO2_RATING_PERIOD) {
+		if(this._recentRatedResults.length === glicko2Constants.GAMES_PER_RATING_PERIOD) {
 			this._updateGlicko2();
 			this._recentRatedResults = [];
 		}
@@ -430,9 +429,9 @@ define(function(require) {
 	
 	User.prototype._updateGlicko2 = function() {
 		var glicko2 = new Glicko2({
-			rating: glicko2Defaults.RATING,
-			rd: glicko2Defaults.RD,
-			vol: glicko2Defaults.VOL
+			rating: glicko2Constants.defaults.RATING,
+			rd: glicko2Constants.defaults.RD,
+			vol: glicko2Constants.defaults.VOL
 		});
 		
 		var matches = [];
