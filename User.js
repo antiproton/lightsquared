@@ -148,6 +148,7 @@ define(function(require) {
 			this.LoggingOut.fire();
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
+			this._currentGames = [];
 			this._username = ANONYMOUS_USERNAME;
 			this._glicko2 = this._getInitialGlicko2();
 			this.LoggedOut.fire();
