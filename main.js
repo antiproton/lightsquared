@@ -18,7 +18,7 @@ requirejs.config({
 
 requirejs(["lib/websocket/server/Server", "./Application"], function(Server, Application) {
 	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
-		if(error === null) {
+		if(db) {
 			var server = new Server(8080);
 			var app = new Application(server, db);
 		}
