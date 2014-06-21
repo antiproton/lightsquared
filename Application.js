@@ -14,8 +14,8 @@ define(function(require) {
 		this._publisher = new Publisher();
 		this._db = db;
 		
-		server.UserConnected.addHandler(this, function(data) {
-			var user = new User(data.user, this, this._db.collection("users"));
+		server.UserConnected.addHandler(this, function(serverUser) {
+			var user = new User(serverUser, this, this._db.collection("users"));
 			
 			this._setupUser(user);
 			this._replaceExistingLoggedInUser(user);
