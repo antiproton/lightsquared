@@ -166,14 +166,6 @@ define(function(require) {
 		var username = user.getUsername();
 		var error = null;
 		
-		/*
-		FIXME
-		
-		games need a record of the original players' details in case they log out
-		
-		that is probably what should be in the toJSON
-		*/
-		
 		if(!user.isLoggedIn() || (username !== gameDetails.white && username !== gameDetails.black)) {
 			error = "You must be logged in as one of the original players to restore a game";
 		}
