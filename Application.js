@@ -13,6 +13,7 @@ define(function(require) {
 		this._promises = {};
 		this._publisher = new Publisher();
 		this._db = db;
+		this._pendingGameRestorations = {};
 		
 		server.UserConnected.addHandler(this, function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
@@ -154,6 +155,63 @@ define(function(require) {
 		user.subscribe("/request/time", function(requestId, client) {
 			client.send("/time/" + requestId, time());
 		});
+		
+		user.subscribe("/game/restore", (function(gameDetails) {
+			this._submitGameRestorationRequest(user, gameDetails);
+		}).bind(this));
+	}
+	
+	Application.prototype._submitGameRestorationRequest = function(user, gameDetails) {
+		var id = gameDetails.id;
+		var username = user.getUsername();
+		var error = null;
+		
+		/*
+		FIXME
+		
+		games need a record of the original players' details in case they log out
+		
+		that is probably what should be in the toJSON
+		*/
+		
+		if(!user.isLoggedIn() || (username !== gameDetails.white && username !== gameDetails.black)) {
+			error = "You must be logged in as one of the original players to restore a game";
+		}
+		
+		if(!gameDetails.white.isLoggedIn || !gameDetails.black.isLoggedIn) {
+			error = "Only games where both players were logged in can be restored";
+		}
+		
+		if(!error) {
+			if(id in this._pendingGameRestorations) {
+				var pendingRestoration = this._pendingGameRestorations[id];
+				
+				if(pendingRestoration.initiatingUser !== user) {
+					var users = {};
+					
+					users[pendingRestoration.initiatingUser.username] = pendingRestoration.initiatingUser;
+					users[username] = user;
+					
+					//so white = users[gameDetails.white]
+					
+					//check whether the game details match; go up to any moves both players have in common
+					
+				}
+			}
+			
+			else {
+				this._pendingGameRestorations[id] = {
+					initiatingUser: user,
+					gameDetails: gameDetails
+				};
+				
+				user.send("/game/restore/pending", id);
+			}
+		}
+		
+		if(error) {
+			user.send("/game/restore/failure", error);
+		}
 	}
 	
 	Application.prototype.getOpenChallenges = function() {
