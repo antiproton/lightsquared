@@ -181,7 +181,7 @@ define(function(require) {
 				if(pendingRestoration.initiatingUser !== user) {
 					var users = {};
 					
-					users[pendingRestoration.initiatingUser.username] = pendingRestoration.initiatingUser;
+					users[pendingRestoration.initiatingUser.getUsername()] = pendingRestoration.initiatingUser;
 					users[username] = user;
 					
 					var game = Game.restore(users, gameDetails);
