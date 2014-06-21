@@ -184,10 +184,7 @@ define(function(require) {
 					users[pendingRestoration.initiatingUser.username] = pendingRestoration.initiatingUser;
 					users[username] = user;
 					
-					//so white = users[gameDetails.white]
-					
-					//check whether the game details match; go up to any moves both players have in common
-					
+					var game = Game.restore(users, gameDetails);
 				}
 			}
 			
