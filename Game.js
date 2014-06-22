@@ -10,7 +10,7 @@ define(function(require) {
 	require("lib/Array.remove");
 	require("lib/Array.contains");
 	
-	function Game(white, black, options) {
+	function Game(white, black, options, gameRestorationDetails) {
 		this._id = id();
 		
 		this.GameOver = new Event(this);
@@ -58,6 +58,44 @@ define(function(require) {
 		
 		this._isAborted = false;
 		this._setAbortTimer();
+	}
+	
+	Game.restore = function(users, userAGameDetails, userBGameDetails, timeReimbursement) {
+		var game = null;
+		var historyA = userAGameDetails.history;
+		var historyB = userBGameDetails.history;
+		var minHistoryLength = Math.min(historyA.length, historyB.length);
+		var commonHistory = [];
+		
+		for(var i = 0; i < minHistoryLength; i++) {
+			if(historyA[i].label === historyB[i].label) {
+				commonHistory.push(historyA[i]);
+			}
+			
+			else {
+				break;
+			}
+		}
+		
+		userAGameDetails.history = userBGameDetails.history = commonHistory;
+		
+		if(JSON.stringify(userAGameDetails) !== JSON.stringify(userBGameDetails)) {
+			throw "Mismatch between game details submitted by each player";
+		}
+		
+		if(!userAGameDetails.isInProgress) {
+			throw "Game must be in progress to be restored";
+		}
+		
+		var gameDetails = userAGameDetails;
+		var white = users[gameDetails.white.username];
+		var black = users[gameDetails.black.username];
+		
+		game = new Game(white, black, gameDetails.options, gameDetails);
+		
+		game.addTimeToClock(timeReimbursement);
+		
+		return game;
 	}
 	
 	Game.prototype.getId = function() {

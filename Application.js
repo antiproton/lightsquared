@@ -161,7 +161,8 @@ define(function(require) {
 		}).bind(this));
 	}
 	
-	Application.prototype._submitGameRestorationRequest = function(user, gameDetails) {
+	Application.prototype._submitGameRestorationRequest = function(user, data) {
+		var gameDetails = data.gameDetails;
 		var id = gameDetails.id;
 		var username = user.getUsername();
 		var error = null;
@@ -178,19 +179,40 @@ define(function(require) {
 			if(id in this._pendingGameRestorations) {
 				var pendingRestoration = this._pendingGameRestorations[id];
 				
-				if(pendingRestoration.initiatingUser !== user) {
+				if(pendingRestoration.user !== user) {
 					var users = {};
 					
-					users[pendingRestoration.initiatingUser.getUsername()] = pendingRestoration.initiatingUser;
+					users[pendingRestoration.user.getUsername()] = pendingRestoration.user;
 					users[username] = user;
 					
-					var game = Game.restore(users, gameDetails, pendingRestoration.gameDetails);
+					var estimatedCrashTime = Math.round((data.estimatedServerTimeAtCrash + pendingRestoration.estimatedServerTimeAtCrash) / 2);
+					var timeReimbursement = (time() - estimatedCrashTime) + 1000 * 5;
+					
+					try {
+						var game = Game.restore(users, gameDetails, pendingRestoration.gameDetails, timeReimbursement);
+						
+						for(var username in users) {
+							users[username].send("/game/restore/success", {
+								game: game,
+								timeReimbursement: timeReimbursement
+							});
+						}
+					}
+					
+					catch(restorationError) {
+						for(var username in users) {
+							users[username].send("/game/restore/failure", restorationError);
+						}
+						
+						delete this._pendingGameRestorations[id];
+					}
 				}
 			}
 			
 			else {
 				this._pendingGameRestorations[id] = {
-					initiatingUser: user,
+					user: user,
+					estimatedServerTimeAtCrash: data.estimatedServerTimeAtCrash,
 					gameDetails: gameDetails
 				};
 				
