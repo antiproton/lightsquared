@@ -197,9 +197,9 @@ define(function(require) {
 						for(var username in users) {
 							users[username].send("/game/restore/failure", restorationError);
 						}
-						
-						delete this._pendingGameRestorations[id];
 					}
+						
+					delete this._pendingGameRestorations[id];
 				}
 			}
 			
