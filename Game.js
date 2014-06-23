@@ -150,6 +150,10 @@ define(function(require) {
 		return this._game.isInProgress();
 	}
 	
+	Game.prototype.timingHasStarted = function() {
+		return this._game.timingHasStarted();
+	}
+	
 	Game.prototype.getEndTime = function() {
 		return this._game.getEndTime();
 	}
