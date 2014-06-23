@@ -167,6 +167,10 @@ define(function(require) {
 		var username = user.getUsername();
 		var error = null;
 		
+		if(id in this._games) {
+			error = "The specified game is active on the server";
+		}
+		
 		if(!user.isLoggedIn() || (username !== gameDetails.white && username !== gameDetails.black)) {
 			error = "You must be logged in as one of the original players to restore a game";
 		}
