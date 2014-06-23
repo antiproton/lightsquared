@@ -154,6 +154,10 @@ define(function(require) {
 		return this._game.timingHasStarted();
 	}
 	
+	Game.prototype.getLastMove = function() {
+		return this._game.getLastMove();
+	}
+	
 	Game.prototype.getEndTime = function() {
 		return this._game.getEndTime();
 	}
