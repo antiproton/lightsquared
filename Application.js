@@ -161,8 +161,7 @@ define(function(require) {
 		}).bind(this));
 	}
 	
-	Application.prototype._submitGameRestorationRequest = function(user, data) {
-		var gameDetails = data.gameDetails;
+	Application.prototype._submitGameRestorationRequest = function(user, gameDetails) {
 		var id = gameDetails.id;
 		var username = user.getUsername();
 		var error = null;
