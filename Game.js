@@ -62,7 +62,7 @@ define(function(require) {
 		this._setAbortTimer();
 	}
 	
-	Game.restore = function(users, userAGameDetails, userBGameDetails, timeReimbursement) {
+	Game.restore = function(users, userAGameDetails, userBGameDetails) {
 		var game = null;
 		var historyA = userAGameDetails.history;
 		var historyB = userBGameDetails.history;
@@ -102,7 +102,12 @@ define(function(require) {
 		
 		game = new Game(white, black, options);
 		
-		game.addTimeToClock(timeReimbursement);
+		if(game.timingHasStarted() && game.getLastMove()) {
+			var lastMoveTime = game.getLastMove().getTime();
+			var reimbursement = time() - lastMoveTime;
+			
+			game.addTimeToClock(reimbursement);
+		}
 		
 		return game;
 	}
