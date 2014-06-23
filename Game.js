@@ -10,7 +10,7 @@ define(function(require) {
 	require("lib/Array.remove");
 	require("lib/Array.contains");
 	
-	function Game(white, black, options, gameRestorationDetails) {
+	function Game(white, black, options) {
 		this._id = id();
 		
 		this.GameOver = new Event(this);
@@ -18,6 +18,8 @@ define(function(require) {
 		this.Rematch = new Event(this);
 		
 		this._options = {
+			history: [],
+			startTime: time(),
 			initialTime: "10m",
 			timeIncrement: "0"
 		};
@@ -90,8 +92,15 @@ define(function(require) {
 		var gameDetails = userAGameDetails;
 		var white = users[gameDetails.white.username];
 		var black = users[gameDetails.black.username];
+		var options = gameDetails.options;
 		
-		game = new Game(white, black, gameDetails.options, gameDetails);
+		options.startTime = gameDetails.startTime;
+		
+		options.history = gameDetails.history.map(function(move) {
+			return Move.fromJson(move);
+		});
+		
+		game = new Game(white, black, options);
 		
 		game.addTimeToClock(timeReimbursement);
 		
