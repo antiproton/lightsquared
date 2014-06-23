@@ -185,17 +185,11 @@ define(function(require) {
 					users[pendingRestoration.user.getUsername()] = pendingRestoration.user;
 					users[username] = user;
 					
-					var estimatedCrashTime = Math.round((data.estimatedServerTimeAtCrash + pendingRestoration.estimatedServerTimeAtCrash) / 2);
-					var timeReimbursement = (time() - estimatedCrashTime) + 1000 * 5;
-					
 					try {
-						var game = Game.restore(users, gameDetails, pendingRestoration.gameDetails, timeReimbursement);
+						var game = Game.restore(users, gameDetails, pendingRestoration.gameDetails);
 						
 						for(var username in users) {
-							users[username].send("/game/restore/success", {
-								game: game,
-								timeReimbursement: timeReimbursement
-							});
+							users[username].send("/game/restore/success", game);
 						}
 					}
 					
@@ -212,7 +206,6 @@ define(function(require) {
 			else {
 				this._pendingGameRestorations[id] = {
 					user: user,
-					estimatedServerTimeAtCrash: data.estimatedServerTimeAtCrash,
 					gameDetails: gameDetails
 				};
 				
