@@ -63,7 +63,6 @@ define(function(require) {
 	}
 	
 	Game.restore = function(users, userAGameDetails, userBGameDetails) {
-		var game = null;
 		var historyA = userAGameDetails.history;
 		var historyB = userBGameDetails.history;
 		var minHistoryLength = Math.min(historyA.length, historyB.length);
@@ -100,7 +99,7 @@ define(function(require) {
 			return Move.fromJson(move);
 		});
 		
-		game = new Game(white, black, options);
+		var game = new Game(white, black, options);
 		
 		if(game.timingHasStarted() && game.getLastMove()) {
 			var lastMoveTime = game.getLastMove().getTime();
