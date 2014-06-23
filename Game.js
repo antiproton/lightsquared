@@ -118,6 +118,10 @@ define(function(require) {
 		}
 	}
 	
+	Game.prototype.addTimeToClock = function(time) {
+		this._game.addTimeToClock(time);
+	}
+	
 	Game.prototype.leave = function(user) {
 		this._spectators.remove(user);
 	}
