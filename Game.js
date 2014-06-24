@@ -2,6 +2,7 @@ define(function(require) {
 	var ChessGame = require("chess/Game");
 	var PieceType = require("chess/PieceType");
 	var id = require("lib/id");
+	var time = require("lib/time");
 	var Colour = require("chess/Colour");
 	var Move = require("jsonchess/Move");
 	var Square = require("chess/Square");
