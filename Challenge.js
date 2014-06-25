@@ -61,7 +61,7 @@ define(function(require) {
 			});
 			
 			[white, black].forEach(function(player) {
-				player.send("/game", game);
+				player.send("/challenge/accepted", game);
 			});
 			
 			this._clearTimeoutTimer();
