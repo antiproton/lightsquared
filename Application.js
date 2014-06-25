@@ -175,7 +175,7 @@ define(function(require) {
 			error = "The specified game is active on the server";
 		}
 		
-		if(!user.isLoggedIn() || (username !== gameDetails.white && username !== gameDetails.black)) {
+		if(!user.isLoggedIn() || (username !== gameDetails.white.username && username !== gameDetails.black.username)) {
 			error = "You must be logged in as one of the original players to restore a game";
 		}
 		
