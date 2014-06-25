@@ -4,6 +4,7 @@ define(function(require) {
 	var User = require("./User");
 	var Challenge = require("./Challenge");
 	var time = require("lib/time");
+	var Game = require("./Game");
 	
 	function Application(server, db) {
 		this._users = {};
