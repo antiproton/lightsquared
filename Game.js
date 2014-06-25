@@ -97,7 +97,7 @@ define(function(require) {
 		options.startTime = gameDetails.startTime;
 		
 		options.history = gameDetails.history.map(function(move) {
-			return Move.fromJson(move);
+			return Move.fromJSON(move);
 		});
 		
 		var game = new Game(white, black, options);
