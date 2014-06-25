@@ -273,7 +273,7 @@ define(function(require) {
 			this._cancelCurrentChallenge();
 		}).bind(this));
 		
-		this._user.subscribe("/game/spectate", (function(id) {
+		this._user.subscribe("/request/game", (function(id) {
 			var game = this._spectateGame(id);
 			
 			if(game) {
