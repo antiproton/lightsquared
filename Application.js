@@ -203,7 +203,10 @@ define(function(require) {
 					
 					catch(restorationError) {
 						for(var username in users) {
-							users[username].send("/game/restore/failure", restorationError);
+							users[username].send("/game/restore/failure", {
+								id: id,
+								reason: restorationError
+							});
 						}
 					}
 						
@@ -222,7 +225,10 @@ define(function(require) {
 		}
 		
 		if(error) {
-			user.send("/game/restore/failure", error);
+			user.send("/game/restore/failure", {
+				id: id,
+				reason: error
+			});
 		}
 	}
 	
