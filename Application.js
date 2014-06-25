@@ -160,6 +160,10 @@ define(function(require) {
 		user.subscribe("/game/restore", (function(gameDetails) {
 			this._submitGameRestorationRequest(user, gameDetails);
 		}).bind(this));
+		
+		user.subscribe("/game/restore/cancel", (function(id) {
+			this._cancelGameRestorationRequest(user, id);
+		}).bind(this));
 	}
 	
 	Application.prototype._submitGameRestorationRequest = function(user, gameDetails) {
@@ -219,6 +223,14 @@ define(function(require) {
 		
 		if(error) {
 			user.send("/game/restore/failure", error);
+		}
+	}
+	
+	Application.prototype._cancelGameRestorationRequest = function(user, id) {
+		if(id in this._pendingGameRestorations && this._pendingGameRestorations[id].user === user) {
+			delete this._pendingGameRestorations[id];
+			
+			user.send("/game/restore/canceled", id);
 		}
 	}
 	
