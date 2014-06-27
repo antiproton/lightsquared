@@ -164,6 +164,10 @@ define(function(require) {
 		return this._game.getLastMove();
 	}
 	
+	Game.prototype.getPosition = function() {
+		return this._game.getPosition();
+	}
+	
 	Game.prototype.getEndTime = function() {
 		return this._game.getEndTime();
 	}
