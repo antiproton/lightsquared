@@ -287,6 +287,7 @@ define(function(require) {
 					this._isDrawOffered = false;
 					this._isUndoRequested = false;
 					this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
+					this.Move.fire(move);
 					
 					this._clearAbortTimer();
 					
