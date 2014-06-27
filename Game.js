@@ -14,6 +14,7 @@ define(function(require) {
 	function Game(white, black, options) {
 		this._id = id();
 		
+		this.Move = new Event(this);
 		this.GameOver = new Event(this);
 		this.Aborted = new Event(this);
 		this.Rematch = new Event(this);
