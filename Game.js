@@ -242,7 +242,7 @@ define(function(require) {
 				promoteTo = PieceType.fromSanString(data.promoteTo);
 			}
 			
-			this._move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
+			this.move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
 		}).bind(this));
 		
 		user.subscribe("/game/" + this._id + "/resign", (function() {
@@ -270,7 +270,7 @@ define(function(require) {
 		}).bind(this));
 	}
 	
-	Game.prototype._move = function(user, from, to, promoteTo) {
+	Game.prototype.move = function(user, from, to, promoteTo) {
 		if(!this._isAborted) {
 			var colour = this._game.getActiveColour();
 			
