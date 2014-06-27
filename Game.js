@@ -293,6 +293,10 @@ define(function(require) {
 		}
 	}
 	
+	Game.prototype.getActiveColour = function() {
+		return this._game.getActiveColour();
+	}
+	
 	Game.prototype._getMoveJson = function(move, index) {
 		var promoteTo = move.getPromoteTo();
 		
