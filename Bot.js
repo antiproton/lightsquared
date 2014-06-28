@@ -57,9 +57,9 @@ define(function(require) {
 			}
 		}).bind(this);
 		
-		var findGame = [createChallenge].random();
+		var findGame = [acceptChallenge, createChallenge].random();
 		
-		setInterval(findGame, Math.floor(Math.random() * 5000));
+		setInterval(findGame, 1000 + Math.floor(Math.random() * 5000));
 	}
 	
 	Bot.prototype.getGamesAsWhiteRatio = function() {
