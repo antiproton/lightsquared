@@ -22,7 +22,7 @@ requirejs(["lib/websocket/server/Server", "./Application", "./Bot"], function(Se
 			var server = new Server(8080);
 			var app = new Application(server, db);
 			
-			for(var i = 0; i < 20; i++) {
+			for(var i = 0; i < 2; i++) {
 				new Bot(app);
 			}
 		}
