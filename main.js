@@ -16,11 +16,15 @@ requirejs.config({
 	}
 });
 
-requirejs(["lib/websocket/server/Server", "./Application"], function(Server, Application) {
+requirejs(["lib/websocket/server/Server", "./Application", "./Bot"], function(Server, Application, Bot) {
 	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
 		if(db) {
 			var server = new Server(8080);
 			var app = new Application(server, db);
+			
+			for(var i = 0; i < 20; i++) {
+				new Bot(app);
+			}
 		}
 		
 		else {
