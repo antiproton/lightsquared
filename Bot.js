@@ -140,7 +140,7 @@ define(function(require) {
 					var stockfish = spawn("stockfish");
 					
 					stockfish.stdin.write("position fen " + fen + "\n");
-					stockfish.stdin.write("go movetime 1000\n");
+					stockfish.stdin.write("go movetime 60\n");
 					
 					stockfish.stdout.on("data", (function(chunk) {
 						var bestmoveLine = "bestmove ";
