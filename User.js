@@ -31,6 +31,7 @@ define(function(require) {
 		this._recentRatedResults = [];
 		
 		this._prefs = {
+			premove: true,
 			alwaysQueen: false,
 			pieceStyle: null,
 			boardSize: null,
