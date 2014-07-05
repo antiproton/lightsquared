@@ -275,9 +275,9 @@ define(function(require) {
 			delete filters[url];
 		}
 		
-		user.subscribe("*", (function(url, data, originator) {
+		user.subscribe("*", (function(url, data) {
 			if(!(url in filters) || filters[url](user)) {
-				publisher.publish(url, data, originator);
+				publisher.publish(url, data);
 			}
 		}).bind(this));
 		
