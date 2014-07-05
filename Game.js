@@ -240,7 +240,47 @@ define(function(require) {
 	Game.prototype._subscribeToPlayerMessages = function(user) {
 		this._subscribeToUserMessages(user);
 		
-		user.subscribe("/game/" + this._id + "/move", (function(data) {
+		var publisher = new Publisher(user);
+		
+		var isInProgress = (function() {
+			return (!this._isAborted && this._game.isInProgress());
+		}).bind(this);
+		
+		var userIsActivePlayer = (function(user) {
+			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour());
+		}).bind(this);
+		
+		var userIsInactivePlayer = (function(user) {
+			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour().opposite);
+		}).bind(this);
+		
+		var isActiveAndUserIsPlaying = (function(user) {
+			return (isInProgress() && this.userIsPlaying(user));
+		}).bind(this);
+		
+		var filters = {
+			"/move": userIsActivePlayer,
+			"/resign": isActiveAndUserIsPlaying,
+			"/offer_draw": userIsInactivePlayer,
+			"/accept_draw": userIsActivePlayer,
+			"/claim_draw": isActiveAndUserIsPlaying,
+			"/offer_or_accept_rematch": this.userIsPlaying.bind(this),
+			"/decline_rematch": this.userIsPlaying.bind(this),
+		};
+		
+		for(var url in filters) {
+			filters["/game/" + this._id + url] = filters[url];
+			
+			delete filters[url];
+		}
+		
+		user.subscribe("*", (function(url, data, originator) {
+			if(!(url in filters) || filters[url](user)) {
+				publisher.publish(url, data, originator);
+			}
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/move", (function(data) {
 			var promoteTo;
 			
 			if(data.promoteTo !== undefined) {
@@ -250,50 +290,46 @@ define(function(require) {
 			this.move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
 		}).bind(this));
 		
-		user.subscribe("/game/" + this._id + "/resign", (function() {
+		publisher.subscribe("/game/" + this._id + "/resign", (function() {
 			this._resign(user);
 		}).bind(this));
 		
-		user.subscribe("/game/" + this._id + "/offer_draw", (function() {
+		publisher.subscribe("/game/" + this._id + "/offer_draw", (function() {
 			this._offerDraw(user);
 		}).bind(this));
 		
-		user.subscribe("/game/" + this._id + "/claim_draw", (function() {
-			this._claimDraw(user);
+		publisher.subscribe("/game/" + this._id + "/claim_draw", (function() {
+			this._claimDraw();
 		}).bind(this));
 		
-		user.subscribe("/game/" + this._id + "/accept_draw", (function() {
-			this._acceptDraw(user);
+		publisher.subscribe("/game/" + this._id + "/accept_draw", (function() {
+			this._acceptDraw();
 		}).bind(this));
 		
-		user.subscribe("/game/" + this._id + "/offer_or_accept_rematch", (function() {
+		publisher.subscribe("/game/" + this._id + "/offer_or_accept_rematch", (function() {
 			this._offerOrAcceptRematch(user);
 		}).bind(this));
 		
-		user.subscribe("/game/" + this._id + "/decline_rematch", (function() {
+		publisher.subscribe("/game/" + this._id + "/decline_rematch", (function() {
 			this._declineRematch(user);
 		}).bind(this));
 	}
 	
 	Game.prototype.move = function(user, from, to, promoteTo) {
-		if(!this._isAborted) {
-			var colour = this._game.getActiveColour();
+		if(this.getPlayerColour(user) === this.getActiveColour()) {
+			var index = this._game.getHistory().length;
+			var move = this._game.move(from, to, promoteTo);
 			
-			if(this._players[colour] === user) {
-				var index = this._game.getHistory().length;
-				var move = this._game.move(from, to, promoteTo);
+			if(move !== null && move.isLegal()) {
+				this._isDrawOffered = false;
+				this._isUndoRequested = false;
+				this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
+				this.Move.fire(move);
 				
-				if(move !== null && move.isLegal()) {
-					this._isDrawOffered = false;
-					this._isUndoRequested = false;
-					this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
-					this.Move.fire(move);
-					
-					this._clearAbortTimer();
-					
-					if(!this._game.timingHasStarted()) {
-						this._setAbortTimer();
-					}
+				this._clearAbortTimer();
+				
+				if(!this._game.timingHasStarted()) {
+					this._setAbortTimer();
 				}
 			}
 		}
@@ -316,45 +352,31 @@ define(function(require) {
 	}
 	
 	Game.prototype._resign = function(user) {
-		if(!this._isAborted) {
-			var playerColour = this.getPlayerColour(user);
-			
-			if(playerColour !== null) {
-				this._game.resign(playerColour);
-			}
-		}
+		this._game.resign(this.getPlayerColour(user));
 	}
 	
 	Game.prototype._offerDraw = function(user) {
-		if(!this._isAborted) {
-			var playerColour = this.getPlayerColour(user);
-			
-			if(playerColour === this._game.getActiveColour().opposite) {
-				this._isDrawOffered = true;
-				this._sendToAllUsers("/game/" + this._id + "/draw_offer", playerColour.fenString);
-			}
-		}
+		this._isDrawOffered = true;
+		this._sendToAllUsers("/game/" + this._id + "/draw_offer", this.getPlayerColour(user).fenString);
 	}
 	
 	Game.prototype._offerOrAcceptRematch = function(user) {
 		var colour = this.getPlayerColour(user);
+
+		if(this._rematchOfferedBy === colour.opposite) {
+			this._rematch();
+		}
 		
-		if(colour !== null) {
-			if(this._rematchOfferedBy === colour.opposite) {
-				this._rematch();
-			}
-			
-			else if(this._rematchOfferedBy === null) {
-				this._rematchOfferedBy = colour;
-				this._players[colour.opposite].send("/game/" + this._id + "/rematch_offer");
-			}
+		else if(this._rematchOfferedBy === null) {
+			this._rematchOfferedBy = colour;
+			this._players[colour.opposite].send("/game/" + this._id + "/rematch_offer");
 		}
 	}
 	
 	Game.prototype._declineRematch = function(user) {
 		var colour = this.getPlayerColour(user);
 		
-		if(colour !== null && this._rematchOfferedBy === colour.opposite) {
+		if(this._rematchOfferedBy === colour.opposite) {
 			this._players[colour.opposite].send("/game/" + this._id + "/rematch_declined");
 		}
 	}
@@ -366,19 +388,13 @@ define(function(require) {
 		this._sendToAllUsers("/game/" + this._id + "/rematch", game);
 	}
 	
-	Game.prototype._claimDraw = function(user) {
-		if(!this._isAborted) {
-			if(this.userIsPlaying(user)) {
-				this._game.claimDraw();
-			}
-		}
+	Game.prototype._claimDraw = function() {
+		this._game.claimDraw();
 	}
 	
-	Game.prototype._acceptDraw = function(user) {
-		if(!this._isAborted) {
-			if(this.getPlayerColour(user) === this._game.getActiveColour() && this._isDrawOffered) {
-				this._game.drawByAgreement();
-			}
+	Game.prototype._acceptDraw = function() {
+		if(this._isDrawOffered) {
+			this._game.drawByAgreement();
 		}
 	}
 	
