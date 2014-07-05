@@ -118,7 +118,7 @@ define(function(require) {
 	}
 	
 	Game.prototype.spectate = function(user) {
-		if(!(user in this._players) && !this._spectators.contains(user)) {
+		if(!this.userIsPlaying(user) && !this._spectators.contains(user)) {
 			this._spectators.push(user);
 			this._setupSpectator(user);
 		}
