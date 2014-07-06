@@ -6,6 +6,7 @@ define(function(require) {
 	var Publisher = require("lib/Publisher");
 	var Colour = require("chess/Colour");
 	var Move = require("jsonchess/Move");
+	var Premove = require("jsonchess/Premove");
 	var Square = require("chess/Square");
 	var Event = require("lib/Event");
 	var jsonchess = require("jsonchess/constants");
@@ -56,6 +57,8 @@ define(function(require) {
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
 		this._rematchOfferedBy = null;
+		
+		this._pendingPremove = null;
 		
 		for(var colour in this._players) {
 			this._setupPlayer(this._players[colour], colour);
@@ -261,6 +264,8 @@ define(function(require) {
 		
 		var filters = {
 			"/move": userIsActivePlayer,
+			"/premove": userIsInactivePlayer,
+			"/premove/cancel": userIsInactivePlayer,
 			"/resign": isActiveAndUserIsPlaying,
 			"/offer_draw": userIsInactivePlayer,
 			"/accept_draw": userIsActivePlayer,
@@ -291,6 +296,20 @@ define(function(require) {
 			this.move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
 		}).bind(this));
 		
+		publisher.subscribe("/game/" + this._id + "/premove", (function(json) {
+			if(this._pendingPremove === null) {
+				var premove = Premove.fromJSON(json, this.getPosition());
+				
+				if(premove.isValid()) {
+					this._pendingPremove = premove;
+				}
+			}
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
+			this._cancelPremove();
+		}).bind(this));
+		
 		publisher.subscribe("/game/" + this._id + "/resign", (function() {
 			this._resign(user);
 		}).bind(this));
@@ -314,6 +333,12 @@ define(function(require) {
 		publisher.subscribe("/game/" + this._id + "/decline_rematch", (function() {
 			this._declineRematch(user);
 		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/request/premove", (function() {
+			if(this.getPlayerColour(user) === this.getActiveColour().opposite) {
+				user.send("/premove", this._pendingPremove);
+			}
+		}).bind(this));
 	}
 	
 	Game.prototype.move = function(user, from, to, promoteTo) {
@@ -332,8 +357,27 @@ define(function(require) {
 				if(!this._game.timingHasStarted()) {
 					this._setAbortTimer();
 				}
+				
+				if(this._pendingPremove !== null) {
+					var premove = {
+						from: this._pendingPremove.getFrom(),
+						to: this._pendingPremove.getTo(),
+						promoteTo: this._pendingPremove.getPromoteTo()
+					};
+					
+					this._pendingPremove = null;
+					this.move(this._players[this.getActiveColour()], premove.from, premove.to, premove.promoteTo);
+				}
 			}
 		}
+	}
+	
+	Game.prototype._premove = function(user, from, to, promoteTo) {
+		
+	}
+	
+	Game.prototype._cancelPremove = function() {
+		this._pendingPremove = null;
 	}
 	
 	Game.prototype.getActiveColour = function() {
