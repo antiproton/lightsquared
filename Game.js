@@ -264,6 +264,7 @@ define(function(require) {
 		
 		var filters = {
 			"/move": userIsActivePlayer,
+			"/premove": isActiveAndUserIsPlaying,
 			"/premove/cancel": userIsInactivePlayer,
 			"/resign": isActiveAndUserIsPlaying,
 			"/offer_draw": userIsInactivePlayer,
@@ -296,13 +297,7 @@ define(function(require) {
 		}).bind(this));
 		
 		publisher.subscribe("/game/" + this._id + "/premove", (function(json) {
-			if(this._pendingPremove === null) {
-				var premove = Premove.fromJSON(json, this.getPosition());
-				
-				if(premove.isValid()) {
-					this._pendingPremove = premove;
-				}
-			}
+			this._premove(Premove.fromJSON(json, this.getPosition()));
 		}).bind(this));
 		
 		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
@@ -368,6 +363,16 @@ define(function(require) {
 					this.move(this._players[this.getActiveColour()], premove.from, premove.to, premove.promoteTo);
 				}
 			}
+		}
+	}
+	
+	Game.prototype._premove = function(premove) {
+		if(this.getPlayerColour(user) === this.getActiveColour()) {
+			this.move(user, premove.getFrom(), premove.getTo(), premove.getPromoteTo());
+		}
+		
+		else if(premove.isValid() && this._pendingPremove === null) {
+			this._pendingPremove = premove;
 		}
 	}
 	
