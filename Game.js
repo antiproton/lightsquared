@@ -264,7 +264,6 @@ define(function(require) {
 		
 		var filters = {
 			"/move": userIsActivePlayer,
-			"/premove": userIsInactivePlayer,
 			"/premove/cancel": userIsInactivePlayer,
 			"/resign": isActiveAndUserIsPlaying,
 			"/offer_draw": userIsInactivePlayer,
