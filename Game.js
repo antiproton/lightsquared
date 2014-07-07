@@ -306,7 +306,7 @@ define(function(require) {
 		}).bind(this));
 		
 		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
-			this._cancelPremove();
+			this._pendingPremove = null;
 		}).bind(this));
 		
 		publisher.subscribe("/game/" + this._id + "/resign", (function() {
@@ -369,14 +369,6 @@ define(function(require) {
 				}
 			}
 		}
-	}
-	
-	Game.prototype._premove = function(user, from, to, promoteTo) {
-		
-	}
-	
-	Game.prototype._cancelPremove = function() {
-		this._pendingPremove = null;
 	}
 	
 	Game.prototype.getActiveColour = function() {
