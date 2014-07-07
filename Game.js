@@ -297,7 +297,7 @@ define(function(require) {
 		}).bind(this));
 		
 		publisher.subscribe("/game/" + this._id + "/premove", (function(json) {
-			this._premove(Premove.fromJSON(json, this.getPosition()));
+			this._premove(user, Premove.fromJSON(json, this.getPosition()));
 		}).bind(this));
 		
 		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
@@ -366,7 +366,7 @@ define(function(require) {
 		}
 	}
 	
-	Game.prototype._premove = function(premove) {
+	Game.prototype._premove = function(user, premove) {
 		if(this.getPlayerColour(user) === this.getActiveColour()) {
 			this.move(user, premove.getFrom(), premove.getTo(), premove.getPromoteTo());
 		}
