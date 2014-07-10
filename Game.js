@@ -68,9 +68,9 @@ define(function(require) {
 		this._setAbortTimer();
 	}
 	
-	Game.restore = function(users, userAGameDetails, userBGameDetails) {
-		var historyA = userAGameDetails.history;
-		var historyB = userBGameDetails.history;
+	Game.restore = function(requestA, requestB) {
+		var historyA = requestA.gameDetails.history;
+		var historyB = requestB.gameDetails.history;
 		var minHistoryLength = Math.min(historyA.length, historyB.length);
 		var commonHistory = [];
 		
@@ -84,15 +84,22 @@ define(function(require) {
 			}
 		}
 		
-		userAGameDetails.history = userBGameDetails.history = commonHistory;
+		requestA.gameDetails.history = requestB.gameDetails.history = commonHistory;
 		
-		if(JSON.stringify(userAGameDetails) !== JSON.stringify(userBGameDetails)) {
+		if(JSON.stringify(requestA.gameDetails) !== JSON.stringify(requestB.gameDetails)) {
 			throw "Mismatch between game details submitted by each player";
 		}
 		
-		var gameDetails = userAGameDetails;
-		var white = users[gameDetails.white.username];
-		var black = users[gameDetails.black.username];
+		if(requestA.colour === requestB.colour) {
+			throw "Both players submitted the game to play as the same colour";
+		}
+		
+		var gameDetails = requestA.gameDetails;
+		var players = {};
+		
+		players[requestA.colour] = requestA.user;
+		players[requestB.colour] = requestB.user;
+		
 		var options = gameDetails.options;
 		
 		options.startTime = gameDetails.startTime;
@@ -101,7 +108,7 @@ define(function(require) {
 			return Move.fromJSON(move);
 		});
 		
-		var game = new Game(white, black, options);
+		var game = new Game(players[Colour.white], players[Colour.black], options);
 		
 		if(game.timingHasStarted() && game.getLastMove()) {
 			var lastMoveTime = game.getLastMove().getTime();

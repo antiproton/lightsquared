@@ -168,7 +168,6 @@ define(function(require) {
 	
 	Application.prototype._submitGameRestorationRequest = function(user, gameDetails) {
 		var id = gameDetails.id;
-		var username = user.getUsername();
 		var error = null;
 		
 		if(id in this._games) {
@@ -180,26 +179,26 @@ define(function(require) {
 				var pendingRestoration = this._pendingGameRestorations[id];
 				
 				if(pendingRestoration.user !== user) {
-					var users = {};
-					
-					users[pendingRestoration.user.getUsername()] = pendingRestoration.user;
-					users[username] = user;
+					var users = [user, pendingRestoration.user];
 					
 					try {
-						var game = Game.restore(users, gameDetails, pendingRestoration.gameDetails);
+						var game = Game.restore({
+							user: user,
+							gameDetails: gameDetails
+						}, pendingRestoration);
 						
-						for(var username in users) {
-							users[username].send("/game/restore/success", game);
-						}
+						users.forEach((function(user) {
+							user.send("/game/restore/success", game);
+						}).bind(this));
 					}
 					
 					catch(restorationError) {
-						for(var username in users) {
-							users[username].send("/game/restore/failure", {
+						users.forEach((function(user) {
+							user.send("/game/restore/failure", {
 								id: id,
 								reason: restorationError
 							});
-						}
+						}).bind(this));
 					}
 						
 					delete this._pendingGameRestorations[id];
