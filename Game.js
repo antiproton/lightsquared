@@ -90,10 +90,6 @@ define(function(require) {
 			throw "Mismatch between game details submitted by each player";
 		}
 		
-		if(!userAGameDetails.isInProgress) {
-			throw "Game must be in progress to be restored";
-		}
-		
 		var gameDetails = userAGameDetails;
 		var white = users[gameDetails.white.username];
 		var black = users[gameDetails.black.username];
