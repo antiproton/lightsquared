@@ -166,8 +166,8 @@ define(function(require) {
 		}).bind(this));
 	}
 	
-	Application.prototype._submitGameRestorationRequest = function(user, gameDetails) {
-		var id = gameDetails.id;
+	Application.prototype._submitGameRestorationRequest = function(user, request) {
+		var id = request.gameDetails.id;
 		var error = null;
 		
 		if(id in this._games) {
@@ -184,7 +184,8 @@ define(function(require) {
 					try {
 						var game = Game.restore({
 							user: user,
-							gameDetails: gameDetails
+							gameDetails: request.gameDetails,
+							colour: request.playingAs
 						}, pendingRestoration);
 						
 						users.forEach((function(user) {
@@ -208,7 +209,8 @@ define(function(require) {
 			else {
 				this._pendingGameRestorations[id] = {
 					user: user,
-					gameDetails: gameDetails
+					gameDetails: request.gameDetails,
+					colour: request.playingAs
 				};
 				
 				user.send("/game/restore/pending", id);
