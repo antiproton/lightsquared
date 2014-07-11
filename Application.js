@@ -5,6 +5,7 @@ define(function(require) {
 	var Challenge = require("./Challenge");
 	var time = require("lib/time");
 	var Game = require("./Game");
+	var Event = require("lib/Event");
 	
 	function Application(server, db) {
 		this._users = {};
@@ -15,6 +16,9 @@ define(function(require) {
 		this._publisher = new Publisher();
 		this._db = db;
 		this._pendingGameRestorations = {};
+		
+		this.NewChallenge = new Event(this);
+		this.ChallengeExpired = new Event(this);
 		
 		server.UserConnected.addHandler(this, function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
@@ -42,13 +46,14 @@ define(function(require) {
 		});
 		
 		challenge.Expired.addHandler(this, function() {
-			this._sendToAllUsers("/challenge/expired", id);
+			this.ChallengeExpired.fire(challenge);
 			
 			delete this._openChallenges[id];
 		});
 		
 		this._openChallenges[id] = challenge;
-		this._sendToAllUsers("/challenges", [challenge]);
+		
+		this.NewChallenge.fire(challenge);
 		
 		return challenge;
 	}
@@ -124,6 +129,8 @@ define(function(require) {
 		
 		if(user.isLoggedIn() && username in this._loggedInUsers && this._loggedInUsers[username] !== user) {
 			user.replace(this._loggedInUsers[username]);
+			
+			this._loggedInUsers[username] = user;
 		}
 	}
 	
@@ -148,25 +155,9 @@ define(function(require) {
 		user.LoggedOut.addHandler(this, function() {
 			delete this._loggedInUsers[loggedInUsername];
 		});
-		
-		user.Replaced.addHandler(this, function(newUser) {
-			this._loggedInUsers[loggedInUsername] = newUser;
-		});
-		
-		user.subscribe("/request/time", function(requestId, client) {
-			client.send("/time/" + requestId, time());
-		});
-		
-		user.subscribe("/game/restore", (function(gameDetails) {
-			this._submitGameRestorationRequest(user, gameDetails);
-		}).bind(this));
-		
-		user.subscribe("/game/restore/cancel", (function(id) {
-			this._cancelGameRestorationRequest(user, id);
-		}).bind(this));
 	}
 	
-	Application.prototype._submitGameRestorationRequest = function(user, request) {
+	Application.prototype.submitGameRestorationRequest = function(user, request) {
 		var id = request.gameDetails.id;
 		var error = null;
 		
@@ -225,7 +216,7 @@ define(function(require) {
 		}
 	}
 	
-	Application.prototype._cancelGameRestorationRequest = function(user, id) {
+	Application.prototype.cancelGameRestorationRequest = function(user, id) {
 		if(id in this._pendingGameRestorations && this._pendingGameRestorations[id].user === user) {
 			delete this._pendingGameRestorations[id];
 			

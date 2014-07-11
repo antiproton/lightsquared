@@ -61,6 +61,10 @@ define(function(require) {
 		return this._rating;
 	}
 	
+	Bot.prototype.getName = function() {
+		return this._username;
+	}
+	
 	Bot.prototype._playGame = function(game) {
 		this._game = game;
 		

@@ -16,6 +16,8 @@ define(function(require) {
 		this.Move = new Event(this);
 		this.GameOver = new Event(this);
 		this.Aborted = new Event(this);
+		this.RematchOffered = new Event(this);
+		this.RematchDeclined = new Event(this);
 		this.Rematch = new Event(this);
 		this.DrawOffered = new Event(this);
 		this.Chat = new Event(this);
@@ -51,10 +53,6 @@ define(function(require) {
 		this._isDrawOffered = false;
 		
 		this._pendingPremove = null;
-		
-		for(var colour in this._players) {
-			this._setupPlayer(this._players[colour], colour);
-		}
 		
 		this._isAborted = false;
 		this._setAbortTimer();

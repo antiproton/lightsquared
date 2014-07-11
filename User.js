@@ -1,12 +1,13 @@
 define(function(require) {
+	require("lib/Array.contains");
+	require("lib/Array.remove");
 	var id = require("lib/id");
 	var time = require("lib/time");
 	var Event = require("lib/Event");
 	var Glicko2 = require("glicko2").Glicko2;
 	var glicko2Constants = require("jsonchess/glicko2");
 	var PieceType = require("chess/PieceType");
-	require("lib/Array.contains");
-	require("lib/Array.remove");
+	var Player = require("./Player");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
@@ -18,9 +19,16 @@ define(function(require) {
 		this._db = db;
 		this._user = user;
 		this._app = app;
+		
+		this._gamesPlayedAsWhite = 0;
+		this._gamesPlayedAsBlack = 0;
+		
 		this._username = ANONYMOUS_USERNAME;
 		this._isLoggedIn = false;
 		this._player = new Player(this);
+		
+		this._glicko2 = this._getInitialGlicko2();
+		this._recentRatedResults = [];
 		
 		this._currentGames = [];
 		this._currentChallenge = null;
@@ -38,6 +46,10 @@ define(function(require) {
 		this.Disconnected = new Event(this);
 		this.LoggedIn = new Event(this);
 		this.LoggedOut = new Event(this);
+		
+		this._app.NewChallenge.addHandler(this, function(challenge) {
+			this._user.send("/challenges", [challenge]);
+		});
 		
 		this._user.Disconnected.addHandler(this, function() {
 			this._removeInactiveGames();
@@ -64,11 +76,15 @@ define(function(require) {
 	
 	User.prototype.replace = function(user) {
 		this._loadJson(user.getPersistentJson());
-		
-		user.logout();
-		
 		this._player = user.getPlayer();
 		this._player.setUser(this);
+		
+		user.getCurrentGames().forEach((function(game) {
+			this._addGame(game);
+		}).bind(this));
+		
+		user.logout();
+		user.disconnect();
 	}
 	
 	User.prototype.getPlayer = function() {
@@ -98,7 +114,7 @@ define(function(require) {
 				if(user) {
 					this._loadJson(user);
 					this._isLoggedIn = true;
-					this._player.cancelCurrentChallenge();
+					this._cancelCurrentChallenge();
 					this.LoggedIn.fire();
 					this._user.send("/user/login/success", this._getPrivateJson());
 				}
@@ -114,12 +130,8 @@ define(function(require) {
 		}
 	}
 	
-	User.prototype._logout = function() {
+	User.prototype.logout = function() {
 		if(this._isLoggedIn) {
-			this._currentGames.forEach((function(game) {
-				game.resign(this._player);
-			}).bind(this));
-			
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._currentGames = [];
@@ -128,6 +140,10 @@ define(function(require) {
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
+	}
+	
+	User.prototype.disconnect = function() {
+		this._user.disconnect();
 	}
 	
 	User.prototype._register = function(username, password) {
@@ -194,6 +210,10 @@ define(function(require) {
 		return this._username;
 	}
 	
+	User.prototype.getRating = function() {
+		return this._glicko2.rating;
+	}
+	
 	User.prototype.isLoggedIn = function() {
 		return this._isLoggedIn;
 	}
@@ -211,8 +231,12 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/user/logout", (function() {
+			this._currentGames.forEach((function(game) {
+				game.resign(this._player);
+			}).bind(this));
+			
 			this._updateDb();
-			this._logout();
+			this.logout();
 		}).bind(this));
 		
 		this._user.subscribe("/user/register", (function(data) {
@@ -261,6 +285,18 @@ define(function(require) {
 					this._prefs[pref] = prefs[pref];
 				}
 			}
+		}).bind(this));
+		
+		this._user.subscribe("/request/time", function(requestId, client) {
+			client.send("/time/" + requestId, time());
+		});
+		
+		this._user.subscribe("/game/restore", (function(gameDetails) {
+			this._app.submitGameRestorationRequest(this, gameDetails);
+		}).bind(this));
+		
+		this._user.subscribe("/game/restore/cancel", (function(id) {
+			this._app.cancelGameRestorationRequest(this, id);
 		}).bind(this));
 	}
 	
@@ -342,9 +378,9 @@ define(function(require) {
 	}
 	
 	User.prototype._createChallenge = function(options) {
-		this._player.cancelCurrentChallenge();
+		this._cancelCurrentChallenge();
 		
-		var challenge = this._player.createChallenge(options);
+		var challenge = this._app.createChallenge(this._player, options);
 		
 		challenge.Accepted.addHandler(this, function(game) {
 			this._addGame(game);
@@ -363,48 +399,82 @@ define(function(require) {
 		var challenge = this._app.getChallenge(id);
 		
 		if(challenge !== null) {
-			var game = this._player.acceptChallenge(challenge);
+			var game = challenge.accept(this._player);
 			
 			if(game !== null) {
 				this._addGame(game);
 				this._user.send("/challenge/accepted", game);
-				this._player.cancelCurrentChallenge();
+				this._cancelCurrentChallenge();
 			}
+		}
+	}
+	
+	User.prototype._cancelCurrentChallenge = function() {
+		if(this._currentChallenge !== null) {
+			this._currentChallenge.cancel();
 		}
 	}
 	
 	User.prototype._addGame = function(game) {
+		var id = game.getId();
+		
 		this._currentGames.push(game);
+		this._subscribeToGameMessages(game);
 		
 		game.Aborted.addHandler(this, (function() {
 			this._currentGames.remove(game);
+			this._user.send("/game/" + id + "/aborted");
+			//FIXME remove callbacks (but not the /rematch ones)
 		}));
+		
+		game.DrawOffered.addHandler(this, function() {
+			this._user.send("/game/" + id + "/draw_offer", game.getActiveColour().opposite.fenString);
+		});
 		
 		game.Rematch.addHandler(this, (function(game) {
 			this._addGame(game);
+			this._user.send("/game/" + id + "/rematch", game);
 		}).bind(this));
 		
-		if(this._isPlaying(game)) {
-			game.GameOver.addHandler(this, function() {
+		game.GameOver.addHandler(this, function(result) {
+			if(this._isPlayer(game)) {
 				this._registerCompletedRatedGame(game);
-			});
-		}
+			}
+			
+			//FIXME remove callbacks (but not the /rematch ones)
+			this._user.send("/game/" + id + "/game_over", result);
+		});
 		
 		game.Chat.addHandler(this, function(data) {
-			if(!this._isPlaying(game) || game.playerIsPlaying(data.player)) {
+			if(!this._isPlayer(game) || game.playerIsPlaying(data.player)) {
 				this._user.send("/game/" + id + "/chat", {
-					from: player.getName(),
+					from: data.player.getName(),
 					body: data.message
 				});
 			}
 		});
+		
+		if(this._isPlayer(game)) {
+			game.RematchOffered.addHandler(this, function(player) {
+				if(player !== this._player) {
+					this._user.send("/game/" + id + "/rematch_offer");
+				}
+			});
+			
+			game.RematchDeclined.addHandler(this, function() {
+				if(player !== this._player) {
+					this._user.send("/game/" + id + "/rematch_declined");
+				}
+			});
+		}
 	}
 	
-	User.prototype._isPlaying = function(game) {
+	User.prototype._isPlayer = function(game) {
 		return game.playerIsPlaying(this._player);
 	}
 	
 	User.prototype._removeInactiveGames = function() {
+		//FIXME remove callbacks (including /rematch ones)
 		this._currentGames = this._currentGames.filter((function(game) {
 			return (game.isInProgress() || time() - game.getEndTime() < INACTIVE_GAMES_EXPIRE);
 		}).bind(this));
@@ -424,6 +494,10 @@ define(function(require) {
 		return (game || this._app.getGame(id));
 	}
 	
+	User.prototype.getCurrentGames = function() {
+		return this._currentGames.getShallowCopy();
+	}
+	
 	User.prototype._spectateGame = function(id) {
 		var game = this._getGame(id);
 		
@@ -436,7 +510,7 @@ define(function(require) {
 	
 	User.prototype._hasGamesInProgress = function() {
 		return this._currentGames.some((function(game) {
-			return (game.isInProgress() && this._isPlaying(game));
+			return (game.isInProgress() && this._isPlayer(game));
 		}).bind(this));
 	}
 	
@@ -492,6 +566,10 @@ define(function(require) {
 			rd: glicko2Constants.defaults.RD,
 			vol: glicko2Constants.defaults.VOL
 		};
+	}
+	
+	User.prototype.getGamesAsWhiteRatio = function() {
+		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
 	}
 	
 	User.prototype.toJSON = function() {

@@ -7,6 +7,10 @@ define(function(require) {
 		return this._user.getRating();
 	}
 	
+	Player.prototype.getGamesAsWhiteRatio = function() {
+		return this._user.getGamesAsWhiteRatio();
+	}
+	
 	Player.prototype.getName = function() {
 		return this._user.getUsername();
 	}
