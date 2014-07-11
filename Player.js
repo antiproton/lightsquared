@@ -7,6 +7,10 @@ define(function(require) {
 		return this._user.getRating();
 	}
 	
+	Player.prototype.getName = function() {
+		return this._user.getUsername();
+	}
+	
 	Player.prototype.setUser = function(user) {
 		this._user = user;
 	}
