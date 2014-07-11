@@ -22,13 +22,10 @@ define(function(require) {
 		this._username = ANONYMOUS_USERNAME;
 		this._isLoggedIn = false;
 		this._publisher = new Publisher(this);
-		this._gamesPlayedAsWhite = 0;
-		this._gamesPlayedAsBlack = 0;
+		
 		this._currentGames = [];
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
-		this._glicko2 = this._getInitialGlicko2();
-		this._recentRatedResults = [];
 		
 		this._prefs = {
 			premove: true,
@@ -43,7 +40,6 @@ define(function(require) {
 		this.LoggedIn = new Event(this);
 		this.LoggingOut = new Event(this);
 		this.LoggedOut = new Event(this);
-		this.Replaced = new Event(this);
 		
 		this._user.Disconnected.addHandler(this, function() {
 			this._removeInactiveGames();
@@ -68,41 +64,12 @@ define(function(require) {
 		this._subscribeToUserMessages();
 	}
 	
-	User.prototype.getCurrentGames = function() {
-		return this._currentGames.getShallowCopy();
-	}
-	
-	User.prototype.getRating = function() {
-		return this._glicko2.rating;
-	}
-	
-	User.prototype.getGlicko2 = function() {
-		return this._glicko2;
-	}
-	
-	User.prototype.getGamesPlayedAsWhite = function() {
-		return this._gamesPlayedAsWhite;
-	}
-	
-	User.prototype.getGamesPlayedAsBlack = function() {
-		return this._gamesPlayedAsBlack;
-	}
-	
 	User.prototype.replace = function(user) {
 		this._loadJson(user.getPersistentJson());
 		
-		user.replaceWith(this);
+		user.logout();
 		
-		user.getCurrentGames().forEach((function(game) {
-			this._currentGames.push(game);
-		}).bind(this));
-	}
-	
-	User.prototype.replaceWith = function(user) {
-		this.Replaced.fire(user);
-		this._logout();
-		this._user.send("/user/replaced");
-		this._user.disconnect();
+		this._player = user.getPlayer();
 	}
 	
 	User.prototype.getId = function() {
@@ -146,12 +113,12 @@ define(function(require) {
 	
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
-			this.LoggingOut.fire();
+			this.LoggingOut.fire(); //FIXME resign all games.  LoggingOut might not be necessary.
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._currentGames = [];
 			this._username = ANONYMOUS_USERNAME;
-			this._glicko2 = this._getInitialGlicko2();
+			this._player = new Player(); //FIXME
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
@@ -244,9 +211,133 @@ define(function(require) {
 		return (timeLastActive >= time() - maxIdleTime || this._hasGamesInProgress());
 	}
 	
-	User.prototype.getGamesAsWhiteRatio = function() {
-		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
+	/*
+	Game.prototype._subscribeToUserMessages = function(user) {
+		user.subscribe("/game/" + this._id + "/request/moves", (function(startingIndex) {
+			var index = startingIndex;
+			
+			this._game.getHistory().slice(index).forEach(function(move) {
+				user.send("/game/" + this._id + "/move", this._getMoveJson(move, index));
+			
+				index++;
+			});
+			
+		}).bind(this));
+		
+		user.subscribe("/game/" + this._id + "/chat", (function(message) {
+			if(message.length > 0) {
+				var url = "/game/" + this._id + "/chat";
+				
+				var chatMessage = {
+					from: user.getUsername(),
+					body: message
+				};
+				
+				if(this.userIsPlaying(user) || !this.isInProgress()) {
+					this._sendToAllUsers(url, chatMessage);
+				}
+				
+				else {
+					this._sendToSpectators(url, chatMessage);
+				}
+			}
+		}).bind(this));
 	}
+	
+	Game.prototype._subscribeToPlayerMessages = function(user) {
+		this._subscribeToUserMessages(user);
+		
+		var publisher = new Publisher(user);
+		
+		var isInProgress = (function() {
+			return (!this._isAborted && this._game.isInProgress());
+		}).bind(this);
+		
+		var userIsActivePlayer = (function(user) {
+			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour());
+		}).bind(this);
+		
+		var userIsInactivePlayer = (function(user) {
+			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour().opposite);
+		}).bind(this);
+		
+		var isActiveAndUserIsPlaying = (function(user) {
+			return (isInProgress() && this.userIsPlaying(user));
+		}).bind(this);
+		
+		var filters = {
+			"/move": userIsActivePlayer,
+			"/premove": isActiveAndUserIsPlaying,
+			"/premove/cancel": userIsInactivePlayer,
+			"/resign": isActiveAndUserIsPlaying,
+			"/offer_draw": userIsInactivePlayer,
+			"/accept_draw": userIsActivePlayer,
+			"/claim_draw": isActiveAndUserIsPlaying,
+			"/offer_or_accept_rematch": this.userIsPlaying.bind(this),
+			"/decline_rematch": this.userIsPlaying.bind(this),
+		};
+		
+		for(var url in filters) {
+			filters["/game/" + this._id + url] = filters[url];
+			
+			delete filters[url];
+		}
+		
+		user.subscribe("*", (function(url, data) {
+			if(!(url in filters) || filters[url](user)) {
+				publisher.publish(url, data);
+			}
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/move", (function(data) {
+			var promoteTo;
+			
+			if(data.promoteTo !== undefined) {
+				promoteTo = PieceType.fromSanString(data.promoteTo);
+			}
+			
+			this.move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/premove", (function(json) {
+			this._premove(user, Premove.fromJSON(json, this.getPosition()));
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
+			this._pendingPremove = null;
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/resign", (function() {
+			this._resign(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/offer_draw", (function() {
+			this._offerDraw(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/claim_draw", (function() {
+			this._claimDraw();
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/accept_draw", (function() {
+			this._acceptDraw();
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/offer_or_accept_rematch", (function() {
+			this._offerOrAcceptRematch(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/decline_rematch", (function() {
+			this._declineRematch(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/request/premove", (function() {
+			if(this.getPlayerColour(user) === this.getActiveColour().opposite) {
+				user.send("/game/" + this._id + "/premove", this._pendingPremove);
+			}
+		}).bind(this));
+	}
+	*/
 	
 	User.prototype._subscribeToUserMessages = function() {
 		this._user.subscribe("*", (function(url, data, client) {
@@ -312,39 +403,31 @@ define(function(require) {
 	}
 	
 	User.prototype._createChallenge = function(options) {
-		this._cancelCurrentChallenge();
+		this._player.cancelCurrentChallenge();
 		
-		var challenge = this._app.createChallenge(this, options);
+		var challenge = this._player.createChallenge(options);
 		
 		challenge.Accepted.addHandler(this, function(game) {
 			this._addGame(game);
 		});
 		
 		challenge.Expired.addHandler(this, function() {
-			this._currentChallenge = null;
 			this._user.send("/current_challenge/expired");
 		});
 		
 		this._user.send("/current_challenge", challenge);
-		this._currentChallenge = challenge;
 		this._lastChallengeOptions = options;
-	}
-	
-	User.prototype._cancelCurrentChallenge = function() {
-		if(this._currentChallenge !== null) {
-			this._currentChallenge.cancel();
-		}
 	}
 	
 	User.prototype._acceptChallenge = function(id) {
 		var challenge = this._app.getChallenge(id);
-			
+		
 		if(challenge !== null) {
-			var game = challenge.accept(this);
+			var game = this._player.acceptChallenge(challenge);
 			
 			if(game !== null) {
 				this._addGame(game);
-				this._cancelCurrentChallenge();
+				this._player.cancelCurrentChallenge();
 			}
 		}
 	}
@@ -360,11 +443,15 @@ define(function(require) {
 			this._addGame(game);
 		}).bind(this));
 		
-		if(game.userIsPlaying(this)) {
+		if(this._isPlaying(game)) {
 			game.GameOver.addHandler(this, function() {
 				this._registerCompletedRatedGame(game);
 			});
 		}
+	}
+	
+	User.prototype._isPlaying = function(game) {
+		return game.playerIsPlaying(this._player);
 	}
 	
 	User.prototype._removeInactiveGames = function() {
@@ -401,7 +488,7 @@ define(function(require) {
 	
 	User.prototype._hasGamesInProgress = function() {
 		return this._currentGames.some((function(game) {
-			return (game.isInProgress() && game.userIsPlaying(this));
+			return (game.isInProgress() && this._isPlaying(game));
 		}).bind(this));
 	}
 	
