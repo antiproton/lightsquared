@@ -2,8 +2,6 @@ define(function(require) {
 	require("lib/Array.random");
 	var spawn = require("child_process").spawn;
 	var PieceType = require("chess/PieceType");
-	var Glicko2 = require("glicko2").Glicko2;
-	var glicko2Constants = require("jsonchess/glicko2");
 	var id = require("lib/id");
 	var Event = require("lib/Event");
 	var Square = require("chess/Square");
@@ -13,20 +11,13 @@ define(function(require) {
 		this._username = this._id;
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
-		this._recentRatedResults = [];
+		
 		this._isLoggedIn = true;
 		this._app = app;
 		this._game = null;
 		this._challenge = null;
 		this._uciSkillLevel = 5 + Math.floor(Math.random() * 10);
-		this._glicko2 = this._getInitialGlicko2();
-		
-		this.Connected = new Event(this);
-		this.Disconnected = new Event(this);
-		this.LoggedIn = new Event(this);
-		this.LoggingOut = new Event(this);
-		this.LoggedOut = new Event(this);
-		this.Replaced = new Event(this);
+		this._rating = 123; //set this depending on the skill level
 		
 		var acceptChallenge = (function() {
 			if(!this._game) {
@@ -67,65 +58,7 @@ define(function(require) {
 	}
 	
 	Bot.prototype.getRating = function() {
-		return this._glicko2.rating;
-	}
-	
-	Bot.prototype.getGlicko2 = function() {
-		return this._glicko2;
-	}
-	
-	Bot.prototype._registerCompletedRatedGame = function(game) {
-		var colour = game.getPlayerColour(this);
-		var opponentGlicko2 = game.getPlayer(colour.opposite).getGlicko2();
-		var result = game.getResult();
-		
-		this._recentRatedResults.push({
-			opponentGlicko2: {
-				rating: opponentGlicko2.rating,
-				rd: opponentGlicko2.rd,
-				vol: opponentGlicko2.vol
-			},
-			playerScore: result.scores[colour]
-		});
-		
-		if(this._recentRatedResults.length === glicko2Constants.GAMES_PER_RATING_PERIOD) {
-			this._updateGlicko2();
-			this._recentRatedResults = [];
-		}
-	}
-	
-	Bot.prototype._updateGlicko2 = function() {
-		var glicko2 = new Glicko2({
-			rating: glicko2Constants.defaults.RATING,
-			rd: glicko2Constants.defaults.RD,
-			vol: glicko2Constants.defaults.VOL
-		});
-		
-		var matches = [];
-		var glicko2Player = glicko2.makePlayer(this._glicko2.rating, this._glicko2.rd, this._glicko2.vol);
-		
-		this._recentRatedResults.forEach(function(result) {
-			var opponentGlicko2 = result.opponentGlicko2;
-			var glicko2Opponent = glicko2.makePlayer(opponentGlicko2.rating, opponentGlicko2.rd, opponentGlicko2.vol);
-			
-			matches.push([glicko2Player, glicko2Opponent, result.playerScore]);
-		});
-		
-		glicko2.updateRatings(matches);
-		
-		this._glicko2 = {
-			rating: glicko2Player.getRating(),
-			rd: glicko2Player.getRd(),
-			vol: glicko2Player.getVol()
-		};
-	}
-	
-	Bot.prototype._getInitialGlicko2 = function() {
-		return {
-			rating: glicko2Constants.defaults.RATING,
-			rd: glicko2Constants.defaults.RD,
-			vol: glicko2Constants.defaults.VOL
-		};
+		return this._rating;
 	}
 	
 	Bot.prototype._playGame = function(game) {
@@ -171,7 +104,6 @@ define(function(require) {
 		
 		game.GameOver.addHandler(this, function() {
 			this._game = null;
-			this._registerCompletedRatedGame(game);
 		});
 		
 		game.Aborted.addHandler(this, function() {
@@ -179,26 +111,12 @@ define(function(require) {
 		});
 	}
 	
-	Bot.prototype.send = function(url, data) {
-		/*
-		bots deal directly with the app
-		*/
-	}
-	
-	Bot.prototype.subscribe = function(url, callback) {
-		/*
-		bots deal directly with the app
-		*/
-	}
-	
 	Bot.prototype.toJSON = function() {
 		return {
 			id: this._id,
 			username: this._username,
-			isLoggedIn: this._isLoggedIn,
-			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
-			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
-			rating: this._glicko2.rating
+			isLoggedIn: true,
+			rating: this._rating
 		};
 	}
 	

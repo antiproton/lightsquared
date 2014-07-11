@@ -18,6 +18,7 @@ define(function(require) {
 		this.Aborted = new Event(this);
 		this.Rematch = new Event(this);
 		this.DrawOffered = new Event(this);
+		this.Chat = new Event(this);
 		
 		this._options = {
 			history: [],
@@ -163,6 +164,13 @@ define(function(require) {
 		return this._game.getResult();
 	}
 	
+	Game.prototype.chat = function(player, message) {
+		this.Chat.fire({
+			player: player,
+			message: message
+		});
+	}
+	
 	Game.prototype.move = function(player, from, to, promoteTo) {
 		if(this.getPlayerColour(player) === this.getActiveColour()) {
 			var move = this._game.move(from, to, promoteTo);
@@ -193,7 +201,9 @@ define(function(require) {
 		}
 	}
 	
-	Game.prototype.premove = function(player, premove) {
+	Game.prototype.premove = function(player, from, to, promoteTo) {
+		var premove = new Premove(this.getPosition(), from, to, promoteTo)
+		
 		if(
 			this.getPlayerColour(player) === this.getActiveColour().opposite
 			&& premove.isValid()
@@ -238,9 +248,28 @@ define(function(require) {
 		}
 	}
 	
-	Game.prototype.rematch = function() {
+	Game.prototype._rematch = function() {
 		if(!this.isInProgress()) {
 			this.Rematch.fire(new Game(this._players[Colour.black], this._players[Colour.white], this._options));
+		}
+	}
+	
+	Game.prototype.offerRematch = function(player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy === null) {
+			this._rematchOfferedBy = player;
+			this.RematchOffered.fire(player);
+		}
+	}
+	
+	Game.prototype.acceptRematch = function(player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== player && this._rematchOfferedBy !== null) {
+			this._rematch();
+		}
+	}
+	
+	Game.prototype.declineRematch = function(player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== player) {
+			this.RematchDeclined.fire(player);
 		}
 	}
 	

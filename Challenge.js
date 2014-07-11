@@ -36,32 +36,28 @@ define(function(require) {
 		return this._id;
 	}
 	
-	Challenge.prototype.accept = function(user) {
-		var guestRating = user.getRating();
+	Challenge.prototype.accept = function(player) {
+		var guestRating = player.getRating();
 		var game = null;
 		
-		if(user !== this._owner && guestRating >= this._acceptRatingMin && guestRating <= this._acceptRatingMax) {
+		if(player !== this._owner && guestRating >= this._acceptRatingMin && guestRating <= this._acceptRatingMax) {
 			var white, black;
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();
-			var guestRatio = user.getGamesAsWhiteRatio();
+			var guestRatio = player.getGamesAsWhiteRatio();
 			
 			if(ownerRatio > guestRatio) {
-				white = user;
+				white = player;
 				black = this._owner;
 			}
 			
 			else {
 				white = this._owner;
-				black = user;
+				black = player;
 			}
 			
 			game = new Game(white, black, {
 				initialTime: this._options.initialTime,
 				timeIncrement: this._options.timeIncrement
-			});
-			
-			[white, black].forEach(function(player) {
-				player.send("/challenge/accepted", game);
 			});
 			
 			this._clearTimeoutTimer();

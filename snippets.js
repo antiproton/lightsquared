@@ -96,17 +96,7 @@
 	
 	...
 	
-	Game.prototype._getMoveJson = function(move, index) {
-		var promoteTo = move.getPromoteTo();
-		
-		return {
-			from: move.getFrom().squareNo,
-			to: move.getTo().squareNo,
-			promoteTo: promoteTo === PieceType.queen ? undefined : promoteTo.sanString,
-			index: index,
-			time: move.getTime()
-		};
-	}
+	
 	User has to handle sending the move index
 	
 	var index = this._game.getHistory().length;
@@ -199,10 +189,6 @@
 	*/
 	
 	
-	/*
-	*/
-	
-	
 	
 	/*
 	
@@ -219,3 +205,98 @@
 			}
 		}
 	*/
+	
+	
+	
+	
+	
+	//Game.subscribetoplayeremssages
+		var publisher = new Publisher(user);
+		
+		var isInProgress = (function() {
+			return (!this._isAborted && this._game.isInProgress());
+		}).bind(this);
+		
+		var userIsActivePlayer = (function(user) {
+			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour());
+		}).bind(this);
+		
+		var userIsInactivePlayer = (function(user) {
+			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour().opposite);
+		}).bind(this);
+		
+		var isActiveAndUserIsPlaying = (function(user) {
+			return (isInProgress() && this.userIsPlaying(user));
+		}).bind(this);
+		
+		var filters = {
+			"/move": userIsActivePlayer,
+			"/premove": isActiveAndUserIsPlaying,
+			"/premove/cancel": userIsInactivePlayer,
+			"/resign": isActiveAndUserIsPlaying,
+			"/offer_draw": userIsInactivePlayer,
+			"/accept_draw": userIsActivePlayer,
+			"/claim_draw": isActiveAndUserIsPlaying,
+			"/offer_or_accept_rematch": this.userIsPlaying.bind(this),
+			"/decline_rematch": this.userIsPlaying.bind(this),
+		};
+		
+		for(var url in filters) {
+			filters["/game/" + this._id + url] = filters[url];
+			
+			delete filters[url];
+		}
+		
+		user.subscribe("*", (function(url, data) {
+			if(!(url in filters) || filters[url](user)) {
+				publisher.publish(url, data);
+			}
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/move", (function(data) {
+			var promoteTo;
+			
+			if(data.promoteTo !== undefined) {
+				promoteTo = PieceType.fromSanString(data.promoteTo);
+			}
+			
+			this.move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/premove", (function(json) {
+			this._premove(user, Premove.fromJSON(json, this.getPosition()));
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
+			this._pendingPremove = null;
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/resign", (function() {
+			this._resign(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/offer_draw", (function() {
+			this._offerDraw(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/claim_draw", (function() {
+			this._claimDraw();
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/accept_draw", (function() {
+			this._acceptDraw();
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/offer_or_accept_rematch", (function() {
+			this._offerOrAcceptRematch(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/decline_rematch", (function() {
+			this._declineRematch(user);
+		}).bind(this));
+		
+		publisher.subscribe("/game/" + this._id + "/request/premove", (function() {
+			if(this.getPlayerColour(user) === this.getActiveColour().opposite) {
+				user.send("/game/" + this._id + "/premove", this._pendingPremove);
+			}
+		}).bind(this));

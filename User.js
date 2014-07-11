@@ -1,11 +1,10 @@
 define(function(require) {
-	var Publisher = require("lib/Publisher");
 	var id = require("lib/id");
 	var time = require("lib/time");
 	var Event = require("lib/Event");
 	var Glicko2 = require("glicko2").Glicko2;
 	var glicko2Constants = require("jsonchess/glicko2");
-	require("lib/Array.getShallowCopy");
+	var PieceType = require("chess/PieceType");
 	require("lib/Array.contains");
 	require("lib/Array.remove");
 	
@@ -21,7 +20,7 @@ define(function(require) {
 		this._app = app;
 		this._username = ANONYMOUS_USERNAME;
 		this._isLoggedIn = false;
-		this._publisher = new Publisher(this);
+		this._player = new Player(this);
 		
 		this._currentGames = [];
 		this._currentChallenge = null;
@@ -38,7 +37,6 @@ define(function(require) {
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
 		this.LoggedIn = new Event(this);
-		this.LoggingOut = new Event(this);
 		this.LoggedOut = new Event(this);
 		
 		this._user.Disconnected.addHandler(this, function() {
@@ -70,6 +68,11 @@ define(function(require) {
 		user.logout();
 		
 		this._player = user.getPlayer();
+		this._player.setUser(this);
+	}
+	
+	User.prototype.getPlayer = function() {
+		return this._player;
 	}
 	
 	User.prototype.getId = function() {
@@ -95,7 +98,7 @@ define(function(require) {
 				if(user) {
 					this._loadJson(user);
 					this._isLoggedIn = true;
-					this._cancelCurrentChallenge();
+					this._player.cancelCurrentChallenge();
 					this.LoggedIn.fire();
 					this._user.send("/user/login/success", this._getPrivateJson());
 				}
@@ -113,12 +116,15 @@ define(function(require) {
 	
 	User.prototype._logout = function() {
 		if(this._isLoggedIn) {
-			this.LoggingOut.fire(); //FIXME resign all games.  LoggingOut might not be necessary.
+			this._currentGames.forEach((function(game) {
+				game.resign(this._player);
+			}).bind(this));
+			
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._currentGames = [];
 			this._username = ANONYMOUS_USERNAME;
-			this._player = new Player(); //FIXME
+			this._player = new Player(this);
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
@@ -184,18 +190,6 @@ define(function(require) {
 		}
 	}
 	
-	User.prototype.subscribe = function(url, callback) {
-		this._publisher.subscribe(url, callback);
-	}
-	
-	User.prototype.unsubscribe = function(url, callback) {
-		this._publisher.unsubscribe(url, callback);
-	}
-	
-	User.prototype.send = function(url, data) {
-		this._user.send(url, data);
-	}
-	
 	User.prototype.getUsername = function() {
 		return this._username;
 	}
@@ -211,139 +205,7 @@ define(function(require) {
 		return (timeLastActive >= time() - maxIdleTime || this._hasGamesInProgress());
 	}
 	
-	/*
-	Game.prototype._subscribeToUserMessages = function(user) {
-		user.subscribe("/game/" + this._id + "/request/moves", (function(startingIndex) {
-			var index = startingIndex;
-			
-			this._game.getHistory().slice(index).forEach(function(move) {
-				user.send("/game/" + this._id + "/move", this._getMoveJson(move, index));
-			
-				index++;
-			});
-			
-		}).bind(this));
-		
-		user.subscribe("/game/" + this._id + "/chat", (function(message) {
-			if(message.length > 0) {
-				var url = "/game/" + this._id + "/chat";
-				
-				var chatMessage = {
-					from: user.getUsername(),
-					body: message
-				};
-				
-				if(this.userIsPlaying(user) || !this.isInProgress()) {
-					this._sendToAllUsers(url, chatMessage);
-				}
-				
-				else {
-					this._sendToSpectators(url, chatMessage);
-				}
-			}
-		}).bind(this));
-	}
-	
-	Game.prototype._subscribeToPlayerMessages = function(user) {
-		this._subscribeToUserMessages(user);
-		
-		var publisher = new Publisher(user);
-		
-		var isInProgress = (function() {
-			return (!this._isAborted && this._game.isInProgress());
-		}).bind(this);
-		
-		var userIsActivePlayer = (function(user) {
-			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour());
-		}).bind(this);
-		
-		var userIsInactivePlayer = (function(user) {
-			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour().opposite);
-		}).bind(this);
-		
-		var isActiveAndUserIsPlaying = (function(user) {
-			return (isInProgress() && this.userIsPlaying(user));
-		}).bind(this);
-		
-		var filters = {
-			"/move": userIsActivePlayer,
-			"/premove": isActiveAndUserIsPlaying,
-			"/premove/cancel": userIsInactivePlayer,
-			"/resign": isActiveAndUserIsPlaying,
-			"/offer_draw": userIsInactivePlayer,
-			"/accept_draw": userIsActivePlayer,
-			"/claim_draw": isActiveAndUserIsPlaying,
-			"/offer_or_accept_rematch": this.userIsPlaying.bind(this),
-			"/decline_rematch": this.userIsPlaying.bind(this),
-		};
-		
-		for(var url in filters) {
-			filters["/game/" + this._id + url] = filters[url];
-			
-			delete filters[url];
-		}
-		
-		user.subscribe("*", (function(url, data) {
-			if(!(url in filters) || filters[url](user)) {
-				publisher.publish(url, data);
-			}
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/move", (function(data) {
-			var promoteTo;
-			
-			if(data.promoteTo !== undefined) {
-				promoteTo = PieceType.fromSanString(data.promoteTo);
-			}
-			
-			this.move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/premove", (function(json) {
-			this._premove(user, Premove.fromJSON(json, this.getPosition()));
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
-			this._pendingPremove = null;
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/resign", (function() {
-			this._resign(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/offer_draw", (function() {
-			this._offerDraw(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/claim_draw", (function() {
-			this._claimDraw();
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/accept_draw", (function() {
-			this._acceptDraw();
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/offer_or_accept_rematch", (function() {
-			this._offerOrAcceptRematch(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/decline_rematch", (function() {
-			this._declineRematch(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/request/premove", (function() {
-			if(this.getPlayerColour(user) === this.getActiveColour().opposite) {
-				user.send("/game/" + this._id + "/premove", this._pendingPremove);
-			}
-		}).bind(this));
-	}
-	*/
-	
 	User.prototype._subscribeToUserMessages = function() {
-		this._user.subscribe("*", (function(url, data, client) {
-			this._publisher.publish(url, data, client);
-		}).bind(this));
-		
 		this._user.subscribe("/user/login", (function(data) {
 			this._login(data.username, data.password);
 		}).bind(this));
@@ -402,6 +264,83 @@ define(function(require) {
 		}).bind(this));
 	}
 	
+	User.prototype._subscribeToGameMessages = function(game) {
+		/*
+		FIXME need to remove these callbacks on GameOver/Aborted as otherwise the games will
+		stay around.
+		*/
+		
+		this._user.subscribe("/game/" + id + "/request/moves", (function(data) {
+			var index = data.startingIndex;
+			
+			game.getHistory().slice(index).forEach((function(move) {
+				this._user.send("/game/" + id + "/move", Move.getShortJSON(move, index));
+			
+				index++;
+			}).bind(this));
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/chat", (function(message) {
+			if(message.length > 0) {
+				game.chat(this._player, message);
+			}
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/move", (function(data) {
+			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
+			
+			game.move(this._player, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/premove", (function(data) {
+			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
+			var from = Square.fromSquareNo(data.from);
+			var to = Square.fromSquareNo(data.to);
+			
+			if(game.getPlayerColour(this._player) === game.getActiveColour()) {
+				game.move(this._player, from, to, promoteTo);
+			}
+			
+			else {
+				game.premove(this._player, from, to, promoteTo);
+			}
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/request/premove", (function() {
+			if(game.getPlayerColour(this._player) === game.getActiveColour().opposite) {
+				user.send("/game/" + id + "/premove", this._pendingPremove);
+			}
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/premove/cancel", (function() {
+			game.cancelPremove(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/resign", (function() {
+			game.resign(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/offer_draw", (function() {
+			game.offerDraw(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/claim_draw", (function() {
+			game.claimDraw(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/accept_draw", (function() {
+			game.acceptDraw(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/offer_or_accept_rematch", (function() {
+			game.offerOrAcceptRematch(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/decline_rematch", (function() {
+			game.declineRematch(this._player);
+		}).bind(this));
+	}
+	
 	User.prototype._createChallenge = function(options) {
 		this._player.cancelCurrentChallenge();
 		
@@ -409,6 +348,7 @@ define(function(require) {
 		
 		challenge.Accepted.addHandler(this, function(game) {
 			this._addGame(game);
+			this._user.send("/challenge/accepted", game);
 		});
 		
 		challenge.Expired.addHandler(this, function() {
@@ -427,6 +367,7 @@ define(function(require) {
 			
 			if(game !== null) {
 				this._addGame(game);
+				this._user.send("/challenge/accepted", game);
 				this._player.cancelCurrentChallenge();
 			}
 		}
@@ -448,6 +389,15 @@ define(function(require) {
 				this._registerCompletedRatedGame(game);
 			});
 		}
+		
+		game.Chat.addHandler(this, function(data) {
+			if(!this._isPlaying(game) || game.playerIsPlaying(data.player)) {
+				this._user.send("/game/" + id + "/chat", {
+					from: player.getName(),
+					body: data.message
+				});
+			}
+		});
 	}
 	
 	User.prototype._isPlaying = function(game) {
@@ -478,8 +428,6 @@ define(function(require) {
 		var game = this._getGame(id);
 		
 		if(game && !this._currentGames.contains(game)) {
-			game.spectate(this);
-		
 			this._addGame(game);
 		}
 		
@@ -551,8 +499,6 @@ define(function(require) {
 			id: this._id,
 			username: this._username,
 			isLoggedIn: this._isLoggedIn,
-			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
-			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._glicko2.rating
 		};
 	}
