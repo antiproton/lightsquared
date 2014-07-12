@@ -158,6 +158,10 @@ define(function(require) {
 		return this._game.getEndTime();
 	}
 	
+	Game.prototype.getHistory = function() {
+		return this._game.getHistory();
+	}
+	
 	Game.prototype.getResult = function() {
 		return this._game.getResult();
 	}
