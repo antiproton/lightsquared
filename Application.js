@@ -234,11 +234,5 @@ define(function(require) {
 		return openChallenges;
 	}
 	
-	Application.prototype._sendToAllUsers = function(url, data) {
-		for(var id in this._users) {
-			this._users[id].send(url, data);
-		}
-	}
-	
 	return Application;
 });
