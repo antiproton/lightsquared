@@ -5,6 +5,7 @@ define(function(require) {
 	var id = require("lib/id");
 	var Event = require("lib/Event");
 	var Square = require("chess/Square");
+	var glicko2Constants = require("jsonchess/glicko2");
 	
 	function Bot(app) {
 		this._id = id();
@@ -18,6 +19,12 @@ define(function(require) {
 		this._challenge = null;
 		this._uciSkillLevel = 5 + Math.floor(Math.random() * 10);
 		this._rating = 123; //set this depending on the skill level
+		
+		this._glicko2 = {
+			rating: this._rating,
+			rd: glicko2Constants.defaults.RD,
+			vol: glicko2Constants.defaults.VOL
+		};
 		
 		var acceptChallenge = (function() {
 			if(!this._game) {
@@ -59,6 +66,10 @@ define(function(require) {
 	
 	Bot.prototype.getRating = function() {
 		return this._rating;
+	}
+	
+	Bot.prototype.getGlicko2 = function() {
+		return this._glicko2;
 	}
 	
 	Bot.prototype.getName = function() {
