@@ -8,6 +8,7 @@ define(function(require) {
 	var glicko2Constants = require("jsonchess/glicko2");
 	var PieceType = require("chess/PieceType");
 	var Player = require("./Player");
+	var Square = require("chess/Square");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
