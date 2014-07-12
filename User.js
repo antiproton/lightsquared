@@ -424,6 +424,10 @@ define(function(require) {
 		this._currentGames.push(game);
 		this._subscribeToGameMessages(game);
 		
+		game.Move.addHandler(this, function(move) {
+			this._user.send("/game/" + id + "/move", Move.getShortJSON(move, game.getHistory().length - 1));
+		});
+		
 		game.Aborted.addHandler(this, (function() {
 			this._currentGames.remove(game);
 			this._user.send("/game/" + id + "/aborted");
