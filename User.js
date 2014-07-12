@@ -307,6 +307,8 @@ define(function(require) {
 		stay around.
 		*/
 		
+		var id = game.getId();
+		
 		this._user.subscribe("/game/" + id + "/request/moves", (function(data) {
 			var index = data.startingIndex;
 			
