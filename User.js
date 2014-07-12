@@ -216,6 +216,10 @@ define(function(require) {
 		return this._glicko2.rating;
 	}
 	
+	User.prototype.getGlicko2 = function() {
+		return this._glicko2;
+	}
+	
 	User.prototype.isLoggedIn = function() {
 		return this._isLoggedIn;
 	}

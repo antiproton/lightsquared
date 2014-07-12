@@ -7,6 +7,10 @@ define(function(require) {
 		return this._user.getRating();
 	}
 	
+	Player.prototype.getGlicko2 = function() {
+		return this._user.getGlicko2();
+	}
+	
 	Player.prototype.getGamesAsWhiteRatio = function() {
 		return this._user.getGamesAsWhiteRatio();
 	}
