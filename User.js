@@ -9,6 +9,7 @@ define(function(require) {
 	var PieceType = require("chess/PieceType");
 	var Player = require("./Player");
 	var Square = require("chess/Square");
+	var Move = require("jsonchess/Move");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
