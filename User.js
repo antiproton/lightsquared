@@ -523,7 +523,7 @@ define(function(require) {
 	}
 	
 	User.prototype._registerCompletedRatedGame = function(game) {
-		var colour = game.getPlayerColour(this);
+		var colour = game.getPlayerColour(this._player);
 		var opponentGlicko2 = game.getPlayer(colour.opposite).getGlicko2();
 		var result = game.getResult();
 		
