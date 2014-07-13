@@ -1,13 +1,15 @@
 define(function(require) {
-	var Publisher = require("lib/Publisher");
+	require("lib/Array.contains");
+	require("lib/Array.remove");
 	var id = require("lib/id");
 	var time = require("lib/time");
 	var Event = require("lib/Event");
 	var Glicko2 = require("glicko2").Glicko2;
 	var glicko2Constants = require("jsonchess/glicko2");
-	require("lib/Array.getShallowCopy");
-	require("lib/Array.contains");
-	require("lib/Array.remove");
+	var PieceType = require("chess/PieceType");
+	var Player = require("./Player");
+	var Square = require("chess/Square");
+	var Move = require("jsonchess/Move");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
@@ -19,16 +21,20 @@ define(function(require) {
 		this._db = db;
 		this._user = user;
 		this._app = app;
-		this._username = ANONYMOUS_USERNAME;
-		this._isLoggedIn = false;
-		this._publisher = new Publisher(this);
+		
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
+		
+		this._username = ANONYMOUS_USERNAME;
+		this._isLoggedIn = false;
+		this._player = new Player(this);
+		
+		this._glicko2 = this._getInitialGlicko2();
+		this._recentRatedResults = [];
+		
 		this._currentGames = [];
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
-		this._glicko2 = this._getInitialGlicko2();
-		this._recentRatedResults = [];
 		
 		this._prefs = {
 			premove: true,
@@ -41,9 +47,15 @@ define(function(require) {
 		this.Connected = new Event(this);
 		this.Disconnected = new Event(this);
 		this.LoggedIn = new Event(this);
-		this.LoggingOut = new Event(this);
 		this.LoggedOut = new Event(this);
-		this.Replaced = new Event(this);
+		
+		this._app.NewChallenge.addHandler(this, function(challenge) {
+			this._user.send("/challenges", [challenge]);
+		});
+		
+		this._app.ChallengeExpired.addHandler(this, function(id) {
+			this._user.send("/challenge/expired", id);
+		});
 		
 		this._user.Disconnected.addHandler(this, function() {
 			this._removeInactiveGames();
@@ -68,41 +80,20 @@ define(function(require) {
 		this._subscribeToUserMessages();
 	}
 	
-	User.prototype.getCurrentGames = function() {
-		return this._currentGames.getShallowCopy();
-	}
-	
-	User.prototype.getRating = function() {
-		return this._glicko2.rating;
-	}
-	
-	User.prototype.getGlicko2 = function() {
-		return this._glicko2;
-	}
-	
-	User.prototype.getGamesPlayedAsWhite = function() {
-		return this._gamesPlayedAsWhite;
-	}
-	
-	User.prototype.getGamesPlayedAsBlack = function() {
-		return this._gamesPlayedAsBlack;
-	}
-	
 	User.prototype.replace = function(user) {
 		this._loadJson(user.getPersistentJson());
-		
-		user.replaceWith(this);
+		this._player = user.getPlayer();
+		this._player.setUser(this);
 		
 		user.getCurrentGames().forEach((function(game) {
-			this._currentGames.push(game);
+			this._addGame(game);
 		}).bind(this));
+		
+		user.logout();
 	}
 	
-	User.prototype.replaceWith = function(user) {
-		this.Replaced.fire(user);
-		this._logout();
-		this._user.send("/user/replaced");
-		this._user.disconnect();
+	User.prototype.getPlayer = function() {
+		return this._player;
 	}
 	
 	User.prototype.getId = function() {
@@ -144,14 +135,13 @@ define(function(require) {
 		}
 	}
 	
-	User.prototype._logout = function() {
+	User.prototype.logout = function() {
 		if(this._isLoggedIn) {
-			this.LoggingOut.fire();
 			this._isLoggedIn = false;
 			this._cancelCurrentChallenge();
 			this._currentGames = [];
 			this._username = ANONYMOUS_USERNAME;
-			this._glicko2 = this._getInitialGlicko2();
+			this._player = new Player(this);
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
@@ -217,20 +207,16 @@ define(function(require) {
 		}
 	}
 	
-	User.prototype.subscribe = function(url, callback) {
-		this._publisher.subscribe(url, callback);
-	}
-	
-	User.prototype.unsubscribe = function(url, callback) {
-		this._publisher.unsubscribe(url, callback);
-	}
-	
-	User.prototype.send = function(url, data) {
-		this._user.send(url, data);
-	}
-	
 	User.prototype.getUsername = function() {
 		return this._username;
+	}
+	
+	User.prototype.getRating = function() {
+		return this._glicko2.rating;
+	}
+	
+	User.prototype.getGlicko2 = function() {
+		return this._glicko2;
 	}
 	
 	User.prototype.isLoggedIn = function() {
@@ -244,22 +230,18 @@ define(function(require) {
 		return (timeLastActive >= time() - maxIdleTime || this._hasGamesInProgress());
 	}
 	
-	User.prototype.getGamesAsWhiteRatio = function() {
-		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
-	}
-	
 	User.prototype._subscribeToUserMessages = function() {
-		this._user.subscribe("*", (function(url, data, client) {
-			this._publisher.publish(url, data, client);
-		}).bind(this));
-		
 		this._user.subscribe("/user/login", (function(data) {
 			this._login(data.username, data.password);
 		}).bind(this));
 		
 		this._user.subscribe("/user/logout", (function() {
+			this._currentGames.forEach((function(game) {
+				game.resign(this._player);
+			}).bind(this));
+			
 			this._updateDb();
-			this._logout();
+			this.logout();
 		}).bind(this));
 		
 		this._user.subscribe("/user/register", (function(data) {
@@ -309,25 +291,132 @@ define(function(require) {
 				}
 			}
 		}).bind(this));
+		
+		this._user.subscribe("/request/time", function(requestId, client) {
+			client.send("/time/" + requestId, time());
+		});
+		
+		this._user.subscribe("/game/restore", (function(gameDetails) {
+			this._app.submitGameRestorationRequest(this, gameDetails);
+		}).bind(this));
+		
+		this._user.subscribe("/game/restore/cancel", (function(id) {
+			if(this._app.cancelGameRestorationRequest(this, id)) {
+				this._user.send("/game/restore/canceled", id);
+			}
+		}).bind(this));
+	}
+	
+	User.prototype._subscribeToGameMessages = function(game) {
+		/*
+		FIXME need to remove these callbacks on GameOver/Aborted as otherwise the games will
+		stay around.
+		*/
+		
+		var id = game.getId();
+		
+		this._user.subscribe("/game/" + id + "/request/moves", (function(data) {
+			var index = data.startingIndex;
+			
+			game.getHistory().slice(index).forEach((function(move) {
+				this._user.send("/game/" + id + "/move", Move.getShortJSON(move, index));
+			
+				index++;
+			}).bind(this));
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/chat", (function(message) {
+			if(message.length > 0) {
+				game.chat(this._player, message);
+			}
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/move", (function(data) {
+			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
+			
+			game.move(this._player, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/premove", (function(data) {
+			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
+			var from = Square.fromSquareNo(data.from);
+			var to = Square.fromSquareNo(data.to);
+			
+			if(game.getPlayerColour(this._player) === game.getActiveColour()) {
+				game.move(this._player, from, to, promoteTo);
+			}
+			
+			else {
+				game.premove(this._player, from, to, promoteTo);
+			}
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/request/premove", (function() {
+			if(game.getPlayerColour(this._player) === game.getActiveColour().opposite) {
+				this._user.send("/game/" + id + "/premove", this._pendingPremove);
+			}
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/premove/cancel", (function() {
+			game.cancelPremove(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/resign", (function() {
+			game.resign(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/offer_draw", (function() {
+			game.offerDraw(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/claim_draw", (function() {
+			game.claimDraw(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/accept_draw", (function() {
+			game.acceptDraw(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/offer_or_accept_rematch", (function() {
+			game.offerOrAcceptRematch(this._player);
+		}).bind(this));
+		
+		this._user.subscribe("/game/" + id + "/decline_rematch", (function() {
+			game.declineRematch(this._player);
+		}).bind(this));
 	}
 	
 	User.prototype._createChallenge = function(options) {
 		this._cancelCurrentChallenge();
 		
-		var challenge = this._app.createChallenge(this, options);
+		var challenge = this._app.createChallenge(this._player, options);
 		
 		challenge.Accepted.addHandler(this, function(game) {
 			this._addGame(game);
+			this._user.send("/challenge/accepted", game);
 		});
 		
 		challenge.Expired.addHandler(this, function() {
-			this._currentChallenge = null;
 			this._user.send("/current_challenge/expired");
 		});
 		
-		this._user.send("/current_challenge", challenge);
 		this._currentChallenge = challenge;
+		this._user.send("/current_challenge", challenge);
 		this._lastChallengeOptions = options;
+	}
+	
+	User.prototype._acceptChallenge = function(id) {
+		var challenge = this._app.getChallenge(id);
+		
+		if(challenge !== null) {
+			var game = challenge.accept(this._player);
+			
+			if(game !== null) {
+				this._addGame(game);
+				this._user.send("/challenge/accepted", game);
+				this._cancelCurrentChallenge();
+			}
+		}
 	}
 	
 	User.prototype._cancelCurrentChallenge = function() {
@@ -336,38 +425,70 @@ define(function(require) {
 		}
 	}
 	
-	User.prototype._acceptChallenge = function(id) {
-		var challenge = this._app.getChallenge(id);
-			
-		if(challenge !== null) {
-			var game = challenge.accept(this);
-			
-			if(game !== null) {
-				this._addGame(game);
-				this._cancelCurrentChallenge();
-			}
-		}
-	}
-	
 	User.prototype._addGame = function(game) {
+		var id = game.getId();
+		
 		this._currentGames.push(game);
+		this._subscribeToGameMessages(game);
+		
+		game.Move.addHandler(this, function(move) {
+			this._user.send("/game/" + id + "/move", Move.getShortJSON(move, game.getHistory().length - 1));
+		});
 		
 		game.Aborted.addHandler(this, (function() {
 			this._currentGames.remove(game);
+			this._user.send("/game/" + id + "/aborted");
+			//FIXME remove callbacks (but not the /rematch ones)
 		}));
+		
+		game.DrawOffered.addHandler(this, function() {
+			this._user.send("/game/" + id + "/draw_offer", game.getActiveColour().opposite.fenString);
+		});
 		
 		game.Rematch.addHandler(this, (function(game) {
 			this._addGame(game);
+			this._user.send("/game/" + id + "/rematch", game);
 		}).bind(this));
 		
-		if(game.userIsPlaying(this)) {
-			game.GameOver.addHandler(this, function() {
+		game.GameOver.addHandler(this, function(result) {
+			if(this._isPlayer(game)) {
 				this._registerCompletedRatedGame(game);
+			}
+			
+			//FIXME remove callbacks (but not the /rematch ones)
+			this._user.send("/game/" + id + "/game_over", result);
+		});
+		
+		game.Chat.addHandler(this, function(data) {
+			if(!this._isPlayer(game) || game.playerIsPlaying(data.player)) {
+				this._user.send("/game/" + id + "/chat", {
+					from: data.player.getName(),
+					body: data.message
+				});
+			}
+		});
+		
+		if(this._isPlayer(game)) {
+			game.RematchOffered.addHandler(this, function(player) {
+				if(player !== this._player) {
+					this._user.send("/game/" + id + "/rematch_offer");
+				}
+			});
+			
+			game.RematchDeclined.addHandler(this, function() {
+				if(player !== this._player) {
+					this._user.send("/game/" + id + "/rematch_declined");
+				}
 			});
 		}
 	}
 	
+	User.prototype._isPlayer = function(game) {
+		return game.playerIsPlaying(this._player);
+	}
+	
 	User.prototype._removeInactiveGames = function() {
+		//FIXME remove callbacks (including /rematch ones)
 		this._currentGames = this._currentGames.filter((function(game) {
 			return (game.isInProgress() || time() - game.getEndTime() < INACTIVE_GAMES_EXPIRE);
 		}).bind(this));
@@ -387,12 +508,14 @@ define(function(require) {
 		return (game || this._app.getGame(id));
 	}
 	
+	User.prototype.getCurrentGames = function() {
+		return this._currentGames.getShallowCopy();
+	}
+	
 	User.prototype._spectateGame = function(id) {
 		var game = this._getGame(id);
 		
 		if(game && !this._currentGames.contains(game)) {
-			game.spectate(this);
-		
 			this._addGame(game);
 		}
 		
@@ -401,12 +524,12 @@ define(function(require) {
 	
 	User.prototype._hasGamesInProgress = function() {
 		return this._currentGames.some((function(game) {
-			return (game.isInProgress() && game.userIsPlaying(this));
+			return (game.isInProgress() && this._isPlayer(game));
 		}).bind(this));
 	}
 	
 	User.prototype._registerCompletedRatedGame = function(game) {
-		var colour = game.getPlayerColour(this);
+		var colour = game.getPlayerColour(this._player);
 		var opponentGlicko2 = game.getPlayer(colour.opposite).getGlicko2();
 		var result = game.getResult();
 		
@@ -459,13 +582,15 @@ define(function(require) {
 		};
 	}
 	
+	User.prototype.getGamesAsWhiteRatio = function() {
+		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
+	}
+	
 	User.prototype.toJSON = function() {
 		return {
 			id: this._id,
 			username: this._username,
 			isLoggedIn: this._isLoggedIn,
-			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
-			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			rating: this._glicko2.rating
 		};
 	}

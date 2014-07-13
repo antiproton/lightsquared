@@ -3,15 +3,12 @@ define(function(require) {
 	var PieceType = require("chess/PieceType");
 	var id = require("lib/id");
 	var time = require("lib/time");
-	var Publisher = require("lib/Publisher");
 	var Colour = require("chess/Colour");
 	var Move = require("jsonchess/Move");
 	var Premove = require("jsonchess/Premove");
 	var Square = require("chess/Square");
 	var Event = require("lib/Event");
 	var jsonchess = require("jsonchess/constants");
-	require("lib/Array.remove");
-	require("lib/Array.contains");
 	
 	function Game(white, black, options) {
 		this._id = id();
@@ -19,7 +16,11 @@ define(function(require) {
 		this.Move = new Event(this);
 		this.GameOver = new Event(this);
 		this.Aborted = new Event(this);
+		this.RematchOffered = new Event(this);
+		this.RematchDeclined = new Event(this);
 		this.Rematch = new Event(this);
+		this.DrawOffered = new Event(this);
+		this.Chat = new Event(this);
 		
 		this._options = {
 			history: [],
@@ -44,25 +45,14 @@ define(function(require) {
 		this._players[Colour.white] = white;
 		this._players[Colour.black] = black;
 		
-		this._spectators = [];
-		
-		this._oldRatings = {};
-		this._oldRatings[Colour.white] = white.getRating();
-		this._oldRatings[Colour.black] = black.getRating();
-		
-		this._newRatings = {};
-		this._newRatings[Colour.white] = null;
-		this._newRatings[Colour.black] = null;
+		this._ratings = {};
+		this._ratings[Colour.white] = white.getRating();
+		this._ratings[Colour.black] = black.getRating();
 		
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
-		this._rematchOfferedBy = null;
 		
 		this._pendingPremove = null;
-		
-		for(var colour in this._players) {
-			this._setupPlayer(this._players[colour], colour);
-		}
 		
 		this._isAborted = false;
 		this._setAbortTimer();
@@ -97,8 +87,8 @@ define(function(require) {
 		var gameDetails = requestA.gameDetails;
 		var players = {};
 		
-		players[requestA.colour] = requestA.user;
-		players[requestB.colour] = requestB.user;
+		players[requestA.colour] = requestA.player;
+		players[requestB.colour] = requestB.player;
 		
 		var options = gameDetails.options;
 		
@@ -124,34 +114,23 @@ define(function(require) {
 		return this._id;
 	}
 	
-	Game.prototype.spectate = function(user) {
-		if(!this.userIsPlaying(user) && !this._spectators.contains(user)) {
-			this._spectators.push(user);
-			this._setupSpectator(user);
-		}
-	}
-	
 	Game.prototype.addTimeToClock = function(time) {
 		this._game.addTimeToClock(time);
 	}
 	
-	Game.prototype.leave = function(user) {
-		this._spectators.remove(user);
-	}
-	
-	Game.prototype.userIsPlaying = function(user) {
-		return (this._players[Colour.white] === user || this._players[Colour.black] === user);
+	Game.prototype.playerIsPlaying = function(player) {
+		return (this._players[Colour.white] === player || this._players[Colour.black] === player);
 	}
 	
 	Game.prototype.getPlayer = function(colour) {
 		return this._players[colour];
 	}
 	
-	Game.prototype.getPlayerColour = function(user) {
+	Game.prototype.getPlayerColour = function(player) {
 		var playerColour = null;
 		
 		Colour.forEach(function(colour) {
-			if(this._players[colour] === user) {
+			if(this._players[colour] === player) {
 				playerColour = colour;
 			}
 		}, this);
@@ -179,174 +158,29 @@ define(function(require) {
 		return this._game.getEndTime();
 	}
 	
+	Game.prototype.getHistory = function() {
+		return this._game.getHistory();
+	}
+	
 	Game.prototype.getResult = function() {
 		return this._game.getResult();
 	}
 	
-	Game.prototype._setupPlayer = function(user, colour) {
-		this._subscribeToPlayerMessages(user);
-		
-		user.Replaced.addHandler(this, function(newUser) {
-			this._players[colour] = newUser;
-			this._setupPlayer(newUser, colour);
-			
-			newUser.send("/game", this);
-			
-			this.spectate(user);
-		});
-		
-		user.LoggingOut.addHandler(this, function() {
-			this._resign(user);
+	Game.prototype.chat = function(player, message) {
+		this.Chat.fire({
+			player: player,
+			message: message
 		});
 	}
 	
-	Game.prototype._setupSpectator = function(user) {
-		this._subscribeToUserMessages(user);
-		
-		user.Replaced.addHandler(this, function(newUser) {
-			this._spectators.remove(user);
-			this._spectators.push(newUser);
-			this._setupSpectator(newUser);
-			
-			newUser.send("/game", this);
-		});
-	}
-	
-	Game.prototype._subscribeToUserMessages = function(user) {
-		user.subscribe("/game/" + this._id + "/request/moves", (function(startingIndex) {
-			var index = startingIndex;
-			
-			this._game.getHistory().slice(index).forEach(function(move) {
-				user.send("/game/" + this._id + "/move", this._getMoveJson(move, index));
-			
-				index++;
-			});
-			
-		}).bind(this));
-		
-		user.subscribe("/game/" + this._id + "/chat", (function(message) {
-			if(message.length > 0) {
-				var url = "/game/" + this._id + "/chat";
-				
-				var chatMessage = {
-					from: user.getUsername(),
-					body: message
-				};
-				
-				if(this.userIsPlaying(user) || !this.isInProgress()) {
-					this._sendToAllUsers(url, chatMessage);
-				}
-				
-				else {
-					this._sendToSpectators(url, chatMessage);
-				}
-			}
-		}).bind(this));
-	}
-	
-	Game.prototype._subscribeToPlayerMessages = function(user) {
-		this._subscribeToUserMessages(user);
-		
-		var publisher = new Publisher(user);
-		
-		var isInProgress = (function() {
-			return (!this._isAborted && this._game.isInProgress());
-		}).bind(this);
-		
-		var userIsActivePlayer = (function(user) {
-			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour());
-		}).bind(this);
-		
-		var userIsInactivePlayer = (function(user) {
-			return (isInProgress() && this.getPlayerColour(user) === this.getActiveColour().opposite);
-		}).bind(this);
-		
-		var isActiveAndUserIsPlaying = (function(user) {
-			return (isInProgress() && this.userIsPlaying(user));
-		}).bind(this);
-		
-		var filters = {
-			"/move": userIsActivePlayer,
-			"/premove": isActiveAndUserIsPlaying,
-			"/premove/cancel": userIsInactivePlayer,
-			"/resign": isActiveAndUserIsPlaying,
-			"/offer_draw": userIsInactivePlayer,
-			"/accept_draw": userIsActivePlayer,
-			"/claim_draw": isActiveAndUserIsPlaying,
-			"/offer_or_accept_rematch": this.userIsPlaying.bind(this),
-			"/decline_rematch": this.userIsPlaying.bind(this),
-		};
-		
-		for(var url in filters) {
-			filters["/game/" + this._id + url] = filters[url];
-			
-			delete filters[url];
-		}
-		
-		user.subscribe("*", (function(url, data) {
-			if(!(url in filters) || filters[url](user)) {
-				publisher.publish(url, data);
-			}
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/move", (function(data) {
-			var promoteTo;
-			
-			if(data.promoteTo !== undefined) {
-				promoteTo = PieceType.fromSanString(data.promoteTo);
-			}
-			
-			this.move(user, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/premove", (function(json) {
-			this._premove(user, Premove.fromJSON(json, this.getPosition()));
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/premove/cancel", (function() {
-			this._pendingPremove = null;
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/resign", (function() {
-			this._resign(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/offer_draw", (function() {
-			this._offerDraw(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/claim_draw", (function() {
-			this._claimDraw();
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/accept_draw", (function() {
-			this._acceptDraw();
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/offer_or_accept_rematch", (function() {
-			this._offerOrAcceptRematch(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/decline_rematch", (function() {
-			this._declineRematch(user);
-		}).bind(this));
-		
-		publisher.subscribe("/game/" + this._id + "/request/premove", (function() {
-			if(this.getPlayerColour(user) === this.getActiveColour().opposite) {
-				user.send("/game/" + this._id + "/premove", this._pendingPremove);
-			}
-		}).bind(this));
-	}
-	
-	Game.prototype.move = function(user, from, to, promoteTo) {
-		if(this.getPlayerColour(user) === this.getActiveColour()) {
-			var index = this._game.getHistory().length;
+	Game.prototype.move = function(player, from, to, promoteTo) {
+		if(this.getPlayerColour(player) === this.getActiveColour()) {
 			var move = this._game.move(from, to, promoteTo);
 			
 			if(move !== null && move.isLegal()) {
 				this._isDrawOffered = false;
 				this._isUndoRequested = false;
-				this._sendToAllUsers("/game/" + this._id + "/move", this._getMoveJson(move, index));
+				
 				this.Move.fire(move);
 				
 				this._clearAbortTimer();
@@ -369,13 +203,21 @@ define(function(require) {
 		}
 	}
 	
-	Game.prototype._premove = function(user, premove) {
-		if(this.getPlayerColour(user) === this.getActiveColour()) {
-			this.move(user, premove.getFrom(), premove.getTo(), premove.getPromoteTo());
-		}
+	Game.prototype.premove = function(player, from, to, promoteTo) {
+		var premove = new Premove(this.getPosition(), from, to, promoteTo)
 		
-		else if(premove.isValid() && this._pendingPremove === null) {
+		if(
+			this.getPlayerColour(player) === this.getActiveColour().opposite
+			&& premove.isValid()
+			&& this._pendingPremove === null
+		) {
 			this._pendingPremove = premove;
+		}
+	}
+	
+	Game.prototype.cancelPremove = function(player) {
+		if(this.getPlayerColour(player) === this.getActiveColour().opposite) {
+			this._pendingPremove = null;
 		}
 	}
 	
@@ -383,83 +225,54 @@ define(function(require) {
 		return this._game.getActiveColour();
 	}
 	
-	Game.prototype._getMoveJson = function(move, index) {
-		var promoteTo = move.getPromoteTo();
-		
-		return {
-			from: move.getFrom().squareNo,
-			to: move.getTo().squareNo,
-			promoteTo: promoteTo === PieceType.queen ? undefined : promoteTo.sanString,
-			index: index,
-			time: move.getTime()
-		};
-	}
-	
-	Game.prototype._resign = function(user) {
-		this._game.resign(this.getPlayerColour(user));
-	}
-	
-	Game.prototype._offerDraw = function(user) {
-		this._isDrawOffered = true;
-		this._sendToAllUsers("/game/" + this._id + "/draw_offer", this.getPlayerColour(user).fenString);
-	}
-	
-	Game.prototype._offerOrAcceptRematch = function(user) {
-		var colour = this.getPlayerColour(user);
-
-		if(this._rematchOfferedBy === colour.opposite) {
-			this._rematch();
-		}
-		
-		else if(this._rematchOfferedBy === null) {
-			this._rematchOfferedBy = colour;
-			this._players[colour.opposite].send("/game/" + this._id + "/rematch_offer");
+	Game.prototype.resign = function(player) {
+		if(this.playerIsPlaying(player)) {
+			this._game.resign(this.getPlayerColour(player));
 		}
 	}
 	
-	Game.prototype._declineRematch = function(user) {
-		var colour = this.getPlayerColour(user);
-		
-		if(this._rematchOfferedBy === colour.opposite) {
-			this._players[colour.opposite].send("/game/" + this._id + "/rematch_declined");
+	Game.prototype.offerDraw = function() {
+		if(this.getPlayerColour(player) === this.getActiveColour().opposite) {
+			this._isDrawOffered = true;
+			this.DrawOffered.fire();
 		}
 	}
 	
-	Game.prototype._rematch = function() {
-		var game = new Game(this._players[Colour.black], this._players[Colour.white], this._options);
-		
-		this.Rematch.fire(game);
-		this._sendToAllUsers("/game/" + this._id + "/rematch", game);
-	}
-	
-	Game.prototype._claimDraw = function() {
-		this._game.claimDraw();
-	}
-	
-	Game.prototype._acceptDraw = function() {
-		if(this._isDrawOffered) {
+	Game.prototype.acceptDraw = function(player) {
+		if(this._isDrawOffered && this.getPlayerColour(player) === this.getActiveColour()) {
 			this._game.drawByAgreement();
 		}
 	}
 	
-	Game.prototype._sendToAllUsers = function(url, data) {
-		var users = [];
-		
-		for(var colour in this._players) {
-			users.push(this._players[colour]);
+	Game.prototype.claimDraw = function(player) {
+		if(this.playerIsPlaying(player)) {
+			this._game.claimDraw();
 		}
-		
-		users = users.concat(this._spectators);
-		
-		users.forEach(function(user) {
-			user.send(url, data);
-		});
 	}
 	
-	Game.prototype._sendToSpectators = function(url, data) {
-		this._spectators.forEach(function(user) {
-			user.send(url, data);
-		});
+	Game.prototype._rematch = function() {
+		if(!this.isInProgress()) {
+			this.Rematch.fire(new Game(this._players[Colour.black], this._players[Colour.white], this._options));
+		}
+	}
+	
+	Game.prototype.offerRematch = function(player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy === null) {
+			this._rematchOfferedBy = player;
+			this.RematchOffered.fire(player);
+		}
+	}
+	
+	Game.prototype.acceptRematch = function(player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== player && this._rematchOfferedBy !== null) {
+			this._rematch();
+		}
+	}
+	
+	Game.prototype.declineRematch = function(player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== player) {
+			this.RematchDeclined.fire(player);
+		}
 	}
 	
 	Game.prototype._setAbortTimer = function() {
@@ -476,16 +289,11 @@ define(function(require) {
 		if(this.isInProgress()) {
 			this._isAborted = true;
 			this.Aborted.fire();
-			this._sendToAllUsers("/game/" + this._id + "/aborted");
 		}
 	}
 	
 	Game.prototype._gameOver = function(result) {
-		this._sendToAllUsers("/game/" + this._id + "/game_over", {
-			result: result
-		});
-		
-		this.GameOver.fire();
+		this.GameOver.fire(result);
 	}
 	
 	Game.prototype.toJSON = function() {
@@ -501,12 +309,8 @@ define(function(require) {
 			result: this._game.getResult(),
 			startTime: this._game.getStartTime(),
 			endTime: this._game.getEndTime(),
-			isThreefoldClaimable: this._game.isThreefoldClaimable(),
-			isFiftymoveClaimable: this._game.isFiftymoveClaimable(),
-			whiteRatingOld: this._oldRatings[Colour.white],
-			whiteRatingNew: this._newRatings[Colour.white],
-			blackRatingOld: this._oldRatings[Colour.black],
-			blackRatingNew: this._newRatings[Colour.black],
+			whiteRating: this._ratings[Colour.white],
+			blackRating: this._ratings[Colour.black],
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
 			options: this._options,
