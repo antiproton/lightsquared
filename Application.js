@@ -46,7 +46,7 @@ define(function(require) {
 		});
 		
 		challenge.Expired.addHandler(this, function() {
-			this.ChallengeExpired.fire(challenge);
+			this.ChallengeExpired.fire(id);
 			
 			delete this._openChallenges[id];
 		});
