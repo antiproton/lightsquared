@@ -297,7 +297,21 @@ define(function(require) {
 		});
 		
 		this._user.subscribe("/game/restore", (function(gameDetails) {
-			this._app.submitGameRestorationRequest(this, gameDetails);
+			var id = gameDetails.id;
+			var request = this._app.submitGameRestorationRequest(this, gameDetails);
+			
+			if(!request.isFinished()) {
+				this._user.send("/game/restore/pending", id);
+			}
+			
+			request.then((function(game) {
+				this._user.send("/game/restore/success", game);
+			}).bind(this), (function(error) {
+				this._user.send("/game/restore/failure", {
+					id: id,
+					reason: error
+				});
+			}).bind(this));
 		}).bind(this));
 		
 		this._user.subscribe("/game/restore/cancel", (function(id) {
