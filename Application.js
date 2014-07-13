@@ -96,7 +96,7 @@ define(function(require) {
 		else {
 			var promise = new Promise();
 			
-			promise.then(null, null, (function() {
+			promise.onFinish((function() {
 				delete this._promises[promiseId];
 			}).bind(this));
 			
