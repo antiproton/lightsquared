@@ -90,7 +90,6 @@ define(function(require) {
 		}).bind(this));
 		
 		user.logout();
-		user.disconnect();
 	}
 	
 	User.prototype.getPlayer = function() {
@@ -146,10 +145,6 @@ define(function(require) {
 			this.LoggedOut.fire();
 			this._user.send("/user/logout");
 		}
-	}
-	
-	User.prototype.disconnect = function() {
-		this._user.disconnect();
 	}
 	
 	User.prototype._register = function(username, password) {
