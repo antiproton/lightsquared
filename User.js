@@ -398,6 +398,7 @@ define(function(require) {
 			this._user.send("/current_challenge/expired");
 		});
 		
+		this._currentChallenge = challenge;
 		this._user.send("/current_challenge", challenge);
 		this._lastChallengeOptions = options;
 	}
