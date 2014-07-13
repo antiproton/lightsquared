@@ -301,7 +301,9 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/game/restore/cancel", (function(id) {
-			this._app.cancelGameRestorationRequest(this, id);
+			if(this._app.cancelGameRestorationRequest(this, id)) {
+				this._user.send("/game/restore/canceled", id);
+			}
 		}).bind(this));
 	}
 	

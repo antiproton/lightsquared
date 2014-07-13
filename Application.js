@@ -220,7 +220,11 @@ define(function(require) {
 		if(id in this._pendingGameRestorations && this._pendingGameRestorations[id].user === user) {
 			delete this._pendingGameRestorations[id];
 			
-			user.send("/game/restore/canceled", id);
+			return true;
+		}
+		
+		else {
+			return false;
 		}
 	}
 	
