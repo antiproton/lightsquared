@@ -53,6 +53,10 @@ define(function(require) {
 			this._user.send("/challenges", [challenge]);
 		});
 		
+		this._app.ChallengeExpired.addHandler(this, function(id) {
+			this._user.send("/challenge/expired", id);
+		});
+		
 		this._user.Disconnected.addHandler(this, function() {
 			this._removeInactiveGames();
 			this.Disconnected.fire();
