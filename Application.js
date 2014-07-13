@@ -159,61 +159,60 @@ define(function(require) {
 	
 	Application.prototype.submitGameRestorationRequest = function(user, request) {
 		var id = request.gameDetails.id;
-		var error = null;
+		var promiseId = "/game/restore/" + id;
+		var promise;
 		
-		if(id in this._games) {
-			error = "The specified game is active on the server";
+		if(promiseId in this._promises) {
+			promise = this._promises[promiseId];
 		}
 		
-		if(!error) {
-			if(id in this._pendingGameRestorations) {
-				var pendingRestoration = this._pendingGameRestorations[id];
-				
-				if(pendingRestoration.user !== user) {
-					var users = [user, pendingRestoration.user];
-					
-					try {
-						var game = Game.restore({
-							user: user,
-							gameDetails: request.gameDetails,
-							colour: request.playingAs
-						}, pendingRestoration);
-						
-						users.forEach((function(user) {
-							user.send("/game/restore/success", game);
-						}).bind(this));
-					}
-					
-					catch(restorationError) {
-						users.forEach((function(user) {
-							user.send("/game/restore/failure", {
-								id: id,
-								reason: restorationError
-							});
-						}).bind(this));
-					}
-						
-					delete this._pendingGameRestorations[id];
-				}
+		else {
+			this._promises[promiseId] = promise = new Promise();
+			
+			promise.onFinish((function() {
+				delete this._promises[promiseId];
+			}).bind(this));
+			
+			if(id in this._games) {
+				promise.fail("The specified game is active on the server");
 			}
 			
-			else {
-				this._pendingGameRestorations[id] = {
-					user: user,
-					gameDetails: request.gameDetails,
-					colour: request.playingAs
-				};
+			if(!promise.isFinished()) {
+				if(id in this._pendingGameRestorations) {
+					var pendingRestoration = this._pendingGameRestorations[id];
+					
+					if(pendingRestoration.user !== user) {
+						var users = [user, pendingRestoration.user];
+						
+						try {
+							var game = Game.restore({
+								user: user,
+								gameDetails: request.gameDetails,
+								colour: request.playingAs
+							}, pendingRestoration);
+							
+							promise.resolve(game);
+						}
+						
+						catch(restorationError) {
+							promise.fail(restorationError);
+						}
+							
+						delete this._pendingGameRestorations[id];
+					}
+				}
 				
-				user.send("/game/restore/pending", id);
+				else {
+					this._pendingGameRestorations[id] = {
+						user: user,
+						gameDetails: request.gameDetails,
+						colour: request.playingAs
+					};
+				}
 			}
 		}
 		
-		if(error) {
-			user.send("/game/restore/failure", {
-				id: id,
-				reason: error
-			});
-		}
+		return promise;
 	}
 	
 	Application.prototype.cancelGameRestorationRequest = function(user, id) {
