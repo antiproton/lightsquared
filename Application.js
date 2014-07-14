@@ -213,8 +213,8 @@ define(function(require) {
 		return promise;
 	}
 	
-	Application.prototype.cancelGameRestoration = function(user, id) {
-		if(id in this._pendingGameRestorations && this._pendingGameRestorations[id].user === user) {
+	Application.prototype.cancelGameRestoration = function(player, id) {
+		if(id in this._pendingGameRestorations && this._pendingGameRestorations[id].player === player) {
 			delete this._pendingGameRestorations[id];
 			
 			return true;
