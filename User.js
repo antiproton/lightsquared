@@ -417,6 +417,7 @@ define(function(require) {
 		
 		challenge.Expired.addHandler(this, function() {
 			this._user.send("/current_challenge/expired");
+			this._currentChallenge = null;
 		});
 		
 		this._currentChallenge = challenge;
