@@ -6,6 +6,7 @@ define(function(require) {
 	var time = require("lib/time");
 	var Game = require("./Game");
 	var Event = require("lib/Event");
+	var Promise = require("lib/Promise");
 	
 	function Application(server, db) {
 		this._users = {};
