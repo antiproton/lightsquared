@@ -168,46 +168,46 @@ define(function(require) {
 		}
 		
 		else {
-			this._promises[promiseId] = promise = new Promise();
+			promise = this._promises[promiseId] = new Promise();
 			
 			promise.onFinish((function() {
 				delete this._promises[promiseId];
 			}).bind(this));
-			
-			if(id in this._games) {
-				promise.fail("The specified game is active on the server");
+		}
+		
+		if(id in this._games) {
+			promise.fail("The specified game is active on the server");
+		}
+		
+		else {
+			if(id in this._pendingGameRestorations) {
+				var pendingRestoration = this._pendingGameRestorations[id];
+				
+				if(pendingRestoration.player !== player) {
+					try {
+						var game = Game.restore({
+							player: player,
+							gameDetails: request.gameDetails,
+							colour: request.playingAs
+						}, pendingRestoration);
+						
+						promise.resolve(game);
+					}
+					
+					catch(restorationError) {
+						promise.fail(restorationError);
+					}
+						
+					delete this._pendingGameRestorations[id];
+				}
 			}
 			
-			if(!promise.isFinished()) {
-				if(id in this._pendingGameRestorations) {
-					var pendingRestoration = this._pendingGameRestorations[id];
-					
-					if(pendingRestoration.player !== player) {
-						try {
-							var game = Game.restore({
-								player: player,
-								gameDetails: request.gameDetails,
-								colour: request.playingAs
-							}, pendingRestoration);
-							
-							promise.resolve(game);
-						}
-						
-						catch(restorationError) {
-							promise.fail(restorationError);
-						}
-							
-						delete this._pendingGameRestorations[id];
-					}
-				}
-				
-				else {
-					this._pendingGameRestorations[id] = {
-						player: player,
-						gameDetails: request.gameDetails,
-						colour: request.playingAs
-					};
-				}
+			else {
+				this._pendingGameRestorations[id] = {
+					player: player,
+					gameDetails: request.gameDetails,
+					colour: request.playingAs
+				};
 			}
 		}
 		
