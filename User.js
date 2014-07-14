@@ -296,9 +296,9 @@ define(function(require) {
 			client.send("/time/" + requestId, time());
 		});
 		
-		this._user.subscribe("/game/restore", (function(gameDetails) {
-			var id = gameDetails.id;
-			var request = this._app.restoreGame(this._player, gameDetails);
+		this._user.subscribe("/game/restore", (function(backup) {
+			var id = backup.gameDetails.id;
+			var request = this._app.restoreGame(this._player, backup);
 			
 			if(!request.isFinished()) {
 				this._user.send("/game/restore/pending", id);
