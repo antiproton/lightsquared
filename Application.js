@@ -157,7 +157,7 @@ define(function(require) {
 		});
 	}
 	
-	Application.prototype.submitGameRestorationRequest = function(player, request) {
+	Application.prototype.restoreGame = function(player, request) {
 		var id = request.gameDetails.id;
 		var promiseId = "/game/restore/" + id;
 		var promise;
@@ -213,7 +213,7 @@ define(function(require) {
 		return promise;
 	}
 	
-	Application.prototype.cancelGameRestorationRequest = function(user, id) {
+	Application.prototype.cancelGameRestoration = function(user, id) {
 		if(id in this._pendingGameRestorations && this._pendingGameRestorations[id].user === user) {
 			delete this._pendingGameRestorations[id];
 			
