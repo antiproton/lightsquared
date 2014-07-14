@@ -315,7 +315,7 @@ define(function(require) {
 		}).bind(this));
 		
 		this._user.subscribe("/game/restore/cancel", (function(id) {
-			if(this._app.cancelGameRestorationRequest(this._player, id)) {
+			if(this._app.cancelGameRestoration(this._player, id)) {
 				this._user.send("/game/restore/canceled", id);
 			}
 		}).bind(this));
