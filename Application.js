@@ -157,7 +157,7 @@ define(function(require) {
 		});
 	}
 	
-	Application.prototype.submitGameRestorationRequest = function(user, request) {
+	Application.prototype.submitGameRestorationRequest = function(player, request) {
 		var id = request.gameDetails.id;
 		var promiseId = "/game/restore/" + id;
 		var promise;
@@ -181,12 +181,10 @@ define(function(require) {
 				if(id in this._pendingGameRestorations) {
 					var pendingRestoration = this._pendingGameRestorations[id];
 					
-					if(pendingRestoration.user !== user) {
-						var users = [user, pendingRestoration.user];
-						
+					if(pendingRestoration.player !== player) {
 						try {
 							var game = Game.restore({
-								user: user,
+								player: player,
 								gameDetails: request.gameDetails,
 								colour: request.playingAs
 							}, pendingRestoration);
@@ -204,7 +202,7 @@ define(function(require) {
 				
 				else {
 					this._pendingGameRestorations[id] = {
-						user: user,
+						player: player,
 						gameDetails: request.gameDetails,
 						colour: request.playingAs
 					};
