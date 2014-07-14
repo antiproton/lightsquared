@@ -298,7 +298,7 @@ define(function(require) {
 		
 		this._user.subscribe("/game/restore", (function(gameDetails) {
 			var id = gameDetails.id;
-			var request = this._app.submitGameRestorationRequest(this, gameDetails);
+			var request = this._app.submitGameRestorationRequest(this._player, gameDetails);
 			
 			if(!request.isFinished()) {
 				this._user.send("/game/restore/pending", id);
