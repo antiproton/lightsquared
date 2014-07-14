@@ -306,7 +306,11 @@ define(function(require) {
 			
 			request.then((function(game) {
 				this._addGame(game);
-				this._user.send("/game/restore/success", game);
+				
+				this._user.send("/game/restore/success", {
+					oldId: id,
+					newGame: game
+				});
 			}).bind(this), (function(error) {
 				this._user.send("/game/restore/failure", {
 					id: id,
