@@ -6,14 +6,14 @@ define(function(require) {
 	var time = require("lib/time");
 	var Game = require("./Game");
 	var Event = require("lib/Event");
-	var Promise = require("lib/Promise");
+	var Promisor = require("lib/Promisor");
 	
 	function Application(server, db) {
 		this._users = {};
 		this._loggedInUsers = {};
 		this._openChallenges = {};
 		this._games = {};
-		this._promises = {};
+		this._promisor = new Promisor(this);
 		this._publisher = new Publisher();
 		this._db = db;
 		this._pendingGameRestorations = {};
@@ -88,19 +88,7 @@ define(function(require) {
 	}
 	
 	Application.prototype.getArchivedGameDetails = function(id) {
-		var promiseId = "/game/" + id;
-		
-		if(promiseId in this._promises) {
-			return this._promises[promiseId];
-		}
-		
-		else {
-			var promise = new Promise();
-			
-			promise.onFinish((function() {
-				delete this._promises[promiseId];
-			}).bind(this));
-			
+		return this._promisor.get("/game/" + id, function(promise) {
 			if(id in this._games) {
 				promise.resolve(JSON.parse(JSON.stringify(this._games[id])));
 			}
@@ -118,11 +106,7 @@ define(function(require) {
 					}
 				}).bind(this));
 			}
-			
-			this._promises[promiseId] = promise;
-			
-			return promise;
-		}
+		});
 	}
 	
 	Application.prototype._replaceExistingLoggedInUser = function(user) {
@@ -160,20 +144,7 @@ define(function(require) {
 	
 	Application.prototype.restoreGame = function(player, request) {
 		var id = request.gameDetails.id;
-		var promiseId = "/game/restore/" + id;
-		var promise;
-		
-		if(promiseId in this._promises) {
-			promise = this._promises[promiseId];
-		}
-		
-		else {
-			promise = this._promises[promiseId] = new Promise();
-			
-			promise.onFinish((function() {
-				delete this._promises[promiseId];
-			}).bind(this));
-		}
+		var promise = this._promisor.get("/game/restore/" + id);
 		
 		if(id in this._games) {
 			promise.fail("The specified game is active on the server");
