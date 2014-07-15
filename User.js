@@ -35,6 +35,7 @@ define(function(require) {
 		this._currentGames = [];
 		this._currentChallenge = null;
 		this._lastChallengeOptions = null;
+		this._pendingRestorationRequests = [];
 		
 		this._prefs = {
 			premove: true,
@@ -301,6 +302,7 @@ define(function(require) {
 			var request = this._app.restoreGame(this._player, backup);
 			
 			if(!request.isFinished()) {
+				this._pendingRestorationRequests.push(id);
 				this._user.send("/game/restore/pending", id);
 			}
 			
@@ -316,6 +318,8 @@ define(function(require) {
 					id: id,
 					reason: error
 				});
+			}).bind(this), (function() {
+				this._pendingRestorationRequests.remove(id);
 			}).bind(this));
 		}).bind(this));
 		
@@ -323,6 +327,10 @@ define(function(require) {
 			if(this._app.cancelGameRestoration(this._player, id)) {
 				this._user.send("/game/restore/canceled", id);
 			}
+		}).bind(this));
+		
+		this._user.subscribe("/request/restoration_requests", (function() {
+			this._user.send("/restoration_requests", this._pendingRestorationRequests);
 		}).bind(this));
 	}
 	
