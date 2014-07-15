@@ -21,6 +21,7 @@ define(function(require) {
 		this._db = db;
 		this._user = user;
 		this._app = app;
+		this._subscriptions = {};
 		
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
@@ -335,14 +336,10 @@ define(function(require) {
 	}
 	
 	User.prototype._subscribeToGameMessages = function(game) {
-		/*
-		FIXME need to remove these callbacks on GameOver/Aborted as otherwise the games will
-		stay around.
-		*/
-		
 		var id = game.getId();
+		var subscriptions = this._subscriptions["/game/" + id] = {};
 		
-		this._user.subscribe("/game/" + id + "/request/moves", (function(data) {
+		subscriptions["/game/" + id + "/request/moves"] = function(data) {
 			var index = data.startingIndex;
 			
 			game.getHistory().slice(index).forEach((function(move) {
@@ -350,21 +347,21 @@ define(function(require) {
 			
 				index++;
 			}).bind(this));
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/chat", (function(message) {
+		subscriptions["/game/" + id + "/chat"] = function(message) {
 			if(message.length > 0) {
 				game.chat(this._player, message);
 			}
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/move", (function(data) {
+		subscriptions["/game/" + id + "/move"] = function(data) {
 			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
 			
 			game.move(this._player, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/premove", (function(data) {
+		subscriptions["/game/" + id + "/premove"] = function(data) {
 			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
 			var from = Square.fromSquareNo(data.from);
 			var to = Square.fromSquareNo(data.to);
@@ -376,41 +373,50 @@ define(function(require) {
 			else {
 				game.premove(this._player, from, to, promoteTo);
 			}
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/request/premove", (function() {
+		subscriptions["/game/" + id + "/request/premove"] = function() {
 			if(game.getPlayerColour(this._player) === game.getActiveColour().opposite) {
 				this._user.send("/game/" + id + "/premove", this._pendingPremove);
 			}
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/premove/cancel", (function() {
+		subscriptions["/game/" + id + "/premove/cancel"] = function() {
 			game.cancelPremove(this._player);
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/resign", (function() {
+		subscriptions["/game/" + id + "/resign"] = function() {
 			game.resign(this._player);
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/offer_draw", (function() {
+		subscriptions["/game/" + id + "/offer_draw"] = function() {
 			game.offerDraw(this._player);
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/claim_draw", (function() {
+		subscriptions["/game/" + id + "/claim_draw"] = function() {
 			game.claimDraw(this._player);
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/accept_draw", (function() {
+		subscriptions["/game/" + id + "/accept_draw"] = function() {
 			game.acceptDraw(this._player);
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/offer_or_accept_rematch", (function() {
+		subscriptions["/game/" + id + "/offer_or_accept_rematch"] = function() {
 			game.offerOrAcceptRematch(this._player);
-		}).bind(this));
+		};
 		
-		this._user.subscribe("/game/" + id + "/decline_rematch", (function() {
+		subscriptions["/game/" + id + "/decline_rematch"] = function() {
 			game.declineRematch(this._player);
-		}).bind(this));
+		};
+		
+		var subscription;
+		
+		for(var url in subscriptions) {
+			subscription = subscriptions[url].bind(this);
+			
+			this._subscriptions["/game/" + id][url] = callback;
+			this._user.subscribe(url, callback);
+		}
 	}
 	
 	User.prototype._createChallenge = function(options) {
@@ -466,7 +472,7 @@ define(function(require) {
 		game.Aborted.addHandler(this, (function() {
 			this._currentGames.remove(game);
 			this._user.send("/game/" + id + "/aborted");
-			//FIXME remove callbacks (but not the /rematch ones)
+			this._removeSubscriptions("/game/" + id);
 		}));
 		
 		game.DrawOffered.addHandler(this, function() {
@@ -483,7 +489,7 @@ define(function(require) {
 				this._registerCompletedRatedGame(game);
 			}
 			
-			//FIXME remove callbacks (but not the /rematch ones)
+			this._removeSubscriptions("/game/" + id);
 			this._user.send("/game/" + id + "/game_over", result);
 		});
 		
@@ -516,10 +522,17 @@ define(function(require) {
 	}
 	
 	User.prototype._removeInactiveGames = function() {
-		//FIXME remove callbacks (including /rematch ones)
 		this._currentGames = this._currentGames.filter((function(game) {
 			return (game.isInProgress() || time() - game.getEndTime() < INACTIVE_GAMES_EXPIRE);
 		}).bind(this));
+	}
+	
+	User.prototype._removeSubscriptions = function(id) {
+		for(var url in this._subscriptions[id]) {
+			this._user.unsubscribe(url, this._subscriptions[id][url]);
+		}
+		
+		delete this._subscriptions[id];
 	}
 	
 	User.prototype._getGame = function(id) {
