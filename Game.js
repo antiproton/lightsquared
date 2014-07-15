@@ -251,9 +251,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._rematch = function() {
-		if(!this.isInProgress()) {
-			this.Rematch.fire(new Game(this._players[Colour.black], this._players[Colour.white], this._options));
-		}
+		this.Rematch.fire(new Game(this._players[Colour.black], this._players[Colour.white], this._options));
 	}
 	
 	Game.prototype.offerRematch = function(player) {
