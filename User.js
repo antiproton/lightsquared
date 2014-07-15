@@ -259,15 +259,15 @@ define(function(require) {
 				this._cancelCurrentChallenge();
 			},
 			
-			"/request/game": function(id) {
+			"/request/game": function(id, client) {
 				var game = this._spectateGame(id);
 				
 				if(game) {
-					this._user.send("/game", game);
+					client.send("/game", game);
 				}
 				
 				else {
-					this._user.send("/game/not_found", id);
+					client.send("/game/not_found", id);
 				}
 			},
 			
@@ -325,14 +325,14 @@ define(function(require) {
 				}).bind(this));
 			},
 			
-			"/game/restore/cancel": function(id) {
+			"/game/restore/cancel": function(id, client) {
 				if(this._app.cancelGameRestoration(this._player, id)) {
-					this._user.send("/game/restore/canceled", id);
+					client.send("/game/restore/canceled", id);
 				}
 			},
 			
-			"/request/restoration_requests": function() {
-				this._user.send("/restoration_requests", this._pendingRestorationRequests);
+			"/request/restoration_requests": function(data, client) {
+				client.send("/restoration_requests", this._pendingRestorationRequests);
 			}
 		};
 
