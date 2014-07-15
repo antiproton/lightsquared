@@ -454,7 +454,6 @@ define(function(require) {
 		game.Aborted.addHandler(this, (function() {
 			this._currentGames.remove(game);
 			this._user.send("/game/" + id + "/aborted");
-			this._removeSubscriptions("/game/" + id);
 		}));
 		
 		game.DrawOffered.addHandler(this, function() {
@@ -471,7 +470,6 @@ define(function(require) {
 				this._registerCompletedRatedGame(game);
 			}
 			
-			this._removeSubscriptions("/game/" + id);
 			this._user.send("/game/" + id + "/game_over", result);
 		});
 		
@@ -505,7 +503,15 @@ define(function(require) {
 	
 	User.prototype._removeInactiveGames = function() {
 		this._currentGames = this._currentGames.filter((function(game) {
-			return (game.isInProgress() || time() - game.getEndTime() < INACTIVE_GAMES_EXPIRE);
+			if(game.isInProgress() || time() - game.getEndTime() < INACTIVE_GAMES_EXPIRE) {
+				return true;
+			}
+			
+			else {
+				this._removeSubscriptions("/game/" + game.getId());
+				
+				return false;
+			}
 		}).bind(this));
 	}
 	
