@@ -255,20 +255,20 @@ define(function(require) {
 	}
 	
 	Game.prototype.offerRematch = function(player) {
-		if(this.playerIsPlaying(player) && this._rematchOfferedBy === null) {
-			this._rematchOfferedBy = player;
-			this.RematchOffered.fire(player);
-		}
-	}
-	
-	Game.prototype.acceptRematch = function(player) {
-		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== player && this._rematchOfferedBy !== null) {
-			this._rematch();
+		if(this.playerIsPlaying(player)) {
+			if(this._rematchOfferedBy === null) {
+				this._rematchOfferedBy = player;
+				this.RematchOffered.fire(player);
+			}
+			
+			else if(this._rematchOfferedBy !== player) {
+				this._rematch();
+			}
 		}
 	}
 	
 	Game.prototype.declineRematch = function(player) {
-		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== null && this._rematchOfferedBy !== player) {
 			this.RematchDeclined.fire(player);
 		}
 	}
