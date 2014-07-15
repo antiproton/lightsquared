@@ -233,106 +233,112 @@ define(function(require) {
 	}
 	
 	User.prototype._subscribeToUserMessages = function() {
-		this._user.subscribe("/user/login", (function(data) {
-			this._login(data.username, data.password);
-		}).bind(this));
-		
-		this._user.subscribe("/user/logout", (function() {
-			this._currentGames.forEach((function(game) {
-				game.resign(this._player);
-			}).bind(this));
+		var subscriptions = {
+			"/user/login": function(data) {
+				this._login(data.username, data.password);
+			},
 			
-			this._updateDb();
-			this.logout();
-		}).bind(this));
-		
-		this._user.subscribe("/user/register", (function(data) {
-			this._register(data.username, data.password);
-		}).bind(this));
-		
-		this._user.subscribe("/challenge/create", (function(options) {
-			this._createChallenge(options);
-		}).bind(this));
-		
-		this._user.subscribe("/challenge/cancel", (function() {
-			this._cancelCurrentChallenge();
-		}).bind(this));
-		
-		this._user.subscribe("/request/game", (function(id) {
-			var game = this._spectateGame(id);
-			
-			if(game) {
-				this._user.send("/game", game);
-			}
-			
-			else {
-				this._user.send("/game/not_found", id);
-			}
-		}).bind(this));
-		
-		this._user.subscribe("/challenge/accept", (function(id) {
-			this._acceptChallenge(id);
-		}).bind(this));
-		
-		this._user.subscribe("/request/games", (function(data, client) {
-			client.send("/games", this._currentGames);
-		}).bind(this));
-		
-		this._user.subscribe("/request/user", (function(data, client) {
-			client.send("/user", this._getPrivateJson());
-		}).bind(this));
-		
-		this._user.subscribe("/request/challenges", (function(data, client) {
-			client.send("/challenges", this._app.getOpenChallenges());
-		}).bind(this));
-		
-		this._user.subscribe("/user/prefs/update", (function(prefs) {
-			for(var pref in this._prefs) {
-				if(pref in prefs) {
-					this._prefs[pref] = prefs[pref];
-				}
-			}
-		}).bind(this));
-		
-		this._user.subscribe("/request/time", function(requestId, client) {
-			client.send("/time/" + requestId, time());
-		});
-		
-		this._user.subscribe("/game/restore", (function(backup) {
-			var id = backup.gameDetails.id;
-			var request = this._app.restoreGame(this._player, backup);
-			
-			if(!request.isFinished()) {
-				this._pendingRestorationRequests.push(id);
-				this._user.send("/game/restore/pending", id);
-			}
-			
-			request.then((function(game) {
-				this._addGame(game);
+			"/user/logout": function() {
+				this._currentGames.forEach((function(game) {
+					game.resign(this._player);
+				}).bind(this));
 				
-				this._user.send("/game/restore/success", {
-					oldId: id,
-					newGame: game
-				});
-			}).bind(this), (function(error) {
-				this._user.send("/game/restore/failure", {
-					id: id,
-					reason: error
-				});
-			}).bind(this), (function() {
-				this._pendingRestorationRequests.remove(id);
-			}).bind(this));
-		}).bind(this));
-		
-		this._user.subscribe("/game/restore/cancel", (function(id) {
-			if(this._app.cancelGameRestoration(this._player, id)) {
-				this._user.send("/game/restore/canceled", id);
+				this._updateDb();
+				this.logout();
+			},
+			
+			"/user/register": function(data) {
+				this._register(data.username, data.password);
+			},
+			
+			"/challenge/create": function(options) {
+				this._createChallenge(options);
+			},
+			
+			"/challenge/cancel": function() {
+				this._cancelCurrentChallenge();
+			},
+			
+			"/request/game": function(id) {
+				var game = this._spectateGame(id);
+				
+				if(game) {
+					this._user.send("/game", game);
+				}
+				
+				else {
+					this._user.send("/game/not_found", id);
+				}
+			},
+			
+			"/challenge/accept": function(id) {
+				this._acceptChallenge(id);
+			},
+			
+			"/request/games": function(data, client) {
+				client.send("/games", this._currentGames)
+			},
+			
+			"/request/user": function(data, client) {
+				client.send("/user", this._getPrivateJson());
+			},
+			
+			"/request/challenges": function(data, client) {
+				client.send("/challenges", this._app.getOpenChallenges());
+			},
+			
+			"/user/prefs/update": function(prefs) {
+				for(var pref in this._prefs) {
+					if(pref in prefs) {
+						this._prefs[pref] = prefs[pref];
+					}
+				}
+			},
+			
+			"/request/time": function(data, client) {
+				client.send("/time/" + requestId, time());
+			},
+			
+			"/game/restore": function(backup) {
+				var id = backup.gameDetails.id;
+				var request = this._app.restoreGame(this._player, backup);
+				
+				if(!request.isFinished()) {
+					this._pendingRestorationRequests.push(id);
+					this._user.send("/game/restore/pending", id);
+				}
+				
+				request.then((function(game) {
+					this._addGame(game);
+					
+					this._user.send("/game/restore/success", {
+						oldId: id,
+						newGame: game
+					});
+				}).bind(this), (function(error) {
+					this._user.send("/game/restore/failure", {
+						id: id,
+						reason: error
+					});
+				}).bind(this), (function() {
+					this._pendingRestorationRequests.remove(id);
+				}).bind(this));
+			},
+			
+			"/game/restore/cancel": function(id) {
+				if(this._app.cancelGameRestoration(this._player, id)) {
+					this._user.send("/game/restore/canceled", id);
+				}
+			},
+			
+			"/request/restoration_requests": function() {
+				this._user.send("/restoration_requests", this._pendingRestorationRequests);
 			}
-		}).bind(this));
-		
-		this._user.subscribe("/request/restoration_requests", (function() {
-			this._user.send("/restoration_requests", this._pendingRestorationRequests);
-		}).bind(this));
+		};
+
+		for(var url in subscriptions) {
+			this._user.subscribe(url, subscriptions[url].bind(this));
+		}
 	}
 	
 	User.prototype._subscribeToGameMessages = function(game) {
