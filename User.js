@@ -383,8 +383,8 @@ define(function(require) {
 			game.acceptDraw(this._player);
 		};
 		
-		subscriptions["/game/" + id + "/offer_or_accept_rematch"] = function() {
-			game.offerOrAcceptRematch(this._player);
+		subscriptions["/game/" + id + "/rematch"] = function() {
+			game.offerRematch(this._player);
 		};
 		
 		subscriptions["/game/" + id + "/decline_rematch"] = function() {
