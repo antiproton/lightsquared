@@ -300,35 +300,11 @@ define(function(require) {
 			},
 			
 			"/game/restore": function(backup) {
-				var id = backup.gameDetails.id;
-				var request = this._app.restoreGame(this._player, backup);
-				
-				if(!request.isFinished()) {
-					this._pendingRestorationRequests.push(id);
-					this._user.send("/game/restore/pending", id);
-				}
-				
-				request.then((function(game) {
-					this._addGame(game);
-					
-					this._user.send("/game/restore/success", {
-						oldId: id,
-						newGame: game
-					});
-				}).bind(this), (function(error) {
-					this._user.send("/game/restore/failure", {
-						id: id,
-						reason: error
-					});
-				}).bind(this), (function() {
-					this._pendingRestorationRequests.remove(id);
-				}).bind(this));
+				this._restoreGame(backup);
 			},
 			
-			"/game/restore/cancel": function(id, client) {
-				if(this._app.cancelGameRestoration(this._player, id)) {
-					client.send("/game/restore/canceled", id);
-				}
+			"/game/restore/cancel": function(id) {
+				this._cancelRestoration(id);
 			},
 			
 			"/request/restoration_requests": function(data, client) {
@@ -573,6 +549,31 @@ define(function(require) {
 		return this._currentGames.some((function(game) {
 			return (game.isInProgress() && this._isPlayer(game));
 		}).bind(this));
+	}
+	
+	User.prototype._restoreGame = function(backup) {
+		var id = backup.gameDetails.id;
+		var request = this._app.restoreGame(this._player, backup);
+		
+		if(!request.isFinished()) {
+			this._pendingRestorationRequests.push(id);
+			this._user.send("/game/restore/" + id +"/pending");
+		}
+		
+		request.then((function(game) {
+			this._addGame(game);
+			this._user.send("/game/restore/" + id + "/success", game);
+		}).bind(this), (function(error) {
+			this._user.send("/game/restore/" + id + "/failure", error);
+		}).bind(this), (function() {
+			this._pendingRestorationRequests.remove(id);
+		}).bind(this));
+	}
+	
+	User.prototype._cancelRestoration = function(id) {
+		if(this._app.cancelGameRestoration(this._player, id)) {
+			this._user.send("/game/restore/" + id + "/canceled");
+		}
 	}
 	
 	User.prototype._registerCompletedRatedGame = function(game) {
