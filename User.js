@@ -396,8 +396,8 @@ define(function(require) {
 		for(var url in subscriptions) {
 			subscription = subscriptions[url].bind(this);
 			
-			this._subscriptions["/game/" + id][url] = callback;
-			this._user.subscribe(url, callback);
+			this._subscriptions["/game/" + id][url] = subscription;
+			this._user.subscribe(url, subscription);
 		}
 	}
 	
