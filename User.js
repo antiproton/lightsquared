@@ -295,7 +295,7 @@ define(function(require) {
 				}
 			},
 			
-			"/request/time": function(data, client) {
+			"/request/time": function(requestId, client) {
 				client.send("/time/" + requestId, time());
 			},
 			
