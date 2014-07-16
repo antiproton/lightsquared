@@ -187,6 +187,8 @@ define(function(require) {
 	
 	Application.prototype.cancelGameRestoration = function(player, id) {
 		if(id in this._pendingGameRestorations && this._pendingGameRestorations[id].player === player) {
+			this._promisor.fail("/game/restore/" + id, "Request canceled");
+			
 			delete this._pendingGameRestorations[id];
 			
 			return true;
