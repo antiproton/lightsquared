@@ -49,6 +49,7 @@ define(function(require) {
 		this._ratings[Colour.white] = white.getRating();
 		this._ratings[Colour.black] = black.getRating();
 		
+		this._rematchOfferedBy = null;
 		this._isUndoRequested = false;
 		this._isDrawOffered = false;
 		
