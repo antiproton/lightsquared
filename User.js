@@ -577,9 +577,7 @@ define(function(require) {
 	}
 	
 	User.prototype._cancelRestoration = function(id) {
-		if(this._app.cancelGameRestoration(this._player, id)) {
-			this._user.send("/game/restore/" + id + "/canceled");
-		}
+		this._app.cancelGameRestoration(this._player, id);
 	}
 	
 	User.prototype._registerCompletedRatedGame = function(game) {
