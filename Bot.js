@@ -119,10 +119,28 @@ define(function(require) {
 		
 		game.GameOver.addHandler(this, function() {
 			this._game = null;
+			
+			if(Math.random() > 0.5) {
+				setTimeout((function() {
+					game.offerRematch(this);
+				}).bind(this), 345);
+			}
+		});
+		
+		game.RematchOffered.addHandler(this, function(player) {
+			if(player !== this) {
+				setTimeout((function() {
+					game.offerRematch(this);
+				}).bind(this), 123);
+			}
 		});
 		
 		game.Aborted.addHandler(this, function() {
 			this._game = null;
+		});
+		
+		game.Rematch.addHandler(this, function(game) {
+			this._playGame(game);
 		});
 	}
 	
