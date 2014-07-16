@@ -18,7 +18,7 @@ define(function(require) {
 		this._game = null;
 		this._challenge = null;
 		this._uciSkillLevel = 5 + Math.floor(Math.random() * 10);
-		this._rating = 123; //set this depending on the skill level
+		this._rating = 1500; //set this depending on the skill level
 		
 		this._glicko2 = {
 			rating: this._rating,
