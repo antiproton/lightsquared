@@ -216,6 +216,10 @@ define(function(require) {
 		}
 	}
 	
+	Game.prototype.getPendingPremove = function() {
+		return this._pendingPremove;
+	}
+	
 	Game.prototype.cancelPremove = function(player) {
 		if(this.getPlayerColour(player) === this.getActiveColour().opposite) {
 			this._pendingPremove = null;
