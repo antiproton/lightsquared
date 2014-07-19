@@ -160,6 +160,14 @@ define(function(require) {
 			error = "You must finish all current games before registering an account";
 		}
 		
+		else if(username === "") {
+			error = "Username must be at least 1 character long";
+		}
+		
+		else if(password === "") {
+			error = "Password must be at least 1 character long";
+		}
+		
 		if(error === null) {
 			this._db.findOne({
 				username: username
@@ -235,7 +243,10 @@ define(function(require) {
 	User.prototype._subscribeToUserMessages = function() {
 		var subscriptions = {
 			"/user/login": function(data) {
-				this._login(data.username, data.password);
+				this._login(
+					(data.username || "").toString(),
+					(data.password || "").toString()
+				);
 			},
 			
 			"/user/logout": function() {
@@ -248,7 +259,10 @@ define(function(require) {
 			},
 			
 			"/user/register": function(data) {
-				this._register(data.username, data.password);
+				this._register(
+					(data.username || "").toString(),
+					(data.password || "").toString()
+				);
 			},
 			
 			"/challenge/create": function(options) {
