@@ -145,7 +145,7 @@ define(function(require) {
 			this._username = ANONYMOUS_USERNAME;
 			this._player = new Player(this);
 			this.LoggedOut.fire();
-			this._user.send("/user/logout");
+			this._user.send("/user/logout", this._player.getId());
 		}
 	}
 	
@@ -638,15 +638,6 @@ define(function(require) {
 		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
 	}
 	
-	User.prototype.toJSON = function() {
-		return {
-			id: this._id,
-			username: this._username,
-			isLoggedIn: this._isLoggedIn,
-			rating: this._glicko2.rating
-		};
-	}
-	
 	User.prototype.getPersistentJson = function(password) {
 		var data = {
 			username: this._username,
@@ -667,7 +658,7 @@ define(function(require) {
 	
 	User.prototype._getPrivateJson = function() {
 		return {
-			id: this._id,
+			playerId: this._player.getId(),
 			username: this._username,
 			isLoggedIn: this._isLoggedIn,
 			rating: this._glicko2.rating,
