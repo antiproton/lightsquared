@@ -309,6 +309,10 @@ define(function(require) {
 			
 			"/request/restoration_requests": function(data, client) {
 				client.send("/restoration_requests", this._pendingRestorationRequests);
+			},
+			
+			"/request/random_games": function(max, client) {
+				client.send("/random_games", this._app.getCurrentGames().slice(0, max));
 			}
 		};
 
