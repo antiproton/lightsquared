@@ -236,7 +236,7 @@ define(function(require) {
 		}
 	}
 	
-	Game.prototype.offerDraw = function() {
+	Game.prototype.offerDraw = function(player) {
 		if(this.getPlayerColour(player) === this.getActiveColour().opposite) {
 			this._isDrawOffered = true;
 			this.DrawOffered.fire();
