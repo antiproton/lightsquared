@@ -1,6 +1,13 @@
 define(function(require) {
+	var id = require("lib/id");
+	
 	function Player(user) {
+		this._id = id();
 		this._user = user;
+	}
+	
+	Player.prototype.getId = function() {
+		return this._id;
 	}
 	
 	Player.prototype.getRating = function() {
@@ -24,7 +31,11 @@ define(function(require) {
 	}
 	
 	Player.prototype.toJSON = function() {
-		return this._user.toJSON();
+		return {
+			id: this._id,
+			name: this.getName(),
+			rating: this.getRating()
+		};
 	}
 	
 	return Player;
