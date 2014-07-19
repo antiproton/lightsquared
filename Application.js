@@ -209,5 +209,15 @@ define(function(require) {
 		return openChallenges;
 	}
 	
+	Application.prototype.getCurrentGames = function() {
+		var games = [];
+		
+		for(var id in this._games) {
+			games.push(this._games[id]);
+		}
+		
+		return games;
+	}
+	
 	return Application;
 });
