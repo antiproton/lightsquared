@@ -363,7 +363,7 @@ define(function(require) {
 		
 		subscriptions["/game/" + id + "/request/premove"] = function() {
 			if(game.getPlayerColour(this._player) === game.getActiveColour().opposite) {
-				this._user.send("/game/" + id + "/premove", this._game.getPendingPremove());
+				this._user.send("/game/" + id + "/premove", game.getPendingPremove());
 			}
 		};
 		
