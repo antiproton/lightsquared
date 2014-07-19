@@ -9,11 +9,10 @@ define(function(require) {
 	
 	function Bot(app) {
 		this._id = id();
-		this._username = this._id;
+		this._name = this._id;
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
 		
-		this._isLoggedIn = true;
 		this._app = app;
 		this._game = null;
 		this._challenge = null;
@@ -73,7 +72,7 @@ define(function(require) {
 	}
 	
 	Bot.prototype.getName = function() {
-		return this._username;
+		return this._name;
 	}
 	
 	Bot.prototype._playGame = function(game) {
@@ -147,8 +146,7 @@ define(function(require) {
 	Bot.prototype.toJSON = function() {
 		return {
 			id: this._id,
-			username: this._username,
-			isLoggedIn: true,
+			name: this._name,
 			rating: this._rating
 		};
 	}
