@@ -105,7 +105,7 @@ define(function(require) {
 			var lastMoveTime = game.getLastMove().getTime();
 			var reimbursement = time() - lastMoveTime;
 			
-			game.addTimeToClock(reimbursement);
+			game.addTime(game.getActiveColour(), reimbursement);
 		}
 		
 		return game;
@@ -115,8 +115,8 @@ define(function(require) {
 		return this._id;
 	}
 	
-	Game.prototype.addTimeToClock = function(time) {
-		this._game.addTimeToClock(time);
+	Game.prototype.addTime = function(colour, time) {
+		this._game.addTime(colour, time);
 	}
 	
 	Game.prototype.playerIsPlaying = function(player) {
@@ -313,6 +313,7 @@ define(function(require) {
 			startTime: this._game.getStartTime(),
 			endTime: this._game.getEndTime(),
 			initialRatings: this._ratings,
+			addedTime: this._game.getAddedTime(),
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
 			options: this._options,
