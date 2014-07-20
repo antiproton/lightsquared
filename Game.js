@@ -256,7 +256,10 @@ define(function(require) {
 	}
 	
 	Game.prototype._rematch = function() {
-		this.Rematch.fire(new Game(this._players[Colour.black], this._players[Colour.white], this._options));
+		this.Rematch.fire(new Game(this._players[Colour.black], this._players[Colour.white], {
+			initialTime: this._options.initialTime,
+			timeIncrement: this._options.timeIncrement
+		}));
 	}
 	
 	Game.prototype.offerRematch = function(player) {
