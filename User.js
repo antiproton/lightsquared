@@ -21,6 +21,7 @@ define(function(require) {
 		this._db = db;
 		this._user = user;
 		this._app = app;
+		this._randomGames = this._app.getRandomGames();
 		this._subscriptions = {};
 		
 		this._gamesPlayedAsWhite = 0;
@@ -79,7 +80,46 @@ define(function(require) {
 			this._logout();
 		});
 		
+		this._setupRandomGamesHandlers();
 		this._subscribeToUserMessages();
+	}
+	
+	User.prototype._setupRandomGamesHandlers = function() {
+		this._randomGamesHandlers = [
+			{
+				event: this._randomGames.Move,
+				callback: function(data) {
+					this._user.send("/random_game/move", {
+						game: data.game.getId(),
+						move: data.move
+					});
+				}
+			},
+			{
+				event: this._randomGames.GameOver,
+				callback: function(game) {
+					this._user.send("/random_game/game_over", game.getId());
+				}
+			},
+			{
+				event: this._randomGames.NewGame,
+				callback: function(game) {
+					this._user.send("/random_game/new", game);
+				}
+			}
+		];
+	}
+	
+	User.prototype._addRandomGamesHandlers = function() {
+		this._randomGamesHandlers.forEach((function(handler) {
+			handler.event.removeHandler(this, handler.callback);
+		}).bind(this));
+	}
+	
+	User.prototype._removeRandomGamesHandlers = function() {
+		this._randomGamesHandlers.forEach((function(handler) {
+			handler.event.addHandler(this, handler.callback);
+		}).bind(this));
 	}
 	
 	User.prototype.replace = function(user) {
@@ -325,8 +365,14 @@ define(function(require) {
 				client.send("/restoration_requests", this._pendingRestorationRequests);
 			},
 			
-			"/request/random_games": function(max, client) {
-				client.send("/random_games", this._app.getCurrentGames().slice(0, max));
+			"/random_games/subscribe": function(data, client) {
+				this._addRandomGamesHandlers();
+				
+				client.send("/random_games", this._randomGames.getGames());
+			},
+			
+			"/random_games/unsubscribe": function() {
+				this._removeRandomGamesHandlers();
 			}
 		};
 

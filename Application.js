@@ -7,6 +7,7 @@ define(function(require) {
 	var Game = require("./Game");
 	var Event = require("lib/Event");
 	var Promisor = require("lib/Promisor");
+	var RandomGames = require("./RandomGames");
 	
 	function Application(server, db) {
 		this._users = {};
@@ -33,6 +34,8 @@ define(function(require) {
 				this._loggedInUsers[user.getUsername()] = user;
 			}
 		});
+		
+		this._randomGames = new RandomGames(this);
 	}
 	
 	Application.prototype.createChallenge = function(owner, options) {
@@ -80,6 +83,10 @@ define(function(require) {
 		});
 		
 		this.NewGame.fire(game);
+	}
+	
+	Application.prototype.getRandomGames = function() {
+		return this._randomGames;
 	}
 	
 	Application.prototype.getChallenge = function(id) {
