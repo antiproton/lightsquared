@@ -25,6 +25,7 @@ define(function(require) {
 		this._options = {
 			history: [],
 			startTime: time(),
+			addedTime: null,
 			initialTime: "10m",
 			timeIncrement: "0"
 		};
@@ -35,11 +36,21 @@ define(function(require) {
 			}
 		}
 		
+		this._addedTime = {};
+		this._addedTime[Colour.white] = 0;
+		this._addedTime[Colour.black] = 0;
+		
 		this._game = new ChessGame(this._options);
 		
 		this._game.GameOver.addHandler(this, function(result) {
 			this._gameOver(result);
 		});
+		
+		if(this._options.addedTime) {
+			for(var colour in this._options.addedTime) {
+				this.addTime(this._options.addedTime[colour], colour);
+			}
+		}
 		
 		this._players = {};
 		this._players[Colour.white] = white;
@@ -94,6 +105,7 @@ define(function(require) {
 		var options = gameDetails.options;
 		
 		options.startTime = gameDetails.startTime;
+		options.addedTime = gameDetails.addedTime;
 		
 		options.history = gameDetails.history.map(function(move) {
 			return Move.fromJSON(move);
@@ -105,7 +117,7 @@ define(function(require) {
 			var lastMoveTime = game.getLastMove().getTime();
 			var reimbursement = time() - lastMoveTime;
 			
-			game.addTime(game.getActiveColour(), reimbursement);
+			game.addTime(reimbursement, game.getActiveColour());
 		}
 		
 		return game;
@@ -115,8 +127,9 @@ define(function(require) {
 		return this._id;
 	}
 	
-	Game.prototype.addTime = function(colour, time) {
-		this._game.addTime(colour, time);
+	Game.prototype.addTime = function(time, colour) {
+		this._game.addTimeToClock(time, colour);
+		this._addedTime[colour] += time;
 	}
 	
 	Game.prototype.playerIsPlaying = function(player) {
@@ -316,7 +329,7 @@ define(function(require) {
 			startTime: this._game.getStartTime(),
 			endTime: this._game.getEndTime(),
 			initialRatings: this._ratings,
-			addedTime: this._game.getAddedTime(),
+			addedTime: this._addedTime,
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
 			options: this._options,
