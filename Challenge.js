@@ -30,6 +30,8 @@ define(function(require) {
 		this._timeoutTimer = setTimeout((function() {
 			this._timeout();
 		}).bind(this), jsonChessConstants.CHALLENGE_TIMEOUT);
+		
+		this._expiryTime = time() + jsonChessConstants.CHALLENGE_TIMEOUT;
 	}
 	
 	Challenge.prototype.getId = function() {
@@ -101,7 +103,8 @@ define(function(require) {
 		return {
 			id: this._id,
 			owner: this._owner,
-			options: this._options
+			options: this._options,
+			expiryTime: this._expiryTime
 		};
 	}
 	
