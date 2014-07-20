@@ -339,8 +339,8 @@ define(function(require) {
 		var id = game.getId();
 		var subscriptions = this._subscriptions["/game/" + id] = {};
 		
-		subscriptions["/game/" + id + "/request/moves"] = function(data) {
-			var index = data.startingIndex;
+		subscriptions["/game/" + id + "/request/moves"] = function(startingIndex) {
+			var index = startingIndex;
 			
 			game.getHistory().slice(index).forEach((function(move) {
 				this._user.send("/game/" + id + "/move", Move.getShortJSON(move, index));
