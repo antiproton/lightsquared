@@ -18,6 +18,7 @@ define(function(require) {
 		this._db = db;
 		this._pendingGameRestorations = {};
 		
+		this.NewGame = new Event(this);
 		this.NewChallenge = new Event(this);
 		this.ChallengeExpired = new Event(this);
 		
@@ -77,6 +78,8 @@ define(function(require) {
 		game.Rematch.addHandler(this, function(game) {
 			this._addGame(game);
 		});
+		
+		this.NewGame.fire(game);
 	}
 	
 	Application.prototype.getChallenge = function(id) {
