@@ -21,6 +21,7 @@ define(function(require) {
 		this._db = db;
 		this._user = user;
 		this._app = app;
+		this._isWatchingRandomGames = false;
 		this._randomGames = this._app.getRandomGames();
 		this._subscriptions = {};
 		
@@ -111,15 +112,23 @@ define(function(require) {
 	}
 	
 	User.prototype._addRandomGamesHandlers = function() {
-		this._randomGamesHandlers.forEach((function(handler) {
-			handler.event.removeHandler(this, handler.callback);
-		}).bind(this));
+		if(!this._isWatchingRandomGames) {
+			this._randomGamesHandlers.forEach((function(handler) {
+				handler.event.addHandler(this, handler.callback);
+			}).bind(this));
+			
+			this._isWatchingRandomGames = true;
+		}
 	}
 	
 	User.prototype._removeRandomGamesHandlers = function() {
-		this._randomGamesHandlers.forEach((function(handler) {
-			handler.event.addHandler(this, handler.callback);
-		}).bind(this));
+		if(this._isWatchingRandomGames) {
+			this._randomGamesHandlers.forEach((function(handler) {
+				handler.event.removeHandler(this, handler.callback);
+			}).bind(this));
+			
+			this._isWatchingRandomGames = false;
+		}
 	}
 	
 	User.prototype.replace = function(user) {
