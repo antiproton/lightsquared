@@ -91,7 +91,7 @@ define(function(require) {
 				event: this._randomGames.Move,
 				callback: function(data) {
 					this._user.send("/random_game/move", {
-						game: data.game.getId(),
+						gameId: data.game.getId(),
 						move: data.move
 					});
 				}
