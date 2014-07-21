@@ -9,8 +9,8 @@ define(function(require) {
 		this._id = id();
 		this._owner = owner;
 		
-		this.Expired = new Event(this);
-		this.Accepted = new Event(this);
+		this.Expired = new Event();
+		this.Accepted = new Event();
 		
 		this._options = {
 			initialTime: "10m",

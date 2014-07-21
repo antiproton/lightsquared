@@ -6,9 +6,9 @@ define(function(require) {
 		this._count = count;
 		this._games = [];
 		
-		this.Move = new Event(this);
-		this.GameOver = new Event(this);
-		this.NewGame = new Event(this);
+		this.Move = new Event();
+		this.GameOver = new Event();
+		this.NewGame = new Event();
 		
 		this._app.NewGame.addHandler(this, function(game) {
 			if(this._games.length < this._count) {

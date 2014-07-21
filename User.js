@@ -48,10 +48,10 @@ define(function(require) {
 			boardStyle: null
 		};
 		
-		this.Connected = new Event(this);
-		this.Disconnected = new Event(this);
-		this.LoggedIn = new Event(this);
-		this.LoggedOut = new Event(this);
+		this.Connected = new Event();
+		this.Disconnected = new Event();
+		this.LoggedIn = new Event();
+		this.LoggedOut = new Event();
 		
 		this._app.NewChallenge.addHandler(this, function(challenge) {
 			this._user.send("/challenges", [challenge]);

@@ -19,9 +19,9 @@ define(function(require) {
 		this._db = db;
 		this._pendingGameRestorations = {};
 		
-		this.NewGame = new Event(this);
-		this.NewChallenge = new Event(this);
-		this.ChallengeExpired = new Event(this);
+		this.NewGame = new Event();
+		this.NewChallenge = new Event();
+		this.ChallengeExpired = new Event();
 		
 		server.UserConnected.addHandler(this, function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));

@@ -13,14 +13,14 @@ define(function(require) {
 	function Game(white, black, options) {
 		this._id = id();
 		
-		this.Move = new Event(this);
-		this.GameOver = new Event(this);
-		this.Aborted = new Event(this);
-		this.RematchOffered = new Event(this);
-		this.RematchDeclined = new Event(this);
-		this.Rematch = new Event(this);
-		this.DrawOffered = new Event(this);
-		this.Chat = new Event(this);
+		this.Move = new Event();
+		this.GameOver = new Event();
+		this.Aborted = new Event();
+		this.RematchOffered = new Event();
+		this.RematchDeclined = new Event();
+		this.Rematch = new Event();
+		this.DrawOffered = new Event();
+		this.Chat = new Event();
 		
 		this._options = {
 			history: [],
