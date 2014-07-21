@@ -35,7 +35,7 @@ define(function(require) {
 			}
 		});
 		
-		this._randomGames = new RandomGames(this);
+		this._randomGames = new RandomGames(this, 10);
 	}
 	
 	Application.prototype.createChallenge = function(owner, options) {
