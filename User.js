@@ -92,7 +92,7 @@ define(function(require) {
 				callback: function(data) {
 					this._user.send("/random_game/move", {
 						gameId: data.game.getId(),
-						move: data.move
+						move: Move.fromMove(data.move)
 					});
 				}
 			},
