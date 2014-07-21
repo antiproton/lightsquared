@@ -44,13 +44,13 @@ define(function(require) {
 					timeIncrement: ["0", "1", "2", "5", "10"].random()
 				});
 				
-				this._challenge.Accepted.addHandler(this, function(game) {
+				this._challenge.Accepted.addHandler(function(game) {
 					this._playGame(game);
-				});
+				}, this);
 				
-				this._challenge.Expired.addHandler(this, function() {
+				this._challenge.Expired.addHandler(function() {
 					this._challenge = null;
-				});
+				}, this);
 			}
 		}).bind(this);
 		
@@ -114,9 +114,9 @@ define(function(require) {
 		
 		move();
 		
-		game.Move.addHandler(this, move);
+		game.Move.addHandler(move);
 		
-		game.GameOver.addHandler(this, function() {
+		game.GameOver.addHandler(function() {
 			this._game = null;
 			
 			if(Math.random() > 0.5) {
@@ -124,23 +124,23 @@ define(function(require) {
 					game.offerRematch(this);
 				}).bind(this), 345);
 			}
-		});
+		}, this);
 		
-		game.RematchOffered.addHandler(this, function(player) {
+		game.RematchOffered.addHandler(function(player) {
 			if(player !== this) {
 				setTimeout((function() {
 					game.offerRematch(this);
 				}).bind(this), 123);
 			}
-		});
+		}, this);
 		
-		game.Aborted.addHandler(this, function() {
+		game.Aborted.addHandler(function() {
 			this._game = null;
-		});
+		}, this);
 		
-		game.Rematch.addHandler(this, function(game) {
+		game.Rematch.addHandler(function(game) {
 			this._playGame(game);
-		});
+		}, this);
 	}
 	
 	Bot.prototype.toJSON = function() {

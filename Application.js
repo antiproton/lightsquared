@@ -23,7 +23,7 @@ define(function(require) {
 		this.NewChallenge = new Event();
 		this.ChallengeExpired = new Event();
 		
-		server.UserConnected.addHandler(this, function(serverUser) {
+		server.UserConnected.addHandler(function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
 			
 			this._setupUser(user);
@@ -33,7 +33,7 @@ define(function(require) {
 			if(user.isLoggedIn()) {
 				this._loggedInUsers[user.getUsername()] = user;
 			}
-		});
+		}, this);
 		
 		this._randomGames = new RandomGames(this, 10);
 	}
@@ -42,19 +42,19 @@ define(function(require) {
 		var challenge = new Challenge(owner, options);
 		var id = challenge.getId();
 		
-		challenge.Accepted.addHandler(this, function(game) {
+		challenge.Accepted.addHandler(function(game) {
 			this._addGame(game);
 			
 			delete this._openChallenges[id];
 			
 			return true;
-		});
+		}, this);
 		
-		challenge.Expired.addHandler(this, function() {
+		challenge.Expired.addHandler(function() {
 			this.ChallengeExpired.fire(id);
 			
 			delete this._openChallenges[id];
-		});
+		}, this);
 		
 		this._openChallenges[id] = challenge;
 		
@@ -68,19 +68,19 @@ define(function(require) {
 		
 		this._games[gameId] = game;
 		
-		game.GameOver.addHandler(this, function() {
+		game.GameOver.addHandler(function() {
 			this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
 			
 			delete this._games[gameId];
-		});
+		}, this);
 		
-		game.Aborted.addHandler(this, function() {
+		game.Aborted.addHandler(function() {
 			delete this._games[gameId];
-		});
+		}, this);
 		
-		game.Rematch.addHandler(this, function(game) {
+		game.Rematch.addHandler(function(game) {
 			this._addGame(game);
-		});
+		}, this);
 		
 		this.NewGame.fire(game);
 	}
@@ -132,24 +132,24 @@ define(function(require) {
 	Application.prototype._setupUser = function(user) {
 		var loggedInUsername;
 		
-		user.Disconnected.addHandler(this, function() {
+		user.Disconnected.addHandler(function() {
 			delete this._users[user.getId()];
-		});
+		}, this);
 		
-		user.Connected.addHandler(this, function() {
+		user.Connected.addHandler(function() {
 			this._users[user.getId()] = user;
-		});
+		}, this);
 		
-		user.LoggedIn.addHandler(this, function() {
+		user.LoggedIn.addHandler(function() {
 			loggedInUsername = user.getUsername();
 			
 			this._replaceExistingLoggedInUser(user);
 			this._loggedInUsers[loggedInUsername] = user;
-		});
+		}, this);
 		
-		user.LoggedOut.addHandler(this, function() {
+		user.LoggedOut.addHandler(function() {
 			delete this._loggedInUsers[loggedInUsername];
-		});
+		}, this);
 	}
 	
 	Application.prototype.restoreGame = function(player, request) {

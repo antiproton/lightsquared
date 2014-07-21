@@ -42,9 +42,9 @@ define(function(require) {
 		
 		this._game = new ChessGame(this._options);
 		
-		this._game.GameOver.addHandler(this, function(result) {
+		this._game.GameOver.addHandler(function(result) {
 			this._gameOver(result);
-		});
+		}, this);
 		
 		if(this._options.addedTime) {
 			for(var colour in this._options.addedTime) {
