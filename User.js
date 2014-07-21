@@ -53,33 +53,34 @@ define(function(require) {
 		this.LoggedIn = new Event();
 		this.LoggedOut = new Event();
 		
-		this._app.NewChallenge.addHandler(this, function(challenge) {
-			this._user.send("/challenges", [challenge]);
-		});
-		
-		this._app.ChallengeExpired.addHandler(this, function(id) {
-			this._user.send("/challenge/expired", id);
-		});
-		
-		this._user.Disconnected.addHandler(this, function() {
-			this._removeInactiveGames();
-			this.Disconnected.fire();
-		});
-		
-		this._user.Connected.addHandler(this, function() {
-			this.Connected.fire();
-		});
-		
-		this._user.CheckingActivity.addHandler(this, function(activityCheck) {
-			if(this._isActive()) {
-				activityCheck.registerActivity();
-			}
-		});
-		
-		this._user.Deregistering.addHandler(this, function() {
-			this._updateDb();
-			this._logout();
-		});
+		this._handlers = [
+			this._app.NewChallenge.addHandler(function(challenge) {
+				this._user.send("/challenges", [challenge]);
+			}, this),
+			this._app.ChallengeExpired.addHandler(function(id) {
+				this._user.send("/challenge/expired", id);
+			}, this),
+			this._user.Disconnected.addHandler(function() {
+				this._removeInactiveGames();
+				this.Disconnected.fire();
+			}, this),
+			this._user.Connected.addHandler(function() {
+				this.Connected.fire();
+			}, this),
+			this._user.CheckingActivity.addHandler(function(activityCheck) {
+				if(this._isActive()) {
+					activityCheck.registerActivity();
+				}
+			}, this),
+			this._user.Deregistering.addHandler(function() {
+				this._handlers.forEach(function(handler) {
+					handler.remove();
+				});
+				
+				this._updateDb();
+				this._logout();
+			}, this)
+		];
 		
 		this._setupRandomGamesHandlers();
 		this._subscribeToUserMessages();
@@ -87,35 +88,28 @@ define(function(require) {
 	
 	User.prototype._setupRandomGamesHandlers = function() {
 		this._randomGamesHandlers = [
-			{
-				event: this._randomGames.Move,
-				callback: function(data) {
-					this._user.send("/random_game/move", {
-						gameId: data.game.getId(),
-						move: Move.fromMove(data.move)
-					});
-				}
-			},
-			{
-				event: this._randomGames.GameOver,
-				callback: function(game) {
-					this._user.send("/random_game/game_over", game.getId());
-				}
-			},
-			{
-				event: this._randomGames.NewGame,
-				callback: function(game) {
-					this._user.send("/random_game/new", game);
-				}
-			}
+			this._randomGames.Move.addHandler(function(data) {
+				this._user.send("/random_game/move", {
+					gameId: data.game.getId(),
+					move: Move.fromMove(data.move)
+				});
+			}, this),
+			this._randomGames.GameOver.addHandler(function(game) {
+				this._user.send("/random_game/game_over", game.getId());
+			}, this),
+			this._randomGames.NewGame.addHandler(function(game) {
+				this._user.send("/random_game/new", game);
+			}, this)
 		];
+		
+		this._removeRandomGamesHandlers();
 	}
 	
 	User.prototype._addRandomGamesHandlers = function() {
 		if(!this._isWatchingRandomGames) {
-			this._randomGamesHandlers.forEach((function(handler) {
-				handler.event.addHandler(this, handler.callback);
-			}).bind(this));
+			this._randomGamesHandlers.forEach(function(handler) {
+				handler.add();
+			});
 			
 			this._isWatchingRandomGames = true;
 		}
@@ -123,9 +117,9 @@ define(function(require) {
 	
 	User.prototype._removeRandomGamesHandlers = function() {
 		if(this._isWatchingRandomGames) {
-			this._randomGamesHandlers.forEach((function(handler) {
-				handler.event.removeHandler(this, handler.callback);
-			}).bind(this));
+			this._randomGamesHandlers.forEach(function(handler) {
+				handler.remove();
+			});
 			
 			this._isWatchingRandomGames = false;
 		}
@@ -479,15 +473,15 @@ define(function(require) {
 		
 		var challenge = this._app.createChallenge(this._player, options);
 		
-		challenge.Accepted.addHandler(this, function(game) {
+		challenge.Accepted.addHandler(function(game) {
 			this._addGame(game);
 			this._user.send("/challenge/accepted", game);
-		});
+		}, this);
 		
-		challenge.Expired.addHandler(this, function() {
+		challenge.Expired.addHandler(function() {
 			this._user.send("/current_challenge/expired");
 			this._currentChallenge = null;
-		});
+		}, this);
 		
 		this._currentChallenge = challenge;
 		this._user.send("/current_challenge", challenge);
@@ -520,53 +514,53 @@ define(function(require) {
 		this._currentGames.push(game);
 		this._subscribeToGameMessages(game);
 		
-		game.Move.addHandler(this, function(move) {
+		game.Move.addHandler(function(move) {
 			this._user.send("/game/" + id + "/move", Move.getShortJSON(move, game.getHistory().length - 1));
-		});
+		}, this);
 		
-		game.Aborted.addHandler(this, (function() {
+		game.Aborted.addHandler(function() {
 			this._currentGames.remove(game);
 			this._user.send("/game/" + id + "/aborted");
-		}));
+		}, this);
 		
-		game.DrawOffered.addHandler(this, function() {
+		game.DrawOffered.addHandler(function() {
 			this._user.send("/game/" + id + "/draw_offer", game.getActiveColour().opposite.fenString);
-		});
+		}, this);
 		
-		game.Rematch.addHandler(this, (function(game) {
+		game.Rematch.addHandler(function(game) {
 			this._addGame(game);
 			this._user.send("/game/" + id + "/rematch", game);
-		}).bind(this));
+		}, this);
 		
-		game.GameOver.addHandler(this, function(result) {
+		game.GameOver.addHandler(function(result) {
 			if(this._isPlayer(game)) {
 				this._registerCompletedRatedGame(game);
 			}
 			
 			this._user.send("/game/" + id + "/game_over", result);
-		});
+		}, this);
 		
-		game.Chat.addHandler(this, function(data) {
+		game.Chat.addHandler(function(data) {
 			if(!this._isPlayer(game) || game.playerIsPlaying(data.player)) {
 				this._user.send("/game/" + id + "/chat", {
 					from: data.player.getName(),
 					body: data.message
 				});
 			}
-		});
+		}, this);
 		
 		if(this._isPlayer(game)) {
-			game.RematchOffered.addHandler(this, function(player) {
+			game.RematchOffered.addHandler(function(player) {
 				if(player !== this._player) {
 					this._user.send("/game/" + id + "/rematch_offer");
 				}
-			});
+			}, this);
 			
-			game.RematchDeclined.addHandler(this, function() {
+			game.RematchDeclined.addHandler(function() {
 				if(player !== this._player) {
 					this._user.send("/game/" + id + "/rematch_declined");
 				}
-			});
+			}, this);
 		}
 	}
 	
