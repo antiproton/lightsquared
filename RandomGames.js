@@ -13,6 +13,7 @@ define(function(require) {
 		this._app.NewGame.addHandler(this, function(game) {
 			if(this._games.length < this._count) {
 				this._addGame(game);
+				this.NewGame.fire(game);
 			}
 		});
 		
