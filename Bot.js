@@ -7,9 +7,19 @@ define(function(require) {
 	var Square = require("chess/Square");
 	var glicko2Constants = require("jsonchess/glicko2");
 	
+	var names = [
+		"Norm",
+		"Steel",
+		"timh",
+		"blackrabbit",
+		"shevek"
+	];
+	
+	var botNo = 0;
+	
 	function Bot(app) {
 		this._id = id();
-		this._name = this._id;
+		this._name = names.pop() || "Stockfish " + ++botNo;
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
 		
