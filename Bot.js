@@ -6,6 +6,7 @@ define(function(require) {
 	var Event = require("lib/Event");
 	var Square = require("chess/Square");
 	var glicko2Constants = require("jsonchess/glicko2");
+	var Colour = require("chess/Colour");
 	
 	var names = [
 		"Norm",
@@ -17,17 +18,48 @@ define(function(require) {
 	
 	var botNo = 0;
 	
-	function Bot(app) {
+	var createChallenge = function() {
+		if(!this._challenge && !this._game) {
+			this._challenge = this._app.createChallenge(this, {
+				initialTime: ["1", "2", "3", "5", "10", "15", "20", "30"].random(),
+				timeIncrement: ["0", "1", "2", "5", "10"].random()
+			});
+			
+			this._challenge.Accepted.addHandler(function(game) {
+				this._playGame(game);
+			}, this);
+			
+			this._challenge.Expired.addHandler(function() {
+				this._challenge = null;
+			}, this);
+		}
+	};
+	
+	var acceptChallenge = function() {
+		if(!this._game) {
+			this._app.getOpenChallenges().some((function(challenge) {
+				var game = challenge.accept(this);
+				
+				if(game) {
+					this._playGame(game);
+				}
+			}).bind(this));
+		}
+	};
+	
+	function Bot(app, seekStrategy) {
 		this._id = id();
 		this._name = names.pop() || "Stockfish " + ++botNo;
-		this._gamesPlayedAsWhite = 0;
-		this._gamesPlayedAsBlack = 0;
+		
+		this._gamesPlayedAs = {};
+		this._gamesPlayedAs[Colour.white] = 0;
+		this._gamesPlayedAs[Colour.black] = 0;
 		
 		this._app = app;
 		this._game = null;
 		this._challenge = null;
-		this._uciSkillLevel = 5 + Math.floor(Math.random() * 10);
-		this._rating = 1500; //set this depending on the skill level
+		this._uciSkillLevel = 5;
+		this._rating = Math.round(1400 + Math.random() * 200);
 		
 		this._glicko2 = {
 			rating: this._rating,
@@ -35,42 +67,23 @@ define(function(require) {
 			vol: glicko2Constants.defaults.VOL
 		};
 		
-		var acceptChallenge = (function() {
-			if(!this._game) {
-				this._app.getOpenChallenges().some((function(challenge) {
-					var game = challenge.accept(this);
-					
-					if(game) {
-						this._playGame(game);
-					}
-				}).bind(this));
-			}
-		}).bind(this);
-		
-		var createChallenge = (function() {
-			if(!this._challenge && !this._game) {
-				this._challenge = this._app.createChallenge(this, {
-					initialTime: ["1", "2", "3", "5", "10", "15", "20", "30"].random(),
-					timeIncrement: ["0", "1", "2", "5", "10"].random()
-				});
-				
-				this._challenge.Accepted.addHandler(function(game) {
-					this._playGame(game);
-				}, this);
-				
-				this._challenge.Expired.addHandler(function() {
-					this._challenge = null;
-				}, this);
-			}
-		}).bind(this);
-		
-		var findGame = [acceptChallenge, createChallenge].random();
-		
-		setInterval(findGame, 1000 + Math.floor(Math.random() * 5000));
+		setInterval(seekStrategy().bind(this), 1000 + Math.floor(Math.random() * 5000));
 	}
 	
+	Bot.seekStrategies = {
+		ACCEPT: function() {
+			return acceptChallenge;
+		},
+		CREATE: function() {
+			return createChallenge;
+		},
+		RANDOM: function() {
+			return [acceptChallenge, createChallenge].random();
+		}
+	};
+	
 	Bot.prototype.getGamesAsWhiteRatio = function() {
-		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
+		return Math.max(1, this._gamesPlayedAs[Colour.white]) / Math.max(1, this._gamesPlayedAs[Colour.black]);
 	}
 	
 	Bot.prototype.getRating = function() {
@@ -96,6 +109,9 @@ define(function(require) {
 					var fen = game.getPosition().getFen();
 					var stockfish = spawn("stockfish");
 					
+					stockfish.stdin.write("uci\n");
+					stockfish.stdin.write("ucinewgame\n");
+					stockfish.stdin.write("setoption Skill Level value " + this._uciSkillLevel + "\n");
 					stockfish.stdin.write("position fen " + fen + "\n");
 					stockfish.stdin.write("go movetime 60\n");
 					
@@ -128,6 +144,7 @@ define(function(require) {
 		
 		game.GameOver.addHandler(function() {
 			this._game = null;
+			this._gamesPlayedAs[game.getPlayerColour(this)]++;
 			
 			if(Math.random() > 0.5) {
 				setTimeout((function() {
