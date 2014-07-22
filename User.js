@@ -203,8 +203,16 @@ define(function(require) {
 			error = "You must finish all current games before registering an account";
 		}
 		
+		else if(username.trim() !== username) {
+			error = "Username must not begin or end with whitespace";
+		}
+		
 		else if(username === "") {
 			error = "Username must be at least 1 character long";
+		}
+		
+		else if(username === ANONYMOUS_USERNAME) {
+			error = "'" + ANONYMOUS_USERNAME + "' is reserved for anonymous users";
 		}
 		
 		else if(password === "") {
