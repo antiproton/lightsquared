@@ -48,6 +48,8 @@ define(function(require) {
 	};
 	
 	function Bot(app, seekStrategy) {
+		seekStrategy = seekStrategy || Bot.seekStrategies.RANDOM;
+		
 		this._id = id();
 		this._name = names.pop() || "Stockfish " + ++botNo;
 		
