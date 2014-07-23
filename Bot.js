@@ -19,7 +19,7 @@ define(function(require) {
 	var botNo = 0;
 	
 	var createChallenge = function() {
-		if(!this._challenge && !this._game) {
+		if(!this._challenge && this._countCurrentGames === 0) {
 			this._challenge = this._app.createChallenge(this, {
 				initialTime: ["1", "2", "3", "5", "10", "15", "20", "30"].random(),
 				timeIncrement: ["0", "1", "2", "5", "10"].random()
@@ -36,7 +36,7 @@ define(function(require) {
 	};
 	
 	var acceptChallenge = function() {
-		if(!this._game) {
+		if(this._countCurrentGames === 0) {
 			this._app.getOpenChallenges().some((function(challenge) {
 				var game = challenge.accept(this);
 				
@@ -58,7 +58,7 @@ define(function(require) {
 		this._gamesPlayedAs[Colour.black] = 0;
 		
 		this._app = app;
-		this._game = null;
+		this._countCurrentGames = 0;
 		this._challenge = null;
 		this._uciSkillLevel = 5;
 		this._rating = Math.round(1400 + Math.random() * 200);
@@ -101,7 +101,7 @@ define(function(require) {
 	}
 	
 	Bot.prototype._playGame = function(game) {
-		this._game = game;
+		this._countCurrentGames++;
 		
 		var colour = game.getPlayerColour(this);
 		
@@ -145,7 +145,7 @@ define(function(require) {
 		game.Move.addHandler(move);
 		
 		game.GameOver.addHandler(function() {
-			this._game = null;
+			this._countCurrentGames--;
 			this._gamesPlayedAs[game.getPlayerColour(this)]++;
 			
 			if(Math.random() > 0.5) {
@@ -164,7 +164,7 @@ define(function(require) {
 		}, this);
 		
 		game.Aborted.addHandler(function() {
-			this._game = null;
+			this._countCurrentGames--;
 		}, this);
 		
 		game.Rematch.addHandler(function(game) {
