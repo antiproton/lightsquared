@@ -89,7 +89,9 @@ define(function(require) {
 	User.prototype._setupRandomGamesHandlers = function() {
 		this._randomGamesHandlers = [
 			this._randomGames.Move.addHandler(function(data) {
-				this._sendRandomGame(data.game, data.move);
+				if(data.game.isInProgress()) {
+					this._sendRandomGame(data.game, data.move);
+				}
 			}, this),
 			this._randomGames.GameOver.addHandler(function(game) {
 				this._user.send("/random_game/game_over", game.getId());
