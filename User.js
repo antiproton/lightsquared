@@ -386,7 +386,10 @@ define(function(require) {
 			
 			"/random_games/subscribe": function(data, client) {
 				this._addRandomGamesHandlers();
-				this._randomGames.getGames().forEach(this._sendRandomGame.bind(this));
+				
+				this._randomGames.getGames().forEach((function(game) {
+					this._sendRandomGame(game);
+				}).bind(this));
 			},
 			
 			"/random_games/unsubscribe": function() {
