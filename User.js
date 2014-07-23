@@ -89,16 +89,23 @@ define(function(require) {
 	User.prototype._setupRandomGamesHandlers = function() {
 		this._randomGamesHandlers = [
 			this._randomGames.Move.addHandler(function(data) {
+				var move = Move.fromMove(data.move);
+				
 				this._user.send("/random_game/move", {
 					gameId: data.game.getId(),
-					move: Move.fromMove(data.move)
+					from: move.getFrom(),
+					to: move.getTo(),
+					resultingFen: move.getPositionAfter().getFen()
 				});
 			}, this),
 			this._randomGames.GameOver.addHandler(function(game) {
 				this._user.send("/random_game/game_over", game.getId());
 			}, this),
 			this._randomGames.NewGame.addHandler(function(game) {
-				this._user.send("/random_game/new", game);
+				this._user.send("/random_game/new", {
+					id: game.getId(),
+					fen: game.getPosition().getFen()
+				});
 			}, this)
 		];
 		
