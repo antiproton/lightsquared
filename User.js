@@ -89,27 +89,28 @@ define(function(require) {
 	User.prototype._setupRandomGamesHandlers = function() {
 		this._randomGamesHandlers = [
 			this._randomGames.Move.addHandler(function(data) {
-				var move = Move.fromMove(data.move);
-				
-				this._user.send("/random_game/move", {
-					gameId: data.game.getId(),
-					from: move.getFrom(),
-					to: move.getTo(),
-					resultingFen: move.getPositionAfter().getFen()
-				});
+				this._sendRandomGame(data.game, data.move);
 			}, this),
 			this._randomGames.GameOver.addHandler(function(game) {
 				this._user.send("/random_game/game_over", game.getId());
 			}, this),
 			this._randomGames.NewGame.addHandler(function(game) {
-				this._user.send("/random_game/new", {
-					id: game.getId(),
-					fen: game.getPosition().getFen()
-				});
+				this._sendRandomGame(game);
 			}, this)
 		];
 		
 		this._removeRandomGamesHandlers();
+	}
+	
+	User.prototype._sendRandomGame = function(game, lastMove) {
+		this._user.send("/random_game", {
+			id: game.getId(),
+			fen: game.getPosition().getFen(),
+			lastMove: (lastMove ? {
+				from: lastMove.getFrom().squareNo,
+				to: lastMove.getTo().squareNo
+			} : null)
+		});
 	}
 	
 	User.prototype._addRandomGamesHandlers = function() {
@@ -385,8 +386,7 @@ define(function(require) {
 			
 			"/random_games/subscribe": function(data, client) {
 				this._addRandomGamesHandlers();
-				
-				client.send("/random_games", this._randomGames.getGames());
+				this._randomGames.getGames().forEach(this._sendRandomGame.bind(this));
 			},
 			
 			"/random_games/unsubscribe": function() {
