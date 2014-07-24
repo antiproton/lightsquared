@@ -21,6 +21,8 @@ define(function(require) {
 		this.Rematch = new Event();
 		this.DrawOffered = new Event();
 		this.Chat = new Event();
+		this.PlayerConnected = new Event(this);
+		this.PlayerDisconnected = new Event(this);
 		
 		this._options = {
 			history: [],
@@ -55,6 +57,8 @@ define(function(require) {
 		this._players = {};
 		this._players[Colour.white] = white;
 		this._players[Colour.black] = black;
+		
+		this._setupPlayers();
 		
 		this._ratings = {};
 		this._ratings[Colour.white] = white.getRating();
@@ -130,6 +134,26 @@ define(function(require) {
 	Game.prototype.addTime = function(time, colour) {
 		this._game.addTimeToClock(time, colour);
 		this._addedTime[colour] += time;
+	}
+	
+	Game.prototype._setupPlayers = function() {
+		this._playerHandlers = [];
+		
+		Colour.forEach((function(colour) {
+			this._playerHandlers.push(this._players[colour].Connected.addHandler(function() {
+				this.PlayerConnected.fire(player);
+			}, this));
+			
+			this._playerHandlers.push(this._players[colour].Disconnected.addHandler(function() {
+				this.PlayerDisconnected.fire(player);
+			}, this));
+		}).bind(this));
+	}
+	
+	Game.prototype._removePlayerHandlers = function() {
+		this._playerHandlers.forEach(function(handler) {
+			handler.remove();
+		});
 	}
 	
 	Game.prototype.playerIsPlaying = function(player) {
@@ -306,12 +330,14 @@ define(function(require) {
 	
 	Game.prototype._abort = function() {
 		if(this.isInProgress()) {
+			this._removePlayerHandlers();
 			this._isAborted = true;
 			this.Aborted.fire();
 		}
 	}
 	
 	Game.prototype._gameOver = function(result) {
+		this._removePlayerHandlers();
 		this.GameOver.fire(result);
 	}
 	
