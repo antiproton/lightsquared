@@ -25,6 +25,11 @@ define(function(require) {
 		this._randomGames = this._app.getRandomGames();
 		this._subscriptions = {};
 		
+		this.Connected = new Event();
+		this.Disconnected = new Event();
+		this.LoggedIn = new Event();
+		this.LoggedOut = new Event();
+		
 		this._gamesPlayedAsWhite = 0;
 		this._gamesPlayedAsBlack = 0;
 		
@@ -47,11 +52,6 @@ define(function(require) {
 			boardSize: null,
 			boardStyle: null
 		};
-		
-		this.Connected = new Event();
-		this.Disconnected = new Event();
-		this.LoggedIn = new Event();
-		this.LoggedOut = new Event();
 		
 		this._handlers = [
 			this._app.NewChallenge.addHandler(function(challenge) {
