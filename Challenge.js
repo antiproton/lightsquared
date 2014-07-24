@@ -4,6 +4,7 @@ define(function(require) {
 	var Event = require("lib/Event");
 	var Game = require("./Game");
 	var jsonChessConstants = require("jsonchess/constants");
+	var Time = require("chess/Time");
 	
 	function Challenge(owner, options) {
 		this._id = id();
