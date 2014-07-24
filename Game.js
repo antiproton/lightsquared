@@ -139,12 +139,15 @@ define(function(require) {
 	Game.prototype._setupPlayers = function() {
 		this._playerHandlers = [];
 		
-		Colour.forEach((function(colour) {
-			this._playerHandlers.push(this._players[colour].Connected.addHandler(function() {
+		[
+			this._players[Colour.white],
+			this._players[Colour.black]
+		].forEach((function(player) {
+			this._playerHandlers.push(player.Connected.addHandler(function() {
 				this.PlayerConnected.fire(player);
 			}, this));
 			
-			this._playerHandlers.push(this._players[colour].Disconnected.addHandler(function() {
+			this._playerHandlers.push(player.Disconnected.addHandler(function() {
 				this.PlayerDisconnected.fire(player);
 			}, this));
 		}).bind(this));
