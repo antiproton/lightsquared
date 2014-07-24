@@ -496,21 +496,28 @@ define(function(require) {
 	User.prototype._createChallenge = function(options) {
 		this._cancelCurrentChallenge();
 		
-		var challenge = this._app.createChallenge(this._player, options);
+		try {
+			var challenge = this._app.createChallenge(this._player, options);
+			
+			challenge.Accepted.addHandler(function(game) {
+				this._addGame(game);
+				this._user.send("/challenge/accepted", game);
+			}, this);
+			
+			challenge.Expired.addHandler(function() {
+				this._user.send("/current_challenge_expired");
+				this._currentChallenge = null;
+			}, this);
+			
+			this._currentChallenge = challenge;
+			this._lastChallengeOptions = options;
+			
+			this._user.send("/challenge/create/success", challenge);
+		}
 		
-		challenge.Accepted.addHandler(function(game) {
-			this._addGame(game);
-			this._user.send("/challenge/accepted", game);
-		}, this);
-		
-		challenge.Expired.addHandler(function() {
-			this._user.send("/current_challenge/expired");
-			this._currentChallenge = null;
-		}, this);
-		
-		this._currentChallenge = challenge;
-		this._user.send("/current_challenge", challenge);
-		this._lastChallengeOptions = options;
+		catch(error) {
+			this._user.send("/challenge/create/failure", error);
+		}
 	}
 	
 	User.prototype._acceptChallenge = function(id) {
