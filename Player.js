@@ -1,9 +1,27 @@
 define(function(require) {
 	var id = require("lib/id");
+	var Event = require("lib/Event");
 	
 	function Player(user) {
 		this._id = id();
 		this._user = user;
+		
+		this.Disconnected = new Event(this);
+		this.Connected = new Event(this);
+		
+		this._setupUser();
+	}
+	
+	Player.prototype._setupUser = function() {
+		this._userHandlers = [
+			this._user.Disconnected.addHandler(function() {
+				this.Disconnected.fire();
+			}, this),
+			
+			this._user.Connected.addHandler(function() {
+				this.Connected.fire();
+			}, this)
+		];
 	}
 	
 	Player.prototype.getId = function() {
@@ -27,7 +45,12 @@ define(function(require) {
 	}
 	
 	Player.prototype.setUser = function(user) {
+		this._userHandlers.forEach(function(handler) {
+			handler.remove();
+		});
+		
 		this._user = user;
+		this._setupUser();
 	}
 	
 	Player.prototype.toJSON = function() {
