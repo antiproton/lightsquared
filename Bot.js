@@ -53,6 +53,9 @@ define(function(require) {
 		this._id = id();
 		this._name = names.pop() || "Stockfish " + ++botNo;
 		
+		this.Disconnected = new Event(this);
+		this.Connected = new Event(this);
+		
 		this._gamesPlayedAs = {};
 		this._gamesPlayedAs[Colour.white] = 0;
 		this._gamesPlayedAs[Colour.black] = 0;
