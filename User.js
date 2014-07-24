@@ -57,21 +57,26 @@ define(function(require) {
 			this._app.NewChallenge.addHandler(function(challenge) {
 				this._user.send("/challenges", [challenge]);
 			}, this),
+			
 			this._app.ChallengeExpired.addHandler(function(id) {
 				this._user.send("/challenge/expired", id);
 			}, this),
+			
 			this._user.Disconnected.addHandler(function() {
 				this._removeInactiveGames();
 				this.Disconnected.fire();
 			}, this),
+			
 			this._user.Connected.addHandler(function() {
 				this.Connected.fire();
 			}, this),
+			
 			this._user.CheckingActivity.addHandler(function(activityCheck) {
 				if(this._isActive()) {
 					activityCheck.registerActivity();
 				}
 			}, this),
+			
 			this._user.Deregistering.addHandler(function() {
 				this._handlers.forEach(function(handler) {
 					handler.remove();
