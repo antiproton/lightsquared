@@ -25,6 +25,10 @@ define(function(require) {
 			}
 		}
 		
+		if(Time.fromUnitString(this._options.initialTime, Time.minutes).getMilliseconds() === 0) {
+			throw "Initial time must be at least 1s";
+		}
+		
 		this._acceptRatingMin = this._getAbsoluteRating(this._options.acceptRatingMin);
 		this._acceptRatingMax = this._getAbsoluteRating(this._options.acceptRatingMax);
 		
