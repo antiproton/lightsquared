@@ -209,13 +209,10 @@ define(function(require) {
 	
 	User.prototype._register = function(username, password) {
 		var error = null;
+		var autoLogin = true;
 		
-		if(this._isLoggedIn) {
-			error = "You must be logged out to register an account";
-		}
-		
-		else if(this._hasGamesInProgress()) {
-			error = "You must finish all current games before registering an account";
+		if(this._isLoggedIn || this._hasGamesInProgress()) {
+			autoLogin = false;
 		}
 		
 		else if(username.trim() !== username) {
@@ -239,24 +236,22 @@ define(function(require) {
 				username: username
 			}, (function(error, existingUser) {
 				if(!existingUser) {
-					this._username = username;
-					
 					this._db.save(this.getPersistentJson(password), (function(error) {
 						if(!error) {
-							this._isLoggedIn = true;
-							this._cancelCurrentChallenge();
+							if(autoLogin) {
+								this._username = username;
+								this._isLoggedIn = true;
+								this._cancelCurrentChallenge();
+								
+								this.LoggedIn.fire({
+									username: username
+								});
+							}
 							
-							this._user.send("/user/login/success", this._getPrivateJson());
-							this._user.send("/user/register/success");
-							
-							this.LoggedIn.fire({
-								username: username
-							});
+							this._user.send("/user/register/success", autoLogin ? this._getPrivateJson() : null);
 						}
 						
 						else {
-							this._username = ANONYMOUS_USERNAME;
-							
 							this._user.send("/user/register/failure", "Server error: " + error);
 						}
 					}).bind(this));
