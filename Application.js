@@ -2,7 +2,7 @@ define(function(require) {
 	var Publisher = require("lib/Publisher");
 	require("lib/Array.remove");
 	var User = require("./User");
-	var Challenge = require("./Challenge");
+	var Seek = require("./Seek");
 	var time = require("lib/time");
 	var Game = require("./Game");
 	var Event = require("lib/Event");
@@ -12,7 +12,7 @@ define(function(require) {
 	function Application(server, db) {
 		this._users = {};
 		this._loggedInUsers = {};
-		this._openChallenges = {};
+		this._openSeeks = {};
 		this._games = {};
 		this._promisor = new Promisor(this);
 		this._publisher = new Publisher();
@@ -20,8 +20,8 @@ define(function(require) {
 		this._pendingGameRestorations = {};
 		
 		this.NewGame = new Event();
-		this.NewChallenge = new Event();
-		this.ChallengeExpired = new Event();
+		this.NewSeek = new Event();
+		this.SeekExpired = new Event();
 		
 		server.UserConnected.addHandler(function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
@@ -38,29 +38,28 @@ define(function(require) {
 		this._randomGames = new RandomGames(this, 10);
 	}
 	
-	Application.prototype.createChallenge = function(owner, options) {
-		var challenge = new Challenge(owner, options);
-		var id = challenge.getId();
+	Application.prototype.createSeek = function(player, options) {
+		var seek = new Seek(player, options);
+		var id = seek.getId();
 		
-		challenge.Accepted.addHandler(function(game) {
+		seek.Matched.addHandler(function(game) {
 			this._addGame(game);
+			this.SeekExpired.fire(id);
 			
-			delete this._openChallenges[id];
-			
-			return true;
+			delete this._openSeeks[id];
 		}, this);
 		
-		challenge.Expired.addHandler(function() {
-			this.ChallengeExpired.fire(id);
+		seek.Expired.addHandler(function() {
+			this.SeekExpired.fire(id);
 			
-			delete this._openChallenges[id];
+			delete this._openSeeks[id];
 		}, this);
 		
-		this._openChallenges[id] = challenge;
+		this._openSeeks[id] = seek;
 		
-		this.NewChallenge.fire(challenge);
+		this.NewSeek.fire(seek);
 		
-		return challenge;
+		return seek;
 	}
 	
 	Application.prototype._addGame = function(game) {
@@ -89,8 +88,8 @@ define(function(require) {
 		return this._randomGames;
 	}
 	
-	Application.prototype.getChallenge = function(id) {
-		return this._openChallenges[id] || null;
+	Application.prototype.getSeek = function(id) {
+		return this._openSeeks[id] || null;
 	}
 	
 	Application.prototype.getGame = function(id) {
@@ -209,14 +208,14 @@ define(function(require) {
 		}
 	}
 	
-	Application.prototype.getOpenChallenges = function() {
-		var openChallenges = [];
+	Application.prototype.getOpenSeeks = function() {
+		var openSeeks = [];
 		
-		for(var id in this._openChallenges) {
-			openChallenges.push(this._openChallenges[id]);
+		for(var id in this._openSeeks) {
+			openSeeks.push(this._openSeeks[id]);
 		}
 		
-		return openChallenges;
+		return openSeeks;
 	}
 	
 	Application.prototype.getCurrentGames = function() {

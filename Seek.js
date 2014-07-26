@@ -6,12 +6,12 @@ define(function(require) {
 	var jsonChessConstants = require("jsonchess/constants");
 	var Time = require("chess/Time");
 	
-	function Challenge(owner, options) {
+	function Seek(owner, options) {
 		this._id = id();
 		this._owner = owner;
 		
 		this.Expired = new Event();
-		this.Accepted = new Event();
+		this.Matched = new Event();
 		
 		this._options = {
 			initialTime: "10m",
@@ -26,7 +26,10 @@ define(function(require) {
 			}
 		}
 		
-		if(Time.fromUnitString(this._options.initialTime, Time.minutes).getMilliseconds() === 0) {
+		this._initialTime = Time.fromUnitString(this._options.initialTime, Time.minutes);
+		this._timeIncrement = Time.fromUnitString(this._options.timeIncrement, Time.seconds);
+		
+		if(this._initialTime.getMilliseconds() === 0) {
 			throw "Initial time must be at least 1s";
 		}
 		
@@ -35,20 +38,19 @@ define(function(require) {
 		
 		this._timeoutTimer = setTimeout((function() {
 			this._timeout();
-		}).bind(this), jsonChessConstants.CHALLENGE_TIMEOUT);
+		}).bind(this), jsonChessConstants.SEEK_TIMEOUT);
 		
-		this._expiryTime = time() + jsonChessConstants.CHALLENGE_TIMEOUT;
+		this._expiryTime = time() + jsonChessConstants.SEEK_TIMEOUT;
 	}
 	
-	Challenge.prototype.getId = function() {
+	Seek.prototype.getId = function() {
 		return this._id;
 	}
 	
-	Challenge.prototype.accept = function(player) {
-		var guestRating = player.getRating();
+	Seek.prototype.accept = function(player) {
 		var game = null;
 		
-		if(player !== this._owner && guestRating >= this._acceptRatingMin && guestRating <= this._acceptRatingMax) {
+		if(player !== this._owner && this.matchesPlayer(player)) {
 			var white, black;
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();
 			var guestRatio = player.getGamesAsWhiteRatio();
@@ -69,23 +71,35 @@ define(function(require) {
 			});
 			
 			this._clearTimeoutTimer();
-			this.Accepted.fire(game);
-			this.Expired.fire();
+			this.Matched.fire(game);
 		}
 		
 		return game;
 	}
 	
-	Challenge.prototype.cancel = function() {
+	Seek.prototype.matchesPlayer = function(player) {
+		var rating = player.getRating();
+		
+		return (rating >= this._acceptRatingMin && rating <= this._acceptRatingMax);
+	}
+	
+	Seek.prototype.matchesOptions = function(options) {
+		return (
+			Time.fromUnitString(options.initialTime, Time.minutes).getMilliseconds() === this._initialTime.getMilliseconds()
+			&& Time.fromUnitString(options.timeIncrement, Time.seconds).getMilliseconds() === this._timeIncrement.getMilliseconds()
+		);
+	}
+	
+	Seek.prototype.cancel = function() {
 		this._clearTimeoutTimer();
 		this.Expired.fire();
 	}
 	
-	Challenge.prototype._timeout = function() {
+	Seek.prototype._timeout = function() {
 		this.Expired.fire();
 	}
 	
-	Challenge.prototype._clearTimeoutTimer = function() {
+	Seek.prototype._clearTimeoutTimer = function() {
 		if(this._timeoutTimer !== null) {
 			clearTimeout(this._timeoutTimer);
 			
@@ -93,7 +107,7 @@ define(function(require) {
 		}
 	}
 	
-	Challenge.prototype._getAbsoluteRating = function(ratingSpecifier) {
+	Seek.prototype._getAbsoluteRating = function(ratingSpecifier) {
 		var firstChar = ratingSpecifier.charAt(0);
 		
 		if(firstChar === "-" || firstChar === "+") {
@@ -105,7 +119,7 @@ define(function(require) {
 		}
 	}
 	
-	Challenge.prototype.toJSON = function() {
+	Seek.prototype.toJSON = function() {
 		return {
 			id: this._id,
 			owner: this._owner,
@@ -114,5 +128,5 @@ define(function(require) {
 		};
 	}
 	
-	return Challenge;
+	return Seek;
 });

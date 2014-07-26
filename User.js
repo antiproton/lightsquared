@@ -41,8 +41,8 @@ define(function(require) {
 		this._recentRatedResults = [];
 		
 		this._currentGames = [];
-		this._currentChallenge = null;
-		this._lastChallengeOptions = null;
+		this._currentSeek = null;
+		this._lastSeekOptions = null;
 		this._pendingRestorationRequests = [];
 		
 		this._prefs = {
@@ -54,12 +54,12 @@ define(function(require) {
 		};
 		
 		this._handlers = [
-			this._app.NewChallenge.addHandler(function(challenge) {
-				this._user.send("/challenges", [challenge]);
+			this._app.NewSeek.addHandler(function(seek) {
+				this._user.send("/open_seeks", [seek]);
 			}, this),
 			
-			this._app.ChallengeExpired.addHandler(function(id) {
-				this._user.send("/challenge/expired", id);
+			this._app.SeekExpired.addHandler(function(id) {
+				this._user.send("/open_seek/expired", id);
 			}, this),
 			
 			this._user.Disconnected.addHandler(function() {
@@ -179,7 +179,7 @@ define(function(require) {
 				if(user) {
 					this._loadJson(user);
 					this._isLoggedIn = true;
-					this._cancelCurrentChallenge();
+					this._cancelCurrentSeek();
 					this.LoggedIn.fire();
 					this._user.send("/user/login/success", this._getPrivateJson());
 				}
@@ -198,7 +198,7 @@ define(function(require) {
 	User.prototype.logout = function() {
 		if(this._isLoggedIn) {
 			this._isLoggedIn = false;
-			this._cancelCurrentChallenge();
+			this._cancelCurrentSeek();
 			this._currentGames = [];
 			this._username = ANONYMOUS_USERNAME;
 			this._player = new Player(this);
@@ -241,7 +241,7 @@ define(function(require) {
 							if(autoLogin) {
 								this._username = username;
 								this._isLoggedIn = true;
-								this._cancelCurrentChallenge();
+								this._cancelCurrentSeek();
 								
 								this.LoggedIn.fire({
 									username: username
@@ -326,12 +326,16 @@ define(function(require) {
 				);
 			},
 			
-			"/challenge/create": function(options) {
-				this._createChallenge(options);
+			"/seek": function(options) {
+				this._seekGame(options);
 			},
 			
-			"/challenge/cancel": function() {
-				this._cancelCurrentChallenge();
+			"/seek/cancel": function() {
+				this._cancelCurrentSeek();
+			},
+			
+			"/seek/accept": function(id) {
+				this._acceptSeek(id);
 			},
 			
 			"/request/game": function(id, client) {
@@ -346,10 +350,6 @@ define(function(require) {
 				}
 			},
 			
-			"/challenge/accept": function(id) {
-				this._acceptChallenge(id);
-			},
-			
 			"/request/games": function(data, client) {
 				client.send("/games", this._currentGames)
 			},
@@ -358,8 +358,8 @@ define(function(require) {
 				client.send("/user", this._getPrivateJson());
 			},
 			
-			"/request/challenges": function(data, client) {
-				client.send("/challenges", this._app.getOpenChallenges());
+			"/request/open_seeks": function(data, client) {
+				client.send("/open_seeks", this._app.getOpenSeeks());
 			},
 			
 			"/user/prefs/update": function(prefs) {
@@ -488,50 +488,70 @@ define(function(require) {
 		}
 	}
 	
-	User.prototype._createChallenge = function(options) {
-		this._cancelCurrentChallenge();
+	User.prototype._seekGame = function(options) {
+		this._cancelCurrentSeek();
 		
-		try {
-			var challenge = this._app.createChallenge(this._player, options);
-			
-			challenge.Accepted.addHandler(function(game) {
-				this._addGame(game);
-				this._user.send("/challenge/accepted", game);
-			}, this);
-			
-			challenge.Expired.addHandler(function() {
-				this._user.send("/current_challenge_expired");
-				this._currentChallenge = null;
-			}, this);
-			
-			this._currentChallenge = challenge;
-			this._lastChallengeOptions = options;
-			
-			this._user.send("/challenge/create/success", challenge);
-		}
+		var rating = this.getRating();
 		
-		catch(error) {
-			this._user.send("/challenge/create/failure", error);
-		}
-	}
-	
-	User.prototype._acceptChallenge = function(id) {
-		var challenge = this._app.getChallenge(id);
+		var existingSeek = this._app.getOpenSeeks().filter((function(seek) {
+			return (seek.matchesOptions(options) && seek.matchesPlayer(this._player));
+		}).bind(this)).sort(function(seekA, seekB) {
+			return Math.abs(rating - seekA.getOwnerRating()) - Math.abs(rating - seekB.getOwnerRating());
+		})[0];
 		
-		if(challenge !== null) {
-			var game = challenge.accept(this._player);
+		if(existingSeek) {
+			var game = existingSeek.accept(this._player);
 			
 			if(game !== null) {
 				this._addGame(game);
-				this._user.send("/challenge/accepted", game);
-				this._cancelCurrentChallenge();
+				this._user.send("/seek/matched", game);
+			}
+		}
+		
+		else {
+			try {
+				var seek = this._app.createSeek(this._player, options);
+				
+				seek.Matched.addHandler(function(game) {
+					this._currentSeek = null;
+					this._addGame(game);
+					this._user.send("/seek/matched", game);
+				}, this);
+				
+				seek.Expired.addHandler(function() {
+					this._user.send("/seek/expired");
+					this._currentSeek = null;
+				}, this);
+				
+				this._currentSeek = seek;
+				this._lastSeekOptions = options;
+				
+				this._user.send("/seek/waiting", seek);
+			}
+			
+			catch(error) {
+				this._user.send("/seek/error", error);
 			}
 		}
 	}
 	
-	User.prototype._cancelCurrentChallenge = function() {
-		if(this._currentChallenge !== null) {
-			this._currentChallenge.cancel();
+	User.prototype._acceptSeek = function(id) {
+		var seek = this._app.getSeek(id);
+		
+		if(seek !== null) {
+			var game = seek.accept(this._player);
+			
+			if(game !== null) {
+				this._addGame(game);
+				this._user.send("/seek/matched", game);
+				this._cancelCurrentSeek();
+			}
+		}
+	}
+	
+	User.prototype._cancelCurrentSeek = function() {
+		if(this._currentSeek !== null) {
+			this._currentSeek.cancel();
 		}
 	}
 	
@@ -738,7 +758,7 @@ define(function(require) {
 			gamesPlayedAsWhite: this._gamesPlayedAsWhite,
 			gamesPlayedAsBlack: this._gamesPlayedAsBlack,
 			glicko2: this._glicko2,
-			lastChallengeOptions: this._lastChallengeOptions,
+			lastSeekOptions: this._lastSeekOptions,
 			prefs: this._prefs,
 			recentRatedResults: this._recentRatedResults
 		};
@@ -756,8 +776,8 @@ define(function(require) {
 			username: this._username,
 			isLoggedIn: this._isLoggedIn,
 			rating: this._glicko2.rating,
-			currentChallenge: this._currentChallenge,
-			lastChallengeOptions: this._lastChallengeOptions,
+			currentSeek: this._currentSeek,
+			lastSeekOptions: this._lastSeekOptions,
 			prefs: this._prefs
 		};
 	}
@@ -767,7 +787,7 @@ define(function(require) {
 		this._gamesPlayedAsWhite = user.gamesPlayedAsWhite;
 		this._gamesPlayedAsBlack = user.gamesPlayedAsBlack;
 		this._glicko2 = user.glicko2;
-		this._lastChallengeOptions = user.lastChallengeOptions;
+		this._lastSeekOptions = user.lastSeekOptions;
 		this._prefs = user.prefs;
 		this._recentRatedResults = user.recentRatedResults;
 	}
