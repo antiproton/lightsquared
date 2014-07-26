@@ -18,27 +18,27 @@ define(function(require) {
 	
 	var botNo = 0;
 	
-	var createChallenge = function() {
-		if(!this._challenge && this._countCurrentGames === 0) {
-			this._challenge = this._app.createChallenge(this, {
+	var createSeek = function() {
+		if(!this._seek && this._countCurrentGames === 0) {
+			this._seek = this._app.createSeek(this, {
 				initialTime: ["1", "2", "3", "5", "10", "15", "20", "30"].random(),
 				timeIncrement: ["0", "1", "2", "5", "10"].random()
 			});
 			
-			this._challenge.Accepted.addHandler(function(game) {
+			this._seek.Matched.addHandler(function(game) {
 				this._playGame(game);
 			}, this);
 			
-			this._challenge.Expired.addHandler(function() {
-				this._challenge = null;
+			this._seek.Expired.addHandler(function() {
+				this._seek = null;
 			}, this);
 		}
 	};
 	
-	var acceptChallenge = function() {
+	var acceptSeek = function() {
 		if(this._countCurrentGames === 0) {
-			this._app.getOpenChallenges().some((function(challenge) {
-				var game = challenge.accept(this);
+			this._app.getOpenSeeks().some((function(seek) {
+				var game = seek.accept(this);
 				
 				if(game) {
 					this._playGame(game);
@@ -62,7 +62,7 @@ define(function(require) {
 		
 		this._app = app;
 		this._countCurrentGames = 0;
-		this._challenge = null;
+		this._seek = null;
 		this._uciSkillLevel = 5;
 		this._rating = Math.round(1400 + Math.random() * 200);
 		
@@ -77,13 +77,13 @@ define(function(require) {
 	
 	Bot.seekStrategies = {
 		ACCEPT: function() {
-			return acceptChallenge;
+			return acceptSeek;
 		},
 		CREATE: function() {
-			return createChallenge;
+			return createSeek;
 		},
 		RANDOM: function() {
-			return [acceptChallenge, createChallenge].random();
+			return [acceptSeek, createSeek].random();
 		}
 	};
 	
