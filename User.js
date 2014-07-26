@@ -474,8 +474,12 @@ define(function(require) {
 			game.offerRematch(this._player);
 		};
 		
-		subscriptions["/game/" + id + "/decline_rematch"] = function() {
+		subscriptions["/game/" + id + "/rematch/decline"] = function() {
 			game.declineRematch(this._player);
+		};
+		
+		subscriptions["/game/" + id + "/rematch/cancel"] = function() {
+			game.cancelRematch(this._player);
 		};
 		
 		var subscription;
@@ -597,16 +601,20 @@ define(function(require) {
 		}, this);
 		
 		if(this._isPlayer(game)) {
-			game.RematchOffered.addHandler(function(player) {
-				if(player !== this._player) {
-					this._user.send("/game/" + id + "/rematch_offer");
-				}
+			game.RematchOffered.addHandler(function() {
+				this._user.send("/game/" + id + "/rematch/pending");
 			}, this);
 			
 			game.RematchDeclined.addHandler(function() {
-				if(player !== this._player) {
-					this._user.send("/game/" + id + "/rematch_declined");
-				}
+				this._user.send("/game/" + id + "/rematch/declined");
+			}, this);
+			
+			game.RematchOfferCanceled.addHandler(function() {
+				this._user.send("/game/" + id + "/rematch/canceled");
+			}, this);
+			
+			game.RematchOfferExpired.addHandler(function() {
+				this._user.send("/game/" + id + "/rematch/expired");
 			}, this);
 		}
 	}
