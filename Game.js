@@ -21,8 +21,8 @@ define(function(require) {
 		this.Rematch = new Event();
 		this.DrawOffered = new Event();
 		this.Chat = new Event();
-		this.PlayerConnected = new Event(this);
-		this.PlayerDisconnected = new Event(this);
+		this.PlayerConnected = new Event();
+		this.PlayerDisconnected = new Event();
 		
 		this._options = {
 			history: [],
