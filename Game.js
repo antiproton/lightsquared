@@ -18,6 +18,8 @@ define(function(require) {
 		this.Aborted = new Event();
 		this.RematchOffered = new Event();
 		this.RematchDeclined = new Event();
+		this.RematchOfferCanceled = new Event();
+		this.RematchOfferExpired = new Event();
 		this.Rematch = new Event();
 		this.DrawOffered = new Event();
 		this.Chat = new Event();
@@ -303,21 +305,48 @@ define(function(require) {
 	}
 	
 	Game.prototype.offerRematch = function(player) {
-		if(this.playerIsPlaying(player)) {
+		var colour = this.getPlayerColour(player);
+		
+		if(colour !== null) {
 			if(this._rematchOfferedBy === null) {
-				this._rematchOfferedBy = player;
+				this._rematchOfferedBy = colour;
+				this._setRematchExpireTimer();
 				this.RematchOffered.fire(player);
 			}
 			
-			else if(this._rematchOfferedBy !== player) {
+			else if(this._rematchOfferedBy === colour.opposite) {
+				this._clearRematchExpireTimer();
 				this._rematch();
 			}
 		}
 	}
 	
 	Game.prototype.declineRematch = function(player) {
-		if(this.playerIsPlaying(player) && this._rematchOfferedBy !== null && this._rematchOfferedBy !== player) {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy === this.getPlayerColour(player).opposite) {
+			this._clearRematchExpireTimer();
 			this.RematchDeclined.fire(player);
+		}
+	}
+	
+	Game.prototype.cancelRematchOffer = function() {
+		if(this.playerIsPlaying(player) && this._rematchOfferedBy === this.getPlayerColour(player)) {
+			this._clearRematchExpireTimer();
+			this.RematchOfferCanceled.fire(player);
+		}
+	}
+	
+	Game.prototype._setRematchExpireTimer = function() {
+		this._rematchExpireTimer = setTimeout((function() {
+			this._rematchOfferedBy = null;
+			this.RematchOfferExpired.fire();
+		}).bind(this), jsonchess.REMATCH_TIMEOUT);
+	}
+	
+	Game.prototype._clearRematchExpireTimer = function() {
+		if(this._rematchExpireTimer !== null) {
+			clearTimeout(this._rematchExpireTimer);
+			
+			this._rematchExpireTimer = null;
 		}
 	}
 	
@@ -361,6 +390,7 @@ define(function(require) {
 			addedTime: this._addedTime,
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
+			rematchOfferedBy: this._rematchOfferedBy,
 			options: this._options,
 			id: this._id
 		};
