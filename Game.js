@@ -323,13 +323,15 @@ define(function(require) {
 	
 	Game.prototype.declineRematch = function(player) {
 		if(this.playerIsPlaying(player) && this._rematchOfferedBy === this.getPlayerColour(player).opposite) {
+			this._rematchOfferedBy = null;
 			this._clearRematchExpireTimer();
 			this.RematchDeclined.fire(player);
 		}
 	}
 	
-	Game.prototype.cancelRematchOffer = function() {
+	Game.prototype.cancelRematchOffer = function(player) {
 		if(this.playerIsPlaying(player) && this._rematchOfferedBy === this.getPlayerColour(player)) {
+			this._rematchOfferedBy = null;
 			this._clearRematchExpireTimer();
 			this.RematchOfferCanceled.fire(player);
 		}
