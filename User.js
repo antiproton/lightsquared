@@ -601,8 +601,8 @@ define(function(require) {
 		}, this);
 		
 		if(this._isPlayer(game)) {
-			game.RematchOffered.addHandler(function() {
-				this._user.send("/game/" + id + "/rematch/offered");
+			game.RematchOffered.addHandler(function(player) {
+				this._user.send("/game/" + id + "/rematch/offered", game.getPlayerColour(player));
 			}, this);
 			
 			game.RematchDeclined.addHandler(function() {
