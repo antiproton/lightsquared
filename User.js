@@ -602,7 +602,7 @@ define(function(require) {
 		
 		if(this._isPlayer(game)) {
 			game.RematchOffered.addHandler(function() {
-				this._user.send("/game/" + id + "/rematch/pending");
+				this._user.send("/game/" + id + "/rematch/offered");
 			}, this);
 			
 			game.RematchDeclined.addHandler(function() {
