@@ -106,42 +106,37 @@ define(function(require) {
 	Bot.prototype._playGame = function(game) {
 		this._countCurrentGames++;
 		
+		var stockfish = spawn("stockfish");
+		
+		stockfish.stdin.write("uci\n");
+		stockfish.stdin.write("ucinewgame\n");
+		stockfish.stdin.write("setoption Skill Level value " + this._uciSkillLevel + "\n");
+		
+		stockfish.stdout.on("data", (function(chunk) {
+			var bestmoveLine = "bestmove ";
+			var output = chunk.toString();
+			
+			if(output.indexOf(bestmoveLine) !== -1) {
+				var bestmove = output.substr(output.indexOf(bestmoveLine) + bestmoveLine.length, 4); //e.g. e2e4
+				var from = Square.fromAlgebraic(bestmove.substr(0, 2));
+				var to = Square.fromAlgebraic(bestmove.substr(2));
+				var promoteTo;
+				
+				if(bestmove.length === 5) {
+					promoteTo = PieceType.fromSanString(bestmove.substr(4).toUpperCase());
+				}
+				
+				game.move(this, from, to, promoteTo);
+			}
+		}).bind(this));
+		
 		var colour = game.getPlayerColour(this);
 		
-		var move = (function() {
+		var move = function() {
 			if(game.getActiveColour() === colour) {
-				setTimeout((function() {
-					var fen = game.getPosition().getFen();
-					var stockfish = spawn("stockfish");
-					
-					stockfish.stdin.write("uci\n");
-					stockfish.stdin.write("ucinewgame\n");
-					stockfish.stdin.write("setoption Skill Level value " + this._uciSkillLevel + "\n");
-					stockfish.stdin.write("position fen " + fen + "\n");
-					stockfish.stdin.write("go movetime 60\n");
-					
-					stockfish.stdout.on("data", (function(chunk) {
-						var bestmoveLine = "bestmove ";
-						var output = chunk.toString();
-						
-						if(output.indexOf(bestmoveLine) !== -1) {
-							stockfish.stdin.end();
-							
-							var bestmove = output.substr(output.indexOf(bestmoveLine) + bestmoveLine.length, 4); //e.g. e2e4
-							var from = Square.fromAlgebraic(bestmove.substr(0, 2));
-							var to = Square.fromAlgebraic(bestmove.substr(2));
-							var promoteTo;
-							
-							if(bestmove.length === 5) {
-								promoteTo = PieceType.fromSanString(bestmove.substr(4).toUpperCase());
-							}
-							
-							game.move(this, from, to, promoteTo);
-						}
-					}).bind(this));
-				}).bind(this), Math.floor(Math.random() * 3000));
+				stockfish.stdin.write("go movetime 2000\n");
 			}
-		}).bind(this);
+		};
 		
 		move();
 		
@@ -154,20 +149,24 @@ define(function(require) {
 			if(Math.random() > 0.5) {
 				setTimeout((function() {
 					game.offerRematch(this);
-				}).bind(this), 345);
+				}).bind(this), 845);
 			}
+			
+			stockfish.stdin.end();
 		}, this);
 		
 		game.RematchOffered.addHandler(function(player) {
 			if(player !== this) {
 				setTimeout((function() {
 					game.offerRematch(this);
-				}).bind(this), 123);
+				}).bind(this), 1234);
 			}
 		}, this);
 		
 		game.Aborted.addHandler(function() {
 			this._countCurrentGames--;
+			
+			stockfish.stdin.end();
 		}, this);
 		
 		game.Rematch.addHandler(function(game) {
