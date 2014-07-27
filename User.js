@@ -479,7 +479,7 @@ define(function(require) {
 		};
 		
 		subscriptions["/game/" + id + "/rematch/cancel"] = function() {
-			game.cancelRematch(this._player);
+			game.cancelRematchOffer(this._player);
 		};
 		
 		var subscription;
