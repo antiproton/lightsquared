@@ -138,6 +138,10 @@ define(function(require) {
 		this._addedTime[colour] += time;
 	}
 	
+	Game.prototype.getTimeLeft = function(colour) {
+		return this._game.getTimeLeft(colour);
+	}
+	
 	Game.prototype._setupPlayers = function() {
 		this._playerHandlers = [];
 		
