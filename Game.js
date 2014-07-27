@@ -142,6 +142,10 @@ define(function(require) {
 		return this._game.getTimeLeft(colour);
 	}
 	
+	Game.prototype.getTimingStyle = function() {
+		return this._game.getTimingStyle();
+	}
+	
 	Game.prototype._setupPlayers = function() {
 		this._playerHandlers = [];
 		
