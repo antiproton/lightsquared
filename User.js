@@ -83,7 +83,7 @@ define(function(require) {
 				});
 				
 				this._updateDb();
-				this._logout();
+				this.logout();
 			}, this)
 		];
 		
