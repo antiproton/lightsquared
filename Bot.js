@@ -110,36 +110,48 @@ define(function(require) {
 		
 		var move = (function() {
 			if(game.getActiveColour() === colour) {
-				setTimeout((function() {
-					var fen = game.getPosition().getFen();
-					var stockfish = spawn("stockfish");
+				var moves = game.getHistory().map(function(move) {
+					return move.getUciLabel();
+				}).join(" ");
+				
+				var whiteTime = game.getTimeLeft(Colour.white).getMilliseconds();
+				var blackTime = game.getTimeLeft(Colour.black).getMilliseconds();
+				var increment = game.getTimingStyle().increment.getMilliseconds();
+				
+				var commands = [
+					"uci",
+					"setoption name Skill Level value " + this._uciSkillLevel,
+					"position startpos" + (moves ? " moves " + moves : "")
+				];
+				
+				if(game.timingHasStarted()) {
+					commands.push("go wtime " + whiteTime	+ " btime " + blackTime + " winc " + increment + " binc " + increment);
+				}
+				
+				else {
+					commands.push("go movetime 200");
+				}
+				
+				var stockfish = spawn("stockfish");
+				
+				stockfish.stdout.on("data", (function(chunk) {
+					var move = chunk.toString().match(/bestmove (\w\d)(\w\d)(\w?)/);
 					
-					stockfish.stdin.write("uci\n");
-					stockfish.stdin.write("ucinewgame\n");
-					stockfish.stdin.write("setoption Skill Level value " + this._uciSkillLevel + "\n");
-					stockfish.stdin.write("position fen " + fen + "\n");
-					stockfish.stdin.write("go movetime 60\n");
-					
-					stockfish.stdout.on("data", (function(chunk) {
-						var bestmoveLine = "bestmove ";
-						var output = chunk.toString();
+					if(move) {
+						game.move(
+							this,
+							Square.fromAlgebraic(move[1]),
+							Square.fromAlgebraic(move[2]),
+							move[3] ? PieceType.fromSanString(move[3].toUpperCase()) : PieceType.queen
+						);
 						
-						if(output.indexOf(bestmoveLine) !== -1) {
-							stockfish.stdin.end();
-							
-							var bestmove = output.substr(output.indexOf(bestmoveLine) + bestmoveLine.length, 4); //e.g. e2e4
-							var from = Square.fromAlgebraic(bestmove.substr(0, 2));
-							var to = Square.fromAlgebraic(bestmove.substr(2));
-							var promoteTo;
-							
-							if(bestmove.length === 5) {
-								promoteTo = PieceType.fromSanString(bestmove.substr(4).toUpperCase());
-							}
-							
-							game.move(this, from, to, promoteTo);
-						}
-					}).bind(this));
-				}).bind(this), Math.floor(Math.random() * 3000));
+						stockfish.stdin.end();
+					}
+				}).bind(this));
+				
+				commands.forEach(function(command) {
+					stockfish.stdin.write(command + "\n");
+				});
 			}
 		}).bind(this);
 		
