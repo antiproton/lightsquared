@@ -21,8 +21,8 @@ define(function(require) {
 	var createSeek = function() {
 		if(!this._seek && this._countCurrentGames === 0) {
 			this._seek = this._app.createSeek(this, {
-				initialTime: ["1", "2", "3", "5", "10", "15", "20", "30"].random(),
-				timeIncrement: ["0", "1", "2", "5", "10"].random()
+				initialTime: ["30s", "45s", "1m30"].random(),
+				timeIncrement: ["0", "1"].random()
 			});
 			
 			this._seek.Matched.addHandler(function(game) {
@@ -163,19 +163,9 @@ define(function(require) {
 			this._countCurrentGames--;
 			this._gamesPlayedAs[game.getPlayerColour(this)]++;
 			
-			if(Math.random() > 0.5) {
-				setTimeout((function() {
-					game.offerRematch(this);
-				}).bind(this), 345);
-			}
-		}, this);
-		
-		game.RematchOffered.addHandler(function(player) {
-			if(player !== this) {
-				setTimeout((function() {
-					game.offerRematch(this);
-				}).bind(this), 123);
-			}
+			setTimeout((function() {
+				game.offerRematch(this);
+			}).bind(this), 700);
 		}, this);
 		
 		game.Aborted.addHandler(function() {
