@@ -114,8 +114,16 @@ define(function(require) {
 					return move.getUciLabel();
 				}).join(" ");
 				
-				var whiteTime = game.getTimeLeft(Colour.white).getMilliseconds();
-				var blackTime = game.getTimeLeft(Colour.black).getMilliseconds();
+				var botTimeBuffer = 1000; //stop bots running out of time due to lag
+				var artificialMaxBotTime = 1000 * 30; //stop bots thinking too deeply
+				var times = {};
+				
+				Colour.forEach(function(colour) {
+					times[colour] = game.getTimeLeft(Colour.white).getMilliseconds();
+					times[colour] -= Math.min(botTimeBuffer, times[colour] - 1); //make them think they have slightly less time, down to 1ms
+					times[colour] = Math.min(times[colour], artificialMaxBotTime);
+				});
+				
 				var increment = game.getTimingStyle().increment.getMilliseconds();
 				
 				var commands = [
@@ -124,13 +132,7 @@ define(function(require) {
 					"position startpos" + (moves ? " moves " + moves : "")
 				];
 				
-				if(game.timingHasStarted()) {
-					commands.push("go wtime " + whiteTime	+ " btime " + blackTime + " winc " + increment + " binc " + increment);
-				}
-				
-				else {
-					commands.push("go movetime 200");
-				}
+				commands.push("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc " + increment + " binc " + increment);
 				
 				var stockfish = spawn("stockfish");
 				
