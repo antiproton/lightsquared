@@ -236,10 +236,12 @@ define(function(require) {
 				username: username
 			}, (function(error, existingUser) {
 				if(!existingUser) {
-					this._db.save(this.getPersistentJson(password), (function(error) {
+					var user = this._getInitialRegistrationJson(username, password);
+					
+					this._db.save(user, (function(error) {
 						if(!error) {
 							if(autoLogin) {
-								this._username = username;
+								this._loadJson(user);
 								this._isLoggedIn = true;
 								this._cancelCurrentSeek();
 								
@@ -758,6 +760,19 @@ define(function(require) {
 	
 	User.prototype.getGamesAsWhiteRatio = function() {
 		return Math.max(1, this._gamesPlayedAsWhite) / Math.max(1, this._gamesPlayedAsBlack);
+	}
+	
+	User.prototype._getInitialRegistrationJson = function(username, password) {
+		return {
+			username: username,
+			password: password,
+			gamesPlayedAsWhite: 0,
+			gamesPlayedAsBlack: 0,
+			glicko2: this._getInitialGlicko2(),
+			lastSeekOptions: this._lastSeekOptions,
+			prefs: this._prefs,
+			recentRatedResults: []
+		};
 	}
 	
 	User.prototype.getPersistentJson = function(password) {
