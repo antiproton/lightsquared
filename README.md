@@ -10,6 +10,7 @@ Installation
 - Download the code
 - Download [libjs][1] and place it where it will be found under the 'lib' path as mapped in the requirejs config in main.js
 - Download [jsonchess][2] and put it in the libjs folder
+- $npm install
 
 Running the server
 ------------------
