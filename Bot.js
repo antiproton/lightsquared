@@ -13,8 +13,8 @@ define(function(require) {
 	var createSeek = function() {
 		if(!this._seek && !this._game) {
 			this._seek = this._app.createSeek(this, {
-				initialTime: ["30s", "45s", "1m30"].random(),
-				timeIncrement: ["0", "1"].random()
+				initialTime: ["30s", "45s", "1m30", "10"].random(),
+				timeIncrement: ["0", "1", "5", "15"].random()
 			});
 			
 			this._seek.Matched.addHandler(function(game) {
@@ -175,7 +175,7 @@ define(function(require) {
 			var increment = game.getTimingStyle().increment.getMilliseconds();
 			
 			this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
-			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc " + increment + " binc " + increment + "\n");
+			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc 0 binc 0\n");
 		}
 	}
 	
