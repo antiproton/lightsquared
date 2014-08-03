@@ -170,7 +170,7 @@ define(function(require) {
 			var increment = game.getTimingStyle().increment.getMilliseconds();
 			
 			this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
-			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc " + increment + " binc " + increment);
+			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc " + increment + " binc " + increment + "\n");
 		}
 	}
 	
