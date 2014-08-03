@@ -55,7 +55,7 @@ define(function(require) {
 		
 		this._handlers = [
 			this._app.NewSeek.addHandler(function(seek) {
-				this._user.send("/open_seeks", [seek]);
+				this._user.send("/open_seek/new", seek);
 			}, this),
 			
 			this._app.SeekExpired.addHandler(function(id) {
