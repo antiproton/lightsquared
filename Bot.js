@@ -34,6 +34,8 @@ define(function(require) {
 				
 				if(game) {
 					this._playGame(game);
+					
+					return true;
 				}
 			}).bind(this));
 		}
