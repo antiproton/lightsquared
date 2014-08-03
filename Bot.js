@@ -11,7 +11,7 @@ define(function(require) {
 	var botNo = 0;
 	
 	var createSeek = function() {
-		if(!this._seek && !this._game) {
+		if(!this._seek && !this._game && !this._waitingForRematch) {
 			this._seek = this._app.createSeek(this, {
 				initialTime: ["30s", "45s", "1m30", "10"].random(),
 				timeIncrement: ["0", "1", "5", "15"].random()
@@ -29,7 +29,7 @@ define(function(require) {
 	};
 	
 	var acceptSeek = function() {
-		if(!this._game) {
+		if(!this._game && !this._waitingForRematch) {
 			this._app.getOpenSeeks().some((function(seek) {
 				var game = seek.accept(this);
 				
@@ -57,6 +57,8 @@ define(function(require) {
 		
 		this._app = app;
 		this._game = null;
+		this._waitingForRematch = false;
+		this._rematchTimer = null;
 		this._seek = null;
 		this._uciSkillLevel = 5;
 		this._rating = Math.round(1400 + Math.random() * 200);
@@ -132,24 +134,21 @@ define(function(require) {
 		}).bind(this));
 		
 		game.GameOver.addHandler(function() {
-			setTimeout((function() {
-				this._game = null;
-			}).bind(this), 1000 * 30);
-			
+			this._offerRematch();
 			this._gamesPlayedAs[game.getPlayerColour(this)]++;
-			
-			setTimeout((function() {
-				game.offerRematch(this);
-			}).bind(this), 1000);
 		}, this);
 		
 		game.Aborted.addHandler(function() {
-			this._game = null;
+			this._offerRematch();
 		}, this);
 		
 		game.Rematch.addHandler(function(game) {
-			if(!this._game || !this._game.isInProgress()) {
-				this._playGame(game);
+			this._playGame(game);
+			
+			if(this._rematchTimer) {
+				clearTimeout(this._rematchTimer);
+				
+				this._rematchTimer = null;
 			}
 		}, this);
 	}
@@ -176,6 +175,20 @@ define(function(require) {
 			
 			this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
 			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc 0 binc 0\n");
+		}
+	}
+	
+	Bot.prototype._offerRematch = function() {
+		var game = this._game;
+		
+		this._game.offerRematch(this);
+		
+		if(this._game === game) {
+			this._rematchTimer = setTimeout((function() {
+				game.cancelRematchOffer(this);
+				
+				this._game = null;
+			}).bind(this), 1000 * 10);
 		}
 	}
 	
