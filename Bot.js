@@ -45,6 +45,25 @@ define(function(require) {
 		this._id = id();
 		this._name = "Stockfish " + ++botNo;
 		
+		this.Disconnected = new Event(this);
+		this.Connected = new Event(this);
+		
+		this._gamesPlayedAs = {};
+		this._gamesPlayedAs[Colour.white] = 0;
+		this._gamesPlayedAs[Colour.black] = 0;
+		
+		this._app = app;
+		this._game = null;
+		this._seek = null;
+		this._uciSkillLevel = 5;
+		this._rating = Math.round(1400 + Math.random() * 200);
+		
+		this._glicko2 = {
+			rating: this._rating,
+			rd: glicko2Constants.defaults.RD,
+			vol: glicko2Constants.defaults.VOL
+		};
+		
 		var stockfish = this._engine = spawn("stockfish");
 		
 		var commands = [
@@ -68,25 +87,6 @@ define(function(require) {
 				);
 			}
 		}).bind(this));
-		
-		this.Disconnected = new Event(this);
-		this.Connected = new Event(this);
-		
-		this._gamesPlayedAs = {};
-		this._gamesPlayedAs[Colour.white] = 0;
-		this._gamesPlayedAs[Colour.black] = 0;
-		
-		this._app = app;
-		this._game = null;
-		this._seek = null;
-		this._uciSkillLevel = 5;
-		this._rating = Math.round(1400 + Math.random() * 200);
-		
-		this._glicko2 = {
-			rating: this._rating,
-			rd: glicko2Constants.defaults.RD,
-			vol: glicko2Constants.defaults.VOL
-		};
 		
 		setInterval(seekStrategy().bind(this), 1000 + Math.floor(Math.random() * 5000));
 	}
