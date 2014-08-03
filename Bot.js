@@ -19,6 +19,7 @@ define(function(require) {
 			
 			this._seek.Matched.addHandler(function(game) {
 				this._playGame(game);
+				this._seek = null;
 			}, this);
 			
 			this._seek.Expired.addHandler(function() {
