@@ -130,7 +130,7 @@ define(function(require) {
 		
 		game.GameOver.addHandler(function() {
 			setTimeout((function() {
-				this._game = null
+				this._game = null;
 			}).bind(this), 1000 * 30);
 			
 			this._gamesPlayedAs[game.getPlayerColour(this)]++;
@@ -145,7 +145,9 @@ define(function(require) {
 		}, this);
 		
 		game.Rematch.addHandler(function(game) {
-			this._playGame(game);
+			if(!this._game) {
+				this._playGame(game);
+			}
 		}, this);
 	}
 	
