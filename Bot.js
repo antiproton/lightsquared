@@ -148,7 +148,7 @@ define(function(require) {
 		}, this);
 		
 		game.Rematch.addHandler(function(game) {
-			if(!this._game) {
+			if(!this._game || !this._game.isInProgress()) {
 				this._playGame(game);
 			}
 		}, this);
