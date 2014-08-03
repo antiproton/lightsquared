@@ -101,7 +101,7 @@ define(function(require) {
 		var colour = game.getPlayerColour(this);
 		
 		var move = (function() {
-			if(game.getActiveColour() === colour) {
+			if(game.isInProgress() && game.getActiveColour() === colour) {
 				var moves = game.getHistory().map(function(move) {
 					return move.getUciLabel();
 				}).join(" ");
