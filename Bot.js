@@ -11,7 +11,7 @@ define(function(require) {
 	var botNo = 0;
 	
 	var createSeek = function() {
-		if(!this._seek && !this._game && !this._waitingForRematch) {
+		if(!this._seek && !this._game) {
 			this._seek = this._app.createSeek(this, {
 				initialTime: ["30s", "45s", "1m30", "10"].random(),
 				timeIncrement: ["0", "1", "5", "15"].random()
@@ -29,7 +29,7 @@ define(function(require) {
 	};
 	
 	var acceptSeek = function() {
-		if(!this._game && !this._waitingForRematch) {
+		if(!this._game) {
 			this._app.getOpenSeeks().some((function(seek) {
 				var game = seek.accept(this);
 				
@@ -57,7 +57,6 @@ define(function(require) {
 		
 		this._app = app;
 		this._game = null;
-		this._waitingForRematch = false;
 		this._rematchTimer = null;
 		this._seek = null;
 		this._uciSkillLevel = 5;
