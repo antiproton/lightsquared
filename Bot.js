@@ -8,14 +8,6 @@ define(function(require) {
 	var glicko2Constants = require("jsonchess/glicko2");
 	var Colour = require("chess/Colour");
 	
-	var names = [
-		"Norm",
-		"Steel",
-		"timh",
-		"blackrabbit",
-		"shevek"
-	];
-	
 	var botNo = 0;
 	
 	var createSeek = function() {
@@ -51,7 +43,7 @@ define(function(require) {
 		seekStrategy = seekStrategy || Bot.seekStrategies.RANDOM;
 		
 		this._id = id();
-		this._name = names.pop() || "Stockfish " + ++botNo;
+		this._name = "Stockfish " + ++botNo;
 		
 		this.Disconnected = new Event(this);
 		this.Connected = new Event(this);
