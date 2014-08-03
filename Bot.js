@@ -11,7 +11,7 @@ define(function(require) {
 	var botNo = 0;
 	
 	var createSeek = function() {
-		if(!this._seek && this._countCurrentGames === 0) {
+		if(!this._seek && !this._game) {
 			this._seek = this._app.createSeek(this, {
 				initialTime: ["30s", "45s", "1m30"].random(),
 				timeIncrement: ["0", "1"].random()
@@ -28,7 +28,7 @@ define(function(require) {
 	};
 	
 	var acceptSeek = function() {
-		if(this._countCurrentGames === 0) {
+		if(!this._game) {
 			this._app.getOpenSeeks().some((function(seek) {
 				var game = seek.accept(this);
 				
@@ -45,6 +45,30 @@ define(function(require) {
 		this._id = id();
 		this._name = "Stockfish " + ++botNo;
 		
+		var stockfish = this._engine = spawn("stockfish");
+		
+		var commands = [
+			"uci",
+			"setoption name Skill Level value " + this._uciSkillLevel
+		];
+		
+		commands.forEach(function(command) {
+			stockfish.stdin.write(command + "\n");
+		});
+		
+		stockfish.stdout.on("data", (function(chunk) {
+			var move = chunk.toString().match(/bestmove (\w\d)(\w\d)(\w?)/);
+			
+			if(move && this._game) {
+				this._game.move(
+					this,
+					Square.fromAlgebraic(move[1]),
+					Square.fromAlgebraic(move[2]),
+					move[3] ? PieceType.fromSanString(move[3].toUpperCase()) : PieceType.queen
+				);
+			}
+		}).bind(this));
+		
 		this.Disconnected = new Event(this);
 		this.Connected = new Event(this);
 		
@@ -53,7 +77,7 @@ define(function(require) {
 		this._gamesPlayedAs[Colour.black] = 0;
 		
 		this._app = app;
-		this._countCurrentGames = 0;
+		this._game = null;
 		this._seek = null;
 		this._uciSkillLevel = 5;
 		this._rating = Math.round(1400 + Math.random() * 200);
@@ -96,79 +120,58 @@ define(function(require) {
 	}
 	
 	Bot.prototype._playGame = function(game) {
-		this._countCurrentGames++;
+		this._game = game;
+		this._engine.stdin.write("ucinewgame\n");
+		this._move();
 		
-		var colour = game.getPlayerColour(this);
-		
-		var move = (function() {
-			if(game.isInProgress() && game.getActiveColour() === colour) {
-				var moves = game.getHistory().map(function(move) {
-					return move.getUciLabel();
-				}).join(" ");
-				
-				var botTimeBuffer = 1000; //stop bots running out of time due to lag
-				var artificialMaxBotTime = 1000 * 30; //stop bots thinking too deeply
-				var times = {};
-				
-				Colour.forEach(function(colour) {
-					times[colour] = game.getTimeLeft(Colour.white).getMilliseconds();
-					times[colour] -= Math.min(botTimeBuffer, times[colour] - 1); //make them think they have slightly less time, down to 1ms
-					times[colour] = Math.min(times[colour], artificialMaxBotTime);
-				});
-				
-				var increment = game.getTimingStyle().increment.getMilliseconds();
-				
-				var commands = [
-					"uci",
-					"setoption name Skill Level value " + this._uciSkillLevel,
-					"position startpos" + (moves ? " moves " + moves : "")
-				];
-				
-				commands.push("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc " + increment + " binc " + increment);
-				
-				var stockfish = spawn("stockfish");
-				
-				stockfish.stdout.on("data", (function(chunk) {
-					var move = chunk.toString().match(/bestmove (\w\d)(\w\d)(\w?)/);
-					
-					if(move) {
-						game.move(
-							this,
-							Square.fromAlgebraic(move[1]),
-							Square.fromAlgebraic(move[2]),
-							move[3] ? PieceType.fromSanString(move[3].toUpperCase()) : PieceType.queen
-						);
-						
-						stockfish.stdin.end();
-					}
-				}).bind(this));
-				
-				commands.forEach(function(command) {
-					stockfish.stdin.write(command + "\n");
-				});
-			}
-		}).bind(this);
-		
-		move();
-		
-		game.Move.addHandler(move);
+		game.Move.addHandler((function() {
+			this._move();
+		}).bind(this));
 		
 		game.GameOver.addHandler(function() {
-			this._countCurrentGames--;
+			setTimeout((function() {
+				this._game = null
+			}).bind(this), 1000 * 30);
+			
 			this._gamesPlayedAs[game.getPlayerColour(this)]++;
 			
 			setTimeout((function() {
 				game.offerRematch(this);
-			}).bind(this), 700);
+			}).bind(this), 1000);
 		}, this);
 		
 		game.Aborted.addHandler(function() {
-			this._countCurrentGames--;
+			this._game = null;
 		}, this);
 		
 		game.Rematch.addHandler(function(game) {
 			this._playGame(game);
 		}, this);
+	}
+	
+	Bot.prototype._move = function() {
+		var game = this._game;
+		
+		if(game && game.isInProgress() && game.getActiveColour() === game.getPlayerColour(this)) {
+			var moves = game.getHistory().map(function(move) {
+				return move.getUciLabel();
+			}).join(" ");
+			
+			var botTimeBuffer = 1000; //stop bots running out of time due to lag
+			var artificialMaxBotTime = 1000 * 30; //stop bots thinking too deeply
+			var times = {};
+			
+			Colour.forEach(function(colour) {
+				times[colour] = game.getTimeLeft(Colour.white).getMilliseconds();
+				times[colour] -= Math.min(botTimeBuffer, times[colour] - 1); //make them think they have slightly less time, down to 1ms
+				times[colour] = Math.min(times[colour], artificialMaxBotTime);
+			});
+			
+			var increment = game.getTimingStyle().increment.getMilliseconds();
+			
+			this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
+			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc " + increment + " binc " + increment);
+		}
 	}
 	
 	Bot.prototype.toJSON = function() {
