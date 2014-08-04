@@ -42,9 +42,7 @@ define(function(require) {
 		}
 	};
 	
-	function Bot(app, seekStrategy) {
-		seekStrategy = seekStrategy || Bot.seekStrategies.RANDOM;
-		
+	function Bot(app) {
 		this._id = id();
 		this._name = "Stockfish " + ++botNo;
 		
@@ -92,7 +90,9 @@ define(function(require) {
 			}
 		}).bind(this));
 		
-		setInterval(seekStrategy().bind(this), 1000 + Math.floor(Math.random() * 5000));
+		this._seekFunction = [acceptSeek, createSeek][botNo % 2].bind(this);
+		
+		setInterval(this._seekFunction, 1000 + Math.floor(Math.random() * 5000));
 	}
 	
 	Bot.seekStrategies = {
