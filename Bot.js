@@ -124,6 +124,7 @@ define(function(require) {
 	}
 	
 	Bot.prototype._playGame = function(game) {
+		this._clearRematchTimer();
 		this._game = game;
 		this._engine.stdin.write("ucinewgame\n");
 		this._move();
@@ -143,12 +144,7 @@ define(function(require) {
 		
 		game.Rematch.addHandler(function(game) {
 			this._playGame(game);
-			
-			if(this._rematchTimer) {
-				clearTimeout(this._rematchTimer);
-				
-				this._rematchTimer = null;
-			}
+			this._clearRematchTimer();
 		}, this);
 	}
 	
@@ -188,6 +184,14 @@ define(function(require) {
 				
 				this._game = null;
 			}).bind(this), 1000 * 10);
+		}
+	}
+	
+	Bot.prototype._clearRematchTimer = function() {
+		if(this._rematchTimer) {
+			clearTimeout(this._rematchTimer);
+			
+			this._rematchTimer = null;
 		}
 	}
 	
