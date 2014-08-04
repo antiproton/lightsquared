@@ -9,6 +9,10 @@
 		"requirejs": "*",
 		"yargs": "*"
 	},
+	"devDependencies": {
+		"node-monkey": "*",
+		"memwatch": "*"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/lighsquaredev/lightsquared.git"
