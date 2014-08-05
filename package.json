@@ -11,7 +11,7 @@
 	},
 	"devDependencies": {
 		"node-monkey": "*",
-		"memwatch": "*"
+		"heapdump": "*"
 	},
 	"repository": {
 		"type": "git",
