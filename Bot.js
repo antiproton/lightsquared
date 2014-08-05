@@ -170,8 +170,6 @@ define(function(require) {
 				times[colour] = Math.min(times[colour], artificialMaxBotTime);
 			});
 			
-			var increment = game.getTimingStyle().increment.getMilliseconds();
-			
 			this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
 			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc 0 binc 0\n");
 		}
