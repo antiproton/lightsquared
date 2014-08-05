@@ -7,6 +7,7 @@ define(function(require) {
 	var Square = require("chess/Square");
 	var glicko2Constants = require("jsonchess/glicko2");
 	var Colour = require("chess/Colour");
+	var time = require("lib/time");
 	
 	var botNo = 0;
 	
