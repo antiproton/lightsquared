@@ -205,6 +205,10 @@ define(function(require) {
 		return this._game.getPosition();
 	}
 	
+	Game.prototype.getStartTime = function() {
+		return this._game.getStartTime();
+	}
+	
 	Game.prototype.getEndTime = function() {
 		return this._game.getEndTime();
 	}
