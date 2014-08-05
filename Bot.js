@@ -131,6 +131,7 @@ define(function(require) {
 		
 		game.Move.addHandler((function() {
 			this._move();
+			this._claimDraw();
 		}).bind(this));
 		
 		game.GameOver.addHandler(function() {
@@ -173,6 +174,12 @@ define(function(require) {
 			
 			this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
 			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc 0 binc 0\n");
+		}
+	}
+	
+	Bot.prototype._claimDraw = function() {
+		if(this._game) {
+			this._game.claimDraw(this);
 		}
 	}
 	
