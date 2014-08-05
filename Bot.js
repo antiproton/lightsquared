@@ -134,7 +134,10 @@ define(function(require) {
 		}).bind(this));
 		
 		game.GameOver.addHandler(function() {
-			this._offerRematch();
+			setTimeout((function() {
+				this._offerRematch();
+			}).bind(this), 500);
+			
 			this._gamesPlayedAs[game.getPlayerColour(this)]++;
 		}, this);
 		
