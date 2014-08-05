@@ -77,16 +77,32 @@ define(function(require) {
 			stockfish.stdin.write(command + "\n");
 		});
 		
+		var applyMove = (function(move) {
+			this._game.move(
+				this,
+				Square.fromAlgebraic(move[1]),
+				Square.fromAlgebraic(move[2]),
+				move[3] ? PieceType.fromSanString(move[3].toUpperCase()) : PieceType.queen
+			);
+		}).bind(this);
+		
 		stockfish.stdout.on("data", (function(chunk) {
 			var move = chunk.toString().match(/bestmove (\w\d)(\w\d)(\w?)/);
 			
 			if(move && this._game) {
-				this._game.move(
-					this,
-					Square.fromAlgebraic(move[1]),
-					Square.fromAlgebraic(move[2]),
-					move[3] ? PieceType.fromSanString(move[3].toUpperCase()) : PieceType.queen
-				);
+				var lastMove = this._game.getLastMove();
+				var startOrLastMoveTime = (lastMove ? lastMove.getTime() : this._game.getStartTime());
+				var timeSinceLastMove = time() - startOrLastMoveTime;
+				
+				if(timeSinceLastMove < Bot.MIN_MOVE_TIME) {
+					setTimeout(function() {
+						applyMove(move);
+					}, Bot.MIN_MOVE_TIME - timeSinceLastMove);
+				}
+				
+				else {
+					applyMove(move);
+				}
 			}
 		}).bind(this));
 		
@@ -94,6 +110,8 @@ define(function(require) {
 		
 		setInterval(this._seekFunction, 1000 + Math.floor(Math.random() * 5000));
 	}
+	
+	Bot.MIN_MOVE_TIME = 200; //stop crazily fast end games
 	
 	Bot.seekStrategies = {
 		ACCEPT: function() {
@@ -170,10 +188,8 @@ define(function(require) {
 				times[colour] = Math.min(times[colour], artificialMaxBotTime);
 			});
 			
-			setTimeout((function() {
-				this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
-				this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc 0 binc 0\n");
-			}).bind(this), 40);
+			this._engine.stdin.write("position startpos" + (moves ? " moves " + moves : "") + "\n");
+			this._engine.stdin.write("go wtime " + times[Colour.white]	+ " btime " + times[Colour.black] + " winc 0 binc 0\n");
 		}
 	}
 	
