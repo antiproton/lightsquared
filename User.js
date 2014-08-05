@@ -65,6 +65,7 @@ define(function(require) {
 			this._user.Disconnected.addHandler(function() {
 				this._removeInactiveGames();
 				this._removeRandomGamesHandlers();
+				this._cancelCurrentSeek();
 				this.Disconnected.fire();
 			}, this),
 			
