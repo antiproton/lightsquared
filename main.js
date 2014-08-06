@@ -33,6 +33,8 @@ requirejs(["lib/websocket/server/Server", "./Application", "./Bot"], function(Se
 		}
 		
 		else {
+			console.log("Cannot connect to mongodb");
+			console.log(error);
 			process.exit(1);
 		}
 	});
