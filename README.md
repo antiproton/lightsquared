@@ -25,6 +25,6 @@ Use the --bots N option to create computer players, e.g. $js main.js --bots 5.
 forever start /home/gus/lightsquared/main.js --bots 5
 ```
 
-[1]:http://github.com/lightsquaredev/libjs
-[2]:http://github.com/lightsquaredev/jsonchess
+[1]:http://github.com/gushogg-blake/libjs
+[2]:http://github.com/jsonchess/jsonchess
 [3]:https://github.com/nodejitsu/forever
