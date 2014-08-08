@@ -564,6 +564,8 @@ define(function(require) {
 	}
 	
 	User.prototype._addGame = function(game) {
+		this._removeInactiveGames();
+		
 		var id = game.getId();
 		
 		this._currentGames.push(game);
@@ -583,8 +585,10 @@ define(function(require) {
 		}, this);
 		
 		game.Rematch.addHandler(function(game) {
-			this._addGame(game);
-			this._user.send("/game/" + id + "/rematch", game);
+			if(this._user.isConnected()) {
+				this._addGame(game);
+				this._user.send("/game/" + id + "/rematch", game);
+			}
 		}, this);
 		
 		game.GameOver.addHandler(function(result) {
