@@ -17,17 +17,18 @@ requirejs.config({
 	}
 });
 
-yargs.default({
-	bots: 0
-});
+var argv = yargs.default({
+	bots: 0,
+	port: 8080
+}).argv;
 
 requirejs(["lib/websocket/server/Server", "./Application", "./Bot"], function(Server, Application, Bot) {
 	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
 		if(db) {
-			var server = new Server(8080);
+			var server = new Server(argv.port);
 			var app = new Application(server, db);
 			
-			for(var i = 0; i < yargs.argv.bots; i++) {
+			for(var i = 0; i < argv.bots; i++) {
 				new Bot(app);
 			}
 		}
