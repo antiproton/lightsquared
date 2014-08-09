@@ -21,7 +21,7 @@ var argv = yargs.default({
 	port: 8080
 }).argv;
 
-requirejs(["lib/websocket/server/Server", "./Application", "./Bot"], function(Server, Application, Bot) {
+requirejs(["websocket/server/Server", "./Application", "./Bot"], function(Server, Application, Bot) {
 	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
 		if(db) {
 			var server = new Server(argv.port);
