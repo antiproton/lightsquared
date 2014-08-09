@@ -7,13 +7,17 @@ var yargs = require("yargs");
 requirejs.config({
 	nodeRequire: require,
 	paths: {
-		"lib": "/var/www/lib/js"
-	},
-	map: {
-		"*": {
-			"chess": "lib/chess",
-			"jsonchess": "lib/jsonchess"
-		}
+		"lib": "/home/gus/projects/js",
+		"Array.prototype": "/home/gus/projects/Array.prototype",
+		"tokeniser": "/home/gus/projects/tokeniser",
+		"websocket": "/home/gus/projects/websocket",
+		"dom": "/home/gus/projects/dom",
+		"routing": "/home/gus/projects/routing",
+		"json-local-storage": "/home/gus/projects/json-local-storage",
+		"chess": "/home/gus/projects/chess",
+		"jsonchess": "/home/gus/projects/jsonchess",
+		"require": "/home/gus/projects/lib/require",
+		"ractive": "/home/gus/projects/lib/ractive"
 	}
 });
 
