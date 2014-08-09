@@ -8,8 +8,13 @@ Installation
 ------------
 
 - Download the code
-- Download [libjs][1] and place it where it will be found under the 'lib' path as mapped in the requirejs config in main.js
-- Download [jsonchess][2] and put it in the libjs folder
+- Download the following repos and place them according to the RequireJS paths configuration in main.js:
+    - [websocket][4]
+    - [js][6]
+    - [tokeniser][7]
+    - [Array.prototype][8]
+    - [chess][10]
+    - [jsonchess][12]
 - $npm install
 
 Running the server
@@ -26,5 +31,11 @@ forever start /home/gus/lightsquared/main.js --bots 5
 ```
 
 [1]:http://github.com/gushogg-blake/libjs
-[2]:http://github.com/jsonchess/jsonchess
+[2]:http://jsonchess.org
 [3]:https://github.com/nodejitsu/forever
+[4]:http://github.com/gushogg-blake/websocket
+[6]:http://github.com/gushogg-blake/js
+[7]:http://github.com/gushogg-blake/tokeniser
+[8]:http://github.com/gushogg-blake/Array.prototype
+[10]:http://github.com/gushogg-blake/chess
+[12]:http://github.com/gushogg-blake/jsonchess
