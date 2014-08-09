@@ -11,13 +11,8 @@ requirejs.config({
 		"Array.prototype": "/home/gus/projects/Array.prototype",
 		"tokeniser": "/home/gus/projects/tokeniser",
 		"websocket": "/home/gus/projects/websocket",
-		"dom": "/home/gus/projects/dom",
-		"routing": "/home/gus/projects/routing",
-		"json-local-storage": "/home/gus/projects/json-local-storage",
 		"chess": "/home/gus/projects/chess",
 		"jsonchess": "/home/gus/projects/jsonchess",
-		"require": "/home/gus/projects/lib/require",
-		"ractive": "/home/gus/projects/lib/ractive"
 	}
 });
 
