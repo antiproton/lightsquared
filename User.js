@@ -1,15 +1,15 @@
 define(function(require) {
-	require("lib/Array.contains");
-	require("lib/Array.remove");
+	require("Array.prototype/contains");
+	require("Array.prototype/remove");
 	var id = require("lib/id");
 	var time = require("lib/time");
 	var Event = require("lib/Event");
 	var Glicko2 = require("glicko2").Glicko2;
 	var glicko2Constants = require("jsonchess/glicko2");
-	var PieceType = require("chess/PieceType");
-	var Player = require("./Player");
-	var Square = require("chess/Square");
 	var Move = require("jsonchess/Move");
+	var PieceType = require("chess/PieceType");
+	var Square = require("chess/Square");
+	var Player = require("./Player");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;

@@ -1,12 +1,12 @@
 define(function(require) {
+	require("Array.prototype/remove");
 	var Publisher = require("lib/Publisher");
-	require("lib/Array.remove");
-	var User = require("./User");
-	var Seek = require("./Seek");
 	var time = require("lib/time");
-	var Game = require("./Game");
 	var Event = require("lib/Event");
 	var Promisor = require("lib/Promisor");
+	var User = require("./User");
+	var Seek = require("./Seek");
+	var Game = require("./Game");
 	var RandomGames = require("./RandomGames");
 	
 	function Application(server, db) {

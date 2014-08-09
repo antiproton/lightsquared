@@ -2,9 +2,9 @@ define(function(require) {
 	var id = require("lib/id");
 	var time = require("lib/time");
 	var Event = require("lib/Event");
-	var Game = require("./Game");
 	var jsonChessConstants = require("jsonchess/constants");
 	var Time = require("chess/Time");
+	var Game = require("./Game");
 	
 	function Seek(owner, options) {
 		this._id = id();

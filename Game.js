@@ -1,14 +1,14 @@
 define(function(require) {
-	var ChessGame = require("chess/Game");
-	var PieceType = require("chess/PieceType");
 	var id = require("lib/id");
 	var time = require("lib/time");
-	var Colour = require("chess/Colour");
+	var Event = require("lib/Event");
 	var Move = require("jsonchess/Move");
 	var Premove = require("jsonchess/Premove");
-	var Square = require("chess/Square");
-	var Event = require("lib/Event");
 	var jsonchess = require("jsonchess/constants");
+	var Colour = require("chess/Colour");
+	var Square = require("chess/Square");
+	var ChessGame = require("chess/Game");
+	var PieceType = require("chess/PieceType");
 	
 	function Game(white, black, options) {
 		this._id = id();

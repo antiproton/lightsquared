@@ -1,13 +1,13 @@
 define(function(require) {
-	require("lib/Array.random");
+	require("Array.prototype/random");
 	var spawn = require("child_process").spawn;
-	var PieceType = require("chess/PieceType");
 	var id = require("lib/id");
 	var Event = require("lib/Event");
-	var Square = require("chess/Square");
-	var glicko2Constants = require("jsonchess/glicko2");
-	var Colour = require("chess/Colour");
 	var time = require("lib/time");
+	var glicko2Constants = require("jsonchess/glicko2");
+	var PieceType = require("chess/PieceType");
+	var Square = require("chess/Square");
+	var Colour = require("chess/Colour");
 	
 	var botNo = 0;
 	
