@@ -146,7 +146,6 @@ define(function(require) {
 		this._clearRematchTimer();
 		this._game = game;
 		this._engine.stdin.write("ucinewgame\n");
-		this._move();
 		
 		game.Move.addHandler((function() {
 			this._move();
@@ -169,6 +168,8 @@ define(function(require) {
 			this._playGame(game);
 			this._clearRematchTimer();
 		}, this);
+		
+		this._move();
 	}
 	
 	Bot.prototype._move = function() {
