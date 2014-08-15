@@ -403,8 +403,8 @@ define(function(require) {
 			}
 		};
 
-		for(var url in subscriptions) {
-			this._user.subscribe(url, subscriptions[url].bind(this));
+		for(var topic in subscriptions) {
+			this._user.subscribe(topic, subscriptions[topic].bind(this));
 		}
 	}
 	
@@ -488,11 +488,11 @@ define(function(require) {
 		
 		var subscription;
 		
-		for(var url in subscriptions) {
-			subscription = subscriptions[url].bind(this);
+		for(var topic in subscriptions) {
+			subscription = subscriptions[topic].bind(this);
 			
-			this._subscriptions["/game/" + id][url] = subscription;
-			this._user.subscribe(url, subscription);
+			this._subscriptions["/game/" + id][topic] = subscription;
+			this._user.subscribe(topic, subscription);
 		}
 	}
 	
@@ -646,8 +646,8 @@ define(function(require) {
 	}
 	
 	User.prototype._removeSubscriptions = function(id) {
-		for(var url in this._subscriptions[id]) {
-			this._user.unsubscribe(url, this._subscriptions[id][url]);
+		for(var topic in this._subscriptions[id]) {
+			this._user.unsubscribe(topic, this._subscriptions[id][topic]);
 		}
 		
 		delete this._subscriptions[id];
