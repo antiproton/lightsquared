@@ -406,7 +406,10 @@ define(function(require) {
 			isUndoRequested: this._isUndoRequested,
 			isDrawOffered: this._isDrawOffered,
 			rematchOfferedBy: this._rematchOfferedBy,
-			options: this._options,
+			options: {
+				initialTime: this._options.initialTime,
+				timeIncrement: this._options.timeIncrement
+			},
 			id: this._id
 		};
 	}
