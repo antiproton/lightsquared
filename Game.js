@@ -108,14 +108,15 @@ define(function(require) {
 		players[requestA.colour] = requestA.player;
 		players[requestB.colour] = requestB.player;
 		
-		var options = gameDetails.options;
-		
-		options.startTime = gameDetails.startTime;
-		options.addedTime = gameDetails.addedTime;
-		
-		options.history = gameDetails.history.map(function(move) {
-			return Move.fromJSON(move);
-		});
+		var options = {
+			initialTime: gameDetails.options.initialTime,
+			timeIncrement: gameDetails.options.timeIncrement,
+			startTime: gameDetails.startTime,
+			addedTime: gameDetails.addedTime,
+			history: gameDetails.history.map(function(move) {
+				return Move.fromJSON(move);
+			})
+		};
 		
 		var game = new Game(players[Colour.white], players[Colour.black], options);
 		
