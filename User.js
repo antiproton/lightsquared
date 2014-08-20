@@ -54,6 +54,13 @@ define(function(require) {
 		};
 		
 		this._handlers = [
+			this._app.Chat.addHandler(function(message) {
+				this._user.send("/chat", {
+					from: message.from.getName(),
+					body: message.body
+				});
+			}, this),
+			
 			this._app.NewSeek.addHandler(function(seek) {
 				this._user.send("/open_seek/new", seek);
 			}, this),
@@ -307,6 +314,10 @@ define(function(require) {
 	
 	User.prototype._subscribeToUserMessages = function() {
 		var subscriptions = {
+			"/chat": function(message) {
+				this._app.chat(this._player, message);
+			},
+			
 			"/user/login": function(data) {
 				this._login(
 					(data.username || "").toString(),

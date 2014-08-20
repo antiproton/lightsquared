@@ -22,6 +22,7 @@ define(function(require) {
 		this.NewGame = new Event();
 		this.NewSeek = new Event();
 		this.SeekExpired = new Event();
+		this.Chat = new Event();
 		
 		server.UserConnected.addHandler(function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
@@ -36,6 +37,13 @@ define(function(require) {
 		}, this);
 		
 		this._randomGames = new RandomGames(this, 10);
+	}
+	
+	Application.prototype.chat = function(player, message) {
+		this.Chat.fire({
+			from: player,
+			body: message
+		});
 	}
 	
 	Application.prototype.createSeek = function(player, options) {
