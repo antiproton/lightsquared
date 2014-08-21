@@ -315,7 +315,9 @@ define(function(require) {
 	User.prototype._subscribeToUserMessages = function() {
 		var subscriptions = {
 			"/chat": function(message) {
-				this._app.chat(this._player, message);
+				if(message === "" + message && message.trim() !== "") {
+					this._app.chat(this._player, message);
+				}
 			},
 			
 			"/user/login": function(data) {
