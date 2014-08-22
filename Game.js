@@ -9,6 +9,7 @@ define(function(require) {
 	var Square = require("chess/Square");
 	var ChessGame = require("chess/Game");
 	var PieceType = require("chess/PieceType");
+	var Time = require("chess/Time");
 	
 	function Game(white, black, options) {
 		this._id = id();
@@ -30,8 +31,8 @@ define(function(require) {
 			history: [],
 			startTime: time(),
 			addedTime: null,
-			initialTime: "10m",
-			timeIncrement: "0"
+			initialTime: Time.fromUnitString("10m"),
+			timeIncrement: 0
 		};
 		
 		if(options) {

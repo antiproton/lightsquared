@@ -13,11 +13,13 @@ define(function(require) {
 		this.Expired = new Event();
 		this.Matched = new Event();
 		
+		var rating = owner.getRating();
+		
 		this._options = {
-			initialTime: "10m",
-			timeIncrement: "0",
-			acceptRatingMin: "-100",
-			acceptRatingMax: "+100"
+			initialTime: Time.fromUnitString("10m"),
+			timeIncrement: 0,
+			acceptRatingMin: Math.max(0, rating - 100),
+			acceptRatingMax: rating + 100
 		};
 		
 		if(options) {
@@ -26,15 +28,9 @@ define(function(require) {
 			}
 		}
 		
-		this._initialTime = Time.fromUnitString(this._options.initialTime, Time.minutes);
-		this._timeIncrement = Time.fromUnitString(this._options.timeIncrement, Time.seconds);
-		
-		if(this._initialTime.getMilliseconds() === 0) {
+		if(this._options.initialTime < Time.fromUnitString("1s")) {
 			throw "Initial time must be at least 1s";
 		}
-		
-		this._acceptRatingMin = this._getAbsoluteRating(this._options.acceptRatingMin);
-		this._acceptRatingMax = this._getAbsoluteRating(this._options.acceptRatingMax);
 		
 		this._timeoutTimer = setTimeout((function() {
 			this._timeout();
@@ -80,13 +76,13 @@ define(function(require) {
 	Seek.prototype.matchesPlayer = function(player) {
 		var rating = player.getRating();
 		
-		return (rating >= this._acceptRatingMin && rating <= this._acceptRatingMax);
+		return (rating >= this._options.acceptRatingMin && rating <= this._options.acceptRatingMax);
 	}
 	
 	Seek.prototype.matchesOptions = function(options) {
 		return (
-			Time.fromUnitString(options.initialTime, Time.minutes).getMilliseconds() === this._initialTime.getMilliseconds()
-			&& Time.fromUnitString(options.timeIncrement, Time.seconds).getMilliseconds() === this._timeIncrement.getMilliseconds()
+			options.initialTime === this._options.initialTime
+			&& options.timeIncrement === this._options.timeIncrement
 		);
 	}
 	
@@ -104,18 +100,6 @@ define(function(require) {
 			clearTimeout(this._timeoutTimer);
 			
 			this._timeoutTimer = null;
-		}
-	}
-	
-	Seek.prototype._getAbsoluteRating = function(ratingSpecifier) {
-		var firstChar = ratingSpecifier.charAt(0);
-		
-		if(firstChar === "-" || firstChar === "+") {
-			return this._owner.getRating() + parseInt(ratingSpecifier);
-		}
-		
-		else {
-			return parseInt(ratingSpecifier);
 		}
 	}
 	
