@@ -9,7 +9,6 @@ define(function(require) {
 	var Move = require("jsonchess/Move");
 	var PieceType = require("chess/PieceType");
 	var Square = require("chess/Square");
-	var Time = require("chess/Time");
 	var Player = require("./Player");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
@@ -514,13 +513,6 @@ define(function(require) {
 		this._cancelCurrentSeek();
 		
 		var rating = this.getRating();
-		
-		options = {
-			initialTime: Time.fromMilliseconds(options.initialTime),
-			timeIncrement: Time.fromMilliseconds(options.timeIncrement),
-			acceptRatingMin: options.acceptRatingMin,
-			acceptRatingMax: options.acceptRatingMax
-		};
 		
 		var existingSeek = this._app.getOpenSeeks().filter((function(seek) {
 			return (seek.matchesOptions(options) && seek.matchesPlayer(this._player));

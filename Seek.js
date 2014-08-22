@@ -82,8 +82,8 @@ define(function(require) {
 	
 	Seek.prototype.matchesOptions = function(options) {
 		return (
-			options.initialTime.getMilliseconds() === this._options.initialTime.getMilliseconds()
-			&& options.timeIncrement.getMilliseconds() === this._options.timeIncrement.getMilliseconds()
+			options.initialTime === this._options.initialTime
+			&& options.timeIncrement === this._options.timeIncrement
 		);
 	}
 	
