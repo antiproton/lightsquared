@@ -8,14 +8,15 @@ define(function(require) {
 	var PieceType = require("chess/PieceType");
 	var Square = require("chess/Square");
 	var Colour = require("chess/Colour");
+	var Time = require("chess/Time");
 	
 	var botNo = 0;
 	
 	var createSeek = function() {
 		if(!this._seek && !this._game) {
 			this._seek = this._app.createSeek(this, {
-				initialTime: ["30s", "45s", "1m30", "10"].random(),
-				timeIncrement: ["0", "1", "5", "15"].random()
+				initialTime: Time.fromMilliseconds(["30s", "45s", "1m30", "10"].random()),
+				timeIncrement: Time.fromMilliseconds(["0", "1", "5", "15"].random())
 			});
 			
 			this._seek.Matched.addHandler(function(game) {
@@ -185,7 +186,7 @@ define(function(require) {
 			var times = {};
 			
 			Colour.forEach(function(colour) {
-				times[colour] = game.getTimeLeft(Colour.white).getMilliseconds();
+				times[colour] = game.getTimeLeft(colour);
 				times[colour] -= Math.min(botTimeBuffer, times[colour] - 1); //make them think they have slightly less time, down to 1ms
 				times[colour] = Math.min(times[colour], artificialMaxBotTime);
 			});
