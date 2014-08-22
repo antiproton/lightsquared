@@ -13,13 +13,11 @@ define(function(require) {
 		this.Expired = new Event();
 		this.Matched = new Event();
 		
-		var rating = owner.getRating();
-		
 		this._options = {
 			initialTime: Time.fromUnitString("10m"),
 			timeIncrement: 0,
-			acceptRatingMin: Math.max(0, rating - 100),
-			acceptRatingMax: rating + 100
+			acceptRatingMin: "-100",
+			acceptRatingMax: "+100"
 		};
 		
 		if(options) {
@@ -31,6 +29,9 @@ define(function(require) {
 		if(this._options.initialTime < Time.fromUnitString("1s")) {
 			throw "Initial time must be at least 1s";
 		}
+		
+		this._acceptRatingMin = this._getAbsoluteRating(this._options.acceptRatingMin);
+		this._acceptRatingMax = this._getAbsoluteRating(this._options.acceptRatingMax);
 		
 		this._timeoutTimer = setTimeout((function() {
 			this._timeout();
@@ -76,7 +77,7 @@ define(function(require) {
 	Seek.prototype.matchesPlayer = function(player) {
 		var rating = player.getRating();
 		
-		return (rating >= this._options.acceptRatingMin && rating <= this._options.acceptRatingMax);
+		return (rating >= this._acceptRatingMin && rating <= this._acceptRatingMax);
 	}
 	
 	Seek.prototype.matchesOptions = function(options) {
@@ -93,6 +94,18 @@ define(function(require) {
 	
 	Seek.prototype._timeout = function() {
 		this.Expired.fire();
+	}
+	
+	Seek.prototype._getAbsoluteRating = function(ratingSpecifier) {
+		var firstChar = ratingSpecifier.charAt(0);
+		
+		if(firstChar === "-" || firstChar === "+") {
+			return this._owner.getRating() + parseInt(ratingSpecifier);
+		}
+		
+		else {
+			return parseInt(ratingSpecifier);
+		}
 	}
 	
 	Seek.prototype._clearTimeoutTimer = function() {
