@@ -515,7 +515,7 @@ define(function(require) {
 		var rating = this.getRating();
 		
 		var existingSeek = this._app.getOpenSeeks().filter((function(seek) {
-			return (seek.matchesOptions(options) && seek.matchesPlayer(this._player));
+			return (seek.matches(this._player, options));
 		}).bind(this)).sort(function(seekA, seekB) {
 			return Math.abs(rating - seekA.getOwnerRating()) - Math.abs(rating - seekB.getOwnerRating());
 		})[0];
