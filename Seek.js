@@ -64,7 +64,7 @@ define(function(require) {
 	Seek.prototype.accept = function(player) {
 		var game = null;
 		
-		if(player !== this._owner && this.matchesPlayer(player)) {
+		if(player !== this._owner && this._playerIsInRatingRange(player)) {
 			var white, black;
 			var ownerRatio = this._owner.getGamesAsWhiteRatio();
 			var guestRatio = player.getGamesAsWhiteRatio();
@@ -104,6 +104,12 @@ define(function(require) {
 			&& options.initialTime === this._options.initialTime
 			&& options.timeIncrement === this._options.timeIncrement
 		);
+	}
+	
+	Seek.prototype._playerIsInRatingRange = function(player) {
+		var rating = player.getRating();
+		
+		return (rating >= this._acceptRatingMin && rating <= this._acceptRatingMax);
 	}
 	
 	Seek.prototype.cancel = function() {
