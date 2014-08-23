@@ -57,6 +57,10 @@ define(function(require) {
 		return this._id;
 	}
 	
+	Seek.prototype.getOwnerRating = function() {
+		return this._ownerRating;
+	}
+	
 	Seek.prototype.accept = function(player) {
 		var game = null;
 		
