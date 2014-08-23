@@ -3,7 +3,6 @@ define(function(require) {
 	var time = require("lib/time");
 	var Event = require("lib/Event");
 	var jsonChessConstants = require("jsonchess/constants");
-	var Time = require("chess/Time");
 	var Game = require("./Game");
 	
 	function getAbsoluteRating(rating, ratingSpecifier) {
@@ -26,7 +25,7 @@ define(function(require) {
 		this.Matched = new Event();
 		
 		this._options = {
-			initialTime: Time.fromUnitString("10m"),
+			initialTime: 1000 * 60 * 10,
 			timeIncrement: 0,
 			acceptRatingMin: "-100",
 			acceptRatingMax: "+100"
@@ -38,7 +37,7 @@ define(function(require) {
 			}
 		}
 		
-		if(this._options.initialTime < Time.fromUnitString("1s")) {
+		if(this._options.initialTime < 1000) {
 			throw "Initial time must be at least 1s";
 		}
 		
