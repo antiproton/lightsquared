@@ -15,8 +15,8 @@ define(function(require) {
 	var createSeek = function() {
 		if(!this._seek && !this._game) {
 			this._seek = this._app.createSeek(this, {
-				initialTime: Time.fromUnitString(["30s", "45s", "1m30", "10"].random(), Time.minutes),
-				timeIncrement: Time.fromUnitString(["0", "1", "5", "15"].random(), Time.seconds)
+				initialTime: Time.fromUnitString(["30s", "45s", "1m30", "10"].random(), Time.minutes) + 0,
+				timeIncrement: Time.fromUnitString(["0", "1", "5", "15"].random(), Time.seconds) + 0
 			});
 			
 			this._seek.Matched.addHandler(function(game) {
