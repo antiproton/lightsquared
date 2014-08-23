@@ -6,6 +6,18 @@ define(function(require) {
 	var Time = require("chess/Time");
 	var Game = require("./Game");
 	
+	function getAbsoluteRating(rating, ratingSpecifier) {
+		var firstChar = ratingSpecifier.charAt(0);
+		
+		if(firstChar === "-" || firstChar === "+") {
+			return rating + parseInt(ratingSpecifier);
+		}
+		
+		else {
+			return parseInt(ratingSpecifier);
+		}
+	}
+	
 	function Seek(owner, options) {
 		this._id = id();
 		this._owner = owner;
@@ -30,8 +42,9 @@ define(function(require) {
 			throw "Initial time must be at least 1s";
 		}
 		
-		this._acceptRatingMin = this._getAbsoluteRating(this._options.acceptRatingMin);
-		this._acceptRatingMax = this._getAbsoluteRating(this._options.acceptRatingMax);
+		this._ownerRating = this._owner.getRating();
+		this._acceptRatingMin = getAbsoluteRating(this._ownerRating, this._options.acceptRatingMin);
+		this._acceptRatingMax = getAbsoluteRating(this._ownerRating, this._options.acceptRatingMax);
 		
 		this._timeoutTimer = setTimeout((function() {
 			this._timeout();
@@ -74,15 +87,17 @@ define(function(require) {
 		return game;
 	}
 	
-	Seek.prototype.matchesPlayer = function(player) {
+	Seek.prototype.matches = function(player, options) {
 		var rating = player.getRating();
+		var acceptRatingMin = getAbsoluteRating(rating, options.acceptRatingMin);
+		var acceptRatingMax = getAbsoluteRating(rating, options.acceptRatingMax);
 		
-		return (rating >= this._acceptRatingMin && rating <= this._acceptRatingMax);
-	}
-	
-	Seek.prototype.matchesOptions = function(options) {
 		return (
-			options.initialTime === this._options.initialTime
+			rating >= this._acceptRatingMin
+			&& rating <= this._acceptRatingMax
+			&& this._ownerRating >= acceptRatingMin
+			&& this._ownerRating <= acceptRatingMax
+			&& options.initialTime === this._options.initialTime
 			&& options.timeIncrement === this._options.timeIncrement
 		);
 	}
@@ -94,18 +109,6 @@ define(function(require) {
 	
 	Seek.prototype._timeout = function() {
 		this.Expired.fire();
-	}
-	
-	Seek.prototype._getAbsoluteRating = function(ratingSpecifier) {
-		var firstChar = ratingSpecifier.charAt(0);
-		
-		if(firstChar === "-" || firstChar === "+") {
-			return this._owner.getRating() + parseInt(ratingSpecifier);
-		}
-		
-		else {
-			return parseInt(ratingSpecifier);
-		}
 	}
 	
 	Seek.prototype._clearTimeoutTimer = function() {
