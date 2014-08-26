@@ -12,7 +12,7 @@ requirejs.config({
 		"tokeniser": "/home/gus/projects/tokeniser",
 		"websocket": "/home/gus/projects/websocket",
 		"chess": "/home/gus/projects/chess",
-		"jsonchess": "/home/gus/projects/jsonchess",
+		"jsonchess": "/home/gus/projects/jsonchess"
 	}
 });
 
