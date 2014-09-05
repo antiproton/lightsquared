@@ -8,6 +8,7 @@ define(function(require) {
 	var Seek = require("./Seek");
 	var Game = require("./Game");
 	var RandomGames = require("./RandomGames");
+	var jsonchessMessageTypes = require("jsonchess/chatMessageTypes");
 	
 	function Application(server, db) {
 		this._users = {};
@@ -42,7 +43,8 @@ define(function(require) {
 	Application.prototype.chat = function(player, message) {
 		this.Chat.fire({
 			from: player,
-			body: message
+			body: message,
+			type: jsonchessMessageTypes.USER
 		});
 	}
 	
