@@ -4,6 +4,7 @@
 	"description": "jsonchess server",
 	"author": "Gus Hogg-Blake <gus@hogg-blake.co.uk>",
 	"dependencies": {
+		"amdefine": "*",
 		"mongodb": "*",
 		"glicko2": "*",
 		"requirejs": "*",
@@ -13,7 +14,7 @@
 		"jsonchess": "git://github.com/jsonchess/jsonchess.git",
 		"tokeniser": "git://github.com/gushogg-blake/tokeniser.git",
 		"Array.prototype": "git://github.com/gushogg-blake/Array.prototype.git",
-		"lib": "git://github.com/gushogg-blake/js.git"
+		"js": "git://github.com/gushogg-blake/js.git"
 	},
 	"devDependencies": {
 		"node-monkey": "*",

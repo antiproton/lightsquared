@@ -3,7 +3,8 @@
 var requirejs = require("requirejs");
 var mongodb = require("mongodb");
 var yargs = require("yargs");
-var Server = require("websocket-server/Server");
+
+require("amdefine/intercept");
 
 requirejs.config({
 	nodeRequire: require
@@ -14,7 +15,7 @@ var argv = yargs.default({
 	port: 8080
 }).argv;
 
-requirejs(["./Application", "./Bot"], function(Application, Bot) {
+requirejs(["websocket-server/Server", "./Application", "./Bot"], function(Server, Application, Bot) {
 	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
 		if(db) {
 			var server = new Server(argv.port);
