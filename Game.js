@@ -1,7 +1,7 @@
 define(function(require) {
-	var id = require("lib/id");
-	var time = require("lib/time");
-	var Event = require("lib/Event");
+	var id = require("js/id");
+	var time = require("js/time");
+	var Event = require("js/Event");
 	var Move = require("jsonchess/Move");
 	var Premove = require("jsonchess/Premove");
 	var jsonchess = require("jsonchess/constants");

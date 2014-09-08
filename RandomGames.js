@@ -1,5 +1,5 @@
 define(function(require) {
-	var Event = require("lib/Event");
+	var Event = require("js/Event");
 	
 	function RandomGames(app, count) {
 		this._app = app;

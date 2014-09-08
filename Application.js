@@ -1,9 +1,9 @@
 define(function(require) {
 	require("Array.prototype/remove");
-	var Publisher = require("lib/Publisher");
-	var time = require("lib/time");
-	var Event = require("lib/Event");
-	var Promisor = require("lib/Promisor");
+	var Publisher = require("js/Publisher");
+	var time = require("js/time");
+	var Event = require("js/Event");
+	var Promisor = require("js/Promisor");
 	var User = require("./User");
 	var Seek = require("./Seek");
 	var Game = require("./Game");

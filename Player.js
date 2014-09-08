@@ -1,6 +1,6 @@
 define(function(require) {
-	var id = require("lib/id");
-	var Event = require("lib/Event");
+	var id = require("js/id");
+	var Event = require("js/Event");
 	
 	function Player(user) {
 		this._id = id();

@@ -1,9 +1,9 @@
 define(function(require) {
 	require("Array.prototype/contains");
 	require("Array.prototype/remove");
-	var id = require("lib/id");
-	var time = require("lib/time");
-	var Event = require("lib/Event");
+	var id = require("js/id");
+	var time = require("js/time");
+	var Event = require("js/Event");
 	var Glicko2 = require("glicko2").Glicko2;
 	var glicko2Constants = require("jsonchess/glicko2");
 	var Move = require("jsonchess/Move");

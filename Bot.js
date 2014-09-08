@@ -1,9 +1,9 @@
 define(function(require) {
 	require("Array.prototype/random");
 	var spawn = require("child_process").spawn;
-	var id = require("lib/id");
-	var Event = require("lib/Event");
-	var time = require("lib/time");
+	var id = require("js/id");
+	var Event = require("js/Event");
+	var time = require("js/time");
 	var glicko2Constants = require("jsonchess/glicko2");
 	var PieceType = require("chess/PieceType");
 	var Square = require("chess/Square");
