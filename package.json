@@ -1,13 +1,19 @@
 {
 	"name": "lightsquared",
+	"version": "1.0",
 	"description": "jsonchess server",
 	"author": "Gus Hogg-Blake <gus@hogg-blake.co.uk>",
 	"dependencies": {
 		"mongodb": "*",
-		"websocket": "*",
 		"glicko2": "*",
 		"requirejs": "*",
-		"yargs": "*"
+		"yargs": "*",
+		"websocket-server": "git://github.com/gushogg-blake/websocket-server.git",
+		"chess": "git://github.com/gushogg-blake/chess.git",
+		"jsonchess": "git://github.com/jsonchess/jsonchess.git",
+		"tokeniser": "git://github.com/gushogg-blake/tokeniser.git",
+		"Array.prototype": "git://github.com/gushogg-blake/Array.prototype.git",
+		"lib": "git://github.com/gushogg-blake/js.git"
 	},
 	"devDependencies": {
 		"node-monkey": "*",
