@@ -3,17 +3,10 @@
 var requirejs = require("requirejs");
 var mongodb = require("mongodb");
 var yargs = require("yargs");
+var Server = require("websocket-server/Server");
 
 requirejs.config({
-	nodeRequire: require,
-	paths: {
-		"lib": "/home/gus/projects/js",
-		"Array.prototype": "/home/gus/projects/Array.prototype",
-		"tokeniser": "/home/gus/projects/tokeniser",
-		"websocket": "/home/gus/projects/websocket",
-		"chess": "/home/gus/projects/chess",
-		"jsonchess": "/home/gus/projects/jsonchess"
-	}
+	nodeRequire: require
 });
 
 var argv = yargs.default({
@@ -21,7 +14,7 @@ var argv = yargs.default({
 	port: 8080
 }).argv;
 
-requirejs(["websocket/server/Server", "./Application", "./Bot"], function(Server, Application, Bot) {
+requirejs(["./Application", "./Bot"], function(Application, Bot) {
 	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
 		if(db) {
 			var server = new Server(argv.port);
