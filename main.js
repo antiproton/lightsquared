@@ -4,6 +4,17 @@ var requirejs = require("requirejs");
 var mongodb = require("mongodb");
 var yargs = require("yargs");
 
+/*
+amdefine/intercept - allows requirejs-style modules to be required
+through Node's require.
+
+NOTE this has to be after the Node require that requires requirejs,
+because once loaded it tacks some code onto the beginning of all
+node-required modules, checking whether the define function exists
+and defining it if not, and this messes up the "r.js" module for
+some reason.
+*/
+
 require("amdefine/intercept");
 
 requirejs.config({
