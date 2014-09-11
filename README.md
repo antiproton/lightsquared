@@ -11,7 +11,8 @@ Installation
 - Download the code
 - `cd` to the directory
 - Run `$npm install`
-- To make bots work, install the [Stockfish engine](http://stockfishchess.org/) (`#apt-get install stockfish`, or download it and place `stockfish`
+- To make bots work, install the [Stockfish engine](http://stockfishchess.org/)
+    (`#apt-get install stockfish`, or download it and place `stockfish`
     somewhere on your path)
 
 **Note** - the `websocket` module requires the `node` command, which can be obtained by
