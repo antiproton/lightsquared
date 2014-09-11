@@ -9,7 +9,8 @@ Installation
 ------------
 
 - Download the code
-- $npm install
+- `cd` to the directory
+- Run `$npm install`
 
 **Note** - the `websocket` module requires the `node` command, which can be obtained by
 installing the `node-legacy` package, or possibly by just symlinking /usr/bin/node
