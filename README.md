@@ -16,7 +16,7 @@ Installation
     somewhere on your path)
 
 **Note** - the `websocket` module requires the `node` command, which can be obtained by
-installing the `node-legacy` package, or possibly by just symlinking /usr/bin/node
+installing the `nodejs-legacy` package, or possibly by just symlinking /usr/bin/node
 to /usr/bin/nodejs.
 
 Running the server
