@@ -8,6 +8,9 @@ Stockfish engine.
 Installation
 ------------
 
+See [a screencast](https://www.youtube.com/watch?v=PR2FBr_5wiI) showing the
+installation procedure or follow the steps below:
+
 - Download the code
 - `cd` to the directory
 - Run `$npm install`
