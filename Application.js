@@ -24,6 +24,8 @@ define(function(require) {
 		this.NewSeek = new Event();
 		this.SeekExpired = new Event();
 		this.Chat = new Event();
+		this.UserConnected = new Event();
+		this.UserDisconnected = new Event();
 		
 		server.UserConnected.addHandler(function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
@@ -31,6 +33,7 @@ define(function(require) {
 			this._setupUser(user);
 			this._replaceExistingLoggedInUser(user);
 			this._users[user.getId()] = user;
+			this.UserConnected.fire(user);
 			
 			if(user.isLoggedIn()) {
 				this._loggedInUsers[user.getUsername()] = user;
@@ -143,10 +146,12 @@ define(function(require) {
 		
 		user.Disconnected.addHandler(function() {
 			delete this._users[user.getId()];
+			this.UserDisconnected.fire(user);
 		}, this);
 		
 		user.Connected.addHandler(function() {
 			this._users[user.getId()] = user;
+			this.UserConnected.fire(user);
 		}, this);
 		
 		user.LoggedIn.addHandler(function() {
@@ -226,6 +231,16 @@ define(function(require) {
 		}
 		
 		return openSeeks;
+	}
+	
+	Application.prototype.getOnlineUsers = function() {
+		var onlineUsers = [];
+		
+		for(var id in this._users) {
+			onlineUsers.push(this._users[id]);
+		}
+		
+		return onlineUsers;
 	}
 	
 	Application.prototype.getCurrentGames = function() {
