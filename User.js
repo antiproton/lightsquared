@@ -10,6 +10,7 @@ define(function(require) {
 	var PieceType = require("chess/PieceType");
 	var Square = require("chess/Square");
 	var Player = require("./Player");
+	var Feed = require("./Feed");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
@@ -21,9 +22,11 @@ define(function(require) {
 		this._db = db;
 		this._user = user;
 		this._app = app;
-		this._isWatchingRandomGames = false;
+		
 		this._randomGames = this._app.getRandomGames();
 		this._subscriptions = {};
+		
+		this._setupFeeds();
 		
 		this.Connected = new Event();
 		this.Disconnected = new Event();
@@ -71,7 +74,7 @@ define(function(require) {
 			
 			this._user.Disconnected.addHandler(function() {
 				this._removeInactiveGames();
-				this._removeRandomGamesHandlers();
+				this._deactivateFeeds();
 				this._cancelCurrentSeek();
 				this.Disconnected.fire();
 			}, this),
@@ -96,26 +99,72 @@ define(function(require) {
 			}, this)
 		];
 		
-		this._setupRandomGamesHandlers();
 		this._subscribeToUserMessages();
 	}
 	
-	User.prototype._setupRandomGamesHandlers = function() {
-		this._randomGamesHandlers = [
-			this._randomGames.Move.addHandler(function(data) {
-				if(data.game.isInProgress()) {
-					this._sendRandomGame(data.game, data.move);
+	User.prototype._setupFeeds = function() {
+		this._feeds = {
+			"random_games": new Feed(this, [
+				{
+					event: this._randomGames.Move,
+					handler: function(data) {
+						if(data.game.isInProgress()) {
+							this._sendRandomGame(data.game, data.move);
+						}
+					}
+				},
+				{
+					event: this._randomGames.GameOver,
+					handler: function(game) {
+						this._user.send("/random_game/game_over", game.getId());
+					}
+				},
+				{
+					event: this._randomGames.NewGame,
+					handler: function(game) {
+						this._sendRandomGame(game);
+					}
 				}
-			}, this),
-			this._randomGames.GameOver.addHandler(function(game) {
-				this._user.send("/random_game/game_over", game.getId());
-			}, this),
-			this._randomGames.NewGame.addHandler(function(game) {
-				this._sendRandomGame(game);
-			}, this)
-		];
-		
-		this._removeRandomGamesHandlers();
+			], function() {
+				this._randomGames.getGames().forEach((function(game) {
+					this._sendRandomGame(game);
+				}).bind(this));
+			}),
+			"users_online": new Feed(this, [
+				{
+					event: this._app.UserConnected,
+					handler: function(user) {
+						this._user.send("/list/users_online/add", user);
+					}
+				},
+				{
+					event: this._app.UserDisconnected,
+					handler: function(user) {
+						this._user.send("/list/users_online/remove", user);
+					}
+				}
+			], function() {
+				this._user.send("/list/users_online", this._app.getOnlineUsers());
+			})
+		};
+	}
+	
+	User.prototype._activateFeed = function(feedName) {
+		if(feedName in this._feeds) {
+			this._feeds[feedName].activate();
+		}
+	}
+	
+	User.prototype._deactivateFeed = function(feedName) {
+		if(feedName in this._feeds) {
+			this._feeds[feedName].deactivate();
+		}
+	}
+	
+	User.prototype._deactivateFeeds = function() {
+		for(var feedName in this._feeds) {
+			this._feeds[feedName].deactivate();
+		}
 	}
 	
 	User.prototype._sendRandomGame = function(game, lastMove) {
@@ -127,26 +176,6 @@ define(function(require) {
 				to: lastMove.getTo().squareNo
 			} : null)
 		});
-	}
-	
-	User.prototype._addRandomGamesHandlers = function() {
-		if(!this._isWatchingRandomGames) {
-			this._randomGamesHandlers.forEach(function(handler) {
-				handler.add();
-			});
-			
-			this._isWatchingRandomGames = true;
-		}
-	}
-	
-	User.prototype._removeRandomGamesHandlers = function() {
-		if(this._isWatchingRandomGames) {
-			this._randomGamesHandlers.forEach(function(handler) {
-				handler.remove();
-			});
-			
-			this._isWatchingRandomGames = false;
-		}
 	}
 	
 	User.prototype.replace = function(user) {
@@ -403,16 +432,12 @@ define(function(require) {
 				client.send("/restoration_requests", this._pendingRestorationRequests);
 			},
 			
-			"/random_games/subscribe": function(data, client) {
-				this._addRandomGamesHandlers();
-				
-				this._randomGames.getGames().forEach((function(game) {
-					this._sendRandomGame(game);
-				}).bind(this));
+			"/feed/activate": function(feed) {
+				this._activateFeed(feed);
 			},
 			
-			"/random_games/unsubscribe": function() {
-				this._removeRandomGamesHandlers();
+			"/feed/deactivate": function(feed) {
+				this._deactivateFeed(feed);
 			}
 		};
 
