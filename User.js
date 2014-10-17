@@ -154,7 +154,6 @@ define(function(require) {
 					}
 				}
 			], function() {
-				
 				this._user.send("/list/open_seeks", this._app.getOpenSeeks());
 			})
 		};
