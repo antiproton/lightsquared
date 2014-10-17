@@ -23,7 +23,7 @@ define(function(require) {
 			});
 			
 			if(this._setup) {
-				this._setup();
+				this._setup.call(this._bindTo);
 			}
 			
 			this._isActive = true;
@@ -37,7 +37,7 @@ define(function(require) {
 			});
 			
 			if(this._teardown) {
-				this._teardown();
+				this._teardown.call(this._bindTo);
 			}
 		}
 	}
