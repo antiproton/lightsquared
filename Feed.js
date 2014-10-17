@@ -1,5 +1,5 @@
 define(function(require) {
-	function Feed(bindTo, handlers, setup, teardown) {
+	function Feed(bindTo, handlers, sendInitialData) {
 		this._bindTo = bindTo;
 		this._handlers = [];
 		
@@ -11,8 +11,7 @@ define(function(require) {
 			handler.remove();
 		});
 		
-		this._setup = setup || null;
-		this._teardown = teardown || null;
+		this._sendInitialData = sendInitialData || null;
 		this._isActive = false;
 	}
 	
@@ -22,11 +21,11 @@ define(function(require) {
 				handler.add();
 			});
 			
-			if(this._setup) {
-				this._setup.call(this._bindTo);
-			}
-			
 			this._isActive = true;
+		}
+		
+		if(this._sendInitialData) {
+			this._sendInitialData.call(this._bindTo);
 		}
 	}
 	
@@ -36,9 +35,7 @@ define(function(require) {
 				handler.remove();
 			});
 			
-			if(this._teardown) {
-				this._teardown.call(this._bindTo);
-			}
+			this._isActive = false;
 		}
 	}
 	
