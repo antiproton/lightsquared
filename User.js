@@ -64,14 +64,6 @@ define(function(require) {
 				});
 			}, this),
 			
-			this._app.NewSeek.addHandler(function(seek) {
-				this._user.send("/open_seek/new", seek);
-			}, this),
-			
-			this._app.SeekExpired.addHandler(function(id) {
-				this._user.send("/open_seek/expired", id);
-			}, this),
-			
 			this._user.Disconnected.addHandler(function() {
 				this._removeInactiveGames();
 				this._deactivateFeeds();
@@ -130,6 +122,7 @@ define(function(require) {
 					this._sendRandomGame(game);
 				}).bind(this));
 			}),
+			
 			"users_online": new Feed(this, [
 				{
 					event: this._app.UserConnected,
@@ -140,11 +133,29 @@ define(function(require) {
 				{
 					event: this._app.UserDisconnected,
 					handler: function(user) {
-						this._user.send("/list/users_online/remove", user);
+						this._user.send("/list/users_online/remove", user.getId());
 					}
 				}
 			], function() {
 				this._user.send("/list/users_online", this._app.getOnlineUsers());
+			}),
+			
+			"open_seeks": new Feed(this, [
+				{
+					event: this._app.NewSeek,
+					handler: function(seek) {
+						this._user.send("/list/open_seeks/add", seek);
+					}
+				},
+				{
+					event: this._app.SeekExpired,
+					handler: function(id) {
+						this._user.send("/list/open_seeks/remove", id);
+					}
+				}
+			], function() {
+				
+				this._user.send("/list/open_seeks", this._app.getOpenSeeks());
 			})
 		};
 	}
@@ -432,12 +443,12 @@ define(function(require) {
 				client.send("/restoration_requests", this._pendingRestorationRequests);
 			},
 			
-			"/feed/activate": function(feed) {
-				this._activateFeed(feed);
+			"/feed/activate": function(feedName) {
+				this._activateFeed(feedName);
 			},
 			
-			"/feed/deactivate": function(feed) {
-				this._deactivateFeed(feed);
+			"/feed/deactivate": function(feedName) {
+				this._deactivateFeed(feedName);
 			}
 		};
 
