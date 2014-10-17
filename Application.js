@@ -3,6 +3,7 @@ define(function(require) {
 	var Publisher = require("js/Publisher");
 	var time = require("js/time");
 	var Event = require("js/Event");
+	var objToArray = require("js/objToArray");
 	var Promisor = require("js/Promisor");
 	var User = require("./User");
 	var Seek = require("./Seek");
@@ -224,33 +225,15 @@ define(function(require) {
 	}
 	
 	Application.prototype.getOpenSeeks = function() {
-		var openSeeks = [];
-		
-		for(var id in this._openSeeks) {
-			openSeeks.push(this._openSeeks[id]);
-		}
-		
-		return openSeeks;
+		return objToArray(this._openSeeks);
 	}
 	
 	Application.prototype.getOnlineUsers = function() {
-		var onlineUsers = [];
-		
-		for(var id in this._users) {
-			onlineUsers.push(this._users[id]);
-		}
-		
-		return onlineUsers;
+		return objToArray(this._users);
 	}
 	
 	Application.prototype.getCurrentGames = function() {
-		var games = [];
-		
-		for(var id in this._games) {
-			games.push(this._games[id]);
-		}
-		
-		return games;
+		return objToArray(this._games);
 	}
 	
 	return Application;
