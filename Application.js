@@ -82,7 +82,7 @@ define(function(require) {
 		this._games[gameId] = game;
 		
 		game.GameOver.addHandler(function() {
-			this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
+			this._db.collection("games").insert(game.getLongJSON(), function() {});
 			
 			delete this._games[gameId];
 		}, this);
@@ -113,7 +113,7 @@ define(function(require) {
 	Application.prototype.getArchivedGameDetails = function(id) {
 		return this._promisor.get("/game/" + id, function(promise) {
 			if(id in this._games) {
-				promise.resolve(JSON.parse(JSON.stringify(this._games[id])));
+				promise.resolve(this._games[id].getLongJSON());
 			}
 			
 			else {

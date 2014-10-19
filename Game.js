@@ -388,9 +388,13 @@ define(function(require) {
 		this.GameOver.fire(result);
 	}
 	
-	Game.prototype.toJSON = function() {
-		var history = this._game.getHistory().map(function(move) {
-			return Move.fromMove(move);
+	Game.prototype.getLongJSON = function() {
+		return JSON.parse(JSON.stringify(this.toJSON(true)));
+	}
+	
+	Game.prototype.toJSON = function(verboseMoves) {
+		var history = this._game.getHistory().map(function(move, index) {
+			return (verboseMoves ? Move.fromMove(move) : Move.getShortJSON(move, index));
 		});
 		
 		return {
