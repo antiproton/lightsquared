@@ -388,11 +388,7 @@ define(function(require) {
 		this.GameOver.fire(result);
 	}
 	
-	Game.prototype.getLongJSON = function() {
-		return JSON.parse(JSON.stringify(this.toJSON(true)));
-	}
-	
-	Game.prototype.toJSON = function(verboseMoves) {
+	Game.prototype._toJSON = function(verboseMoves) {
 		var history = this._game.getHistory().map(function(move, index) {
 			return (verboseMoves ? Move.fromMove(move) : Move.getShortJSON(move, index));
 		});
@@ -416,6 +412,14 @@ define(function(require) {
 			},
 			id: this._id
 		};
+	}
+	
+	Game.prototype.getLongJSON = function() {
+		return JSON.parse(JSON.stringify(this._toJSON(true)));
+	}
+	
+	Game.prototype.toJSON = function() {
+		return this._toJSON(false);
 	}
 	
 	return Game;
