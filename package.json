@@ -9,12 +9,12 @@
 		"glicko2": "*",
 		"requirejs": "*",
 		"yargs": "*",
-		"websocket-server": "git://github.com/gushogg-blake/websocket-server.git",
-		"chess": "git://github.com/gushogg-blake/chess.git",
-		"jsonchess": "git://github.com/jsonchess/jsonchess.git",
-		"tokeniser": "git://github.com/gushogg-blake/tokeniser.git",
-		"Array.prototype": "git://github.com/gushogg-blake/Array.prototype.git",
-		"js": "git://github.com/gushogg-blake/js.git"
+		"websocket-server": "https://github.com/gushogg-blake/websocket-server/archive/master.tar.gz",
+		"chess": "https://github.com/gushogg-blake/chess/archive/master.tar.gz",
+		"jsonchess": "https://github.com/jsonchess/jsonchess/archive/master.tar.gz",
+		"tokeniser": "https://github.com/gushogg-blake/tokeniser/archive/master.tar.gz",
+		"Array.prototype": "https://github.com/gushogg-blake/Array.prototype/archive/master.tar.gz",
+		"js": "https://github.com/gushogg-blake/js/archive/master.tar.gz"
 	},
 	"devDependencies": {
 		"node-monkey": "*",
