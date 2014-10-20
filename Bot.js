@@ -143,6 +143,10 @@ define(function(require) {
 		return this._name;
 	}
 	
+	Bot.prototype.isUser = function() {
+		return false;
+	}
+	
 	Bot.prototype._playGame = function(game) {
 		this._clearRematchTimer();
 		this._game = game;

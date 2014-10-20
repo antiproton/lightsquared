@@ -44,6 +44,10 @@ define(function(require) {
 		return this._user.getUsername();
 	}
 	
+	Player.prototype.isUser = function() {
+		return true;
+	}
+	
 	Player.prototype.setUser = function(user) {
 		this._userHandlers.forEach(function(handler) {
 			handler.remove();

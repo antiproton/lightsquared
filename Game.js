@@ -60,8 +60,6 @@ define(function(require) {
 		this._players[Colour.white] = white;
 		this._players[Colour.black] = black;
 		
-		this._setupPlayers();
-		
 		this._ratings = {};
 		this._ratings[Colour.white] = white.getRating();
 		this._ratings[Colour.black] = black.getRating();
@@ -145,29 +143,6 @@ define(function(require) {
 	
 	Game.prototype.getTimingStyle = function() {
 		return this._game.getTimingStyle();
-	}
-	
-	Game.prototype._setupPlayers = function() {
-		this._playerHandlers = [];
-		
-		[
-			this._players[Colour.white],
-			this._players[Colour.black]
-		].forEach((function(player) {
-			this._playerHandlers.push(player.Connected.addHandler(function() {
-				this.PlayerConnected.fire(player);
-			}, this));
-			
-			this._playerHandlers.push(player.Disconnected.addHandler(function() {
-				this.PlayerDisconnected.fire(player);
-			}, this));
-		}).bind(this));
-	}
-	
-	Game.prototype._removePlayerHandlers = function() {
-		this._playerHandlers.forEach(function(handler) {
-			handler.remove();
-		});
 	}
 	
 	Game.prototype.playerIsPlaying = function(player) {
@@ -377,14 +352,12 @@ define(function(require) {
 	
 	Game.prototype._abort = function() {
 		if(this.isInProgress()) {
-			this._removePlayerHandlers();
 			this._isAborted = true;
 			this.Aborted.fire();
 		}
 	}
 	
 	Game.prototype._gameOver = function(result) {
-		this._removePlayerHandlers();
 		this.GameOver.fire(result);
 	}
 	

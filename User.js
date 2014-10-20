@@ -25,6 +25,7 @@ define(function(require) {
 		
 		this._randomGames = this._app.getRandomGames();
 		this._subscriptions = {};
+		this._connectionStatusFeeds = {};
 		
 		this._setupFeeds();
 		
@@ -613,11 +614,14 @@ define(function(require) {
 	
 	User.prototype._addGame = function(game) {
 		this._removeInactiveGames();
-		
-		var id = game.getId();
-		
 		this._currentGames.push(game);
 		this._subscribeToGameMessages(game);
+		this._handleGameEvents(game);
+		this._setupConnectionStatusFeeds(game);
+	}
+	
+	User.prototype._handleGameEvents = function(game) {
+		var id = game.getId();
 		
 		game.Move.addHandler(function(move) {
 			this._user.send("/game/" + id + "/move", Move.getShortJSON(move, game.getHistory().length - 1));
@@ -675,6 +679,50 @@ define(function(require) {
 		}
 	}
 	
+	User.prototype._setupConnectionStatusFeeds = function(game) {
+		var id = game.getId();
+		var opponent = (this._isPlayer(game) ? game.getPlayerColour(this._player).opposite : null);
+		var playersToListenTo = (opponent ? [opponent] : [Colour.white, Colour.black]);
+		
+		this._connectionStatusFeeds[id] = {};
+		
+		playersToListenTo.forEach(function(colour) {
+			var player = game.getPlayer(colour);
+			var playerId = player.getId();
+			
+			if(player.isUser()) {
+				var feed = new Feed(this, [
+					{
+						event: player.Connected,
+						handler: function() {
+							this._user.send("/player_connection_status/" + playerId, true);
+						}
+					},
+					{
+						event: player.Disconnected,
+						handler: function() {
+							this._user.send("/player_connection_status/" + playerId, false);
+						}
+					}
+				]);
+				
+				this._connectionStatusFeeds[id][colour] = feed;
+				
+				feed.activate();
+			}
+		}, this);
+	}
+	
+	User.prototype._removeConnectionStatusFeeds = function(game) {
+		var id = game.getId();
+		
+		for(var colour in this._connectionStatusFeeds[id]) {
+			this._connectionStatusFeeds[id][colour].deactivate();
+		}
+		
+		delete this._connectionStatusFeeds[id];
+	}
+	
 	User.prototype._isPlayer = function(game) {
 		return game.playerIsPlaying(this._player);
 	}
@@ -686,11 +734,16 @@ define(function(require) {
 			}
 			
 			else {
-				this._removeSubscriptions("/game/" + game.getId());
+				this._teardownGame(game);
 				
 				return false;
 			}
 		}).bind(this));
+	}
+	
+	User.prototype._teardownGame = function(game) {
+		this._removeSubscriptions("/game/" + game.getId());
+		this._removeConnectionStatusFeeds(game);
 	}
 	
 	User.prototype._removeSubscriptions = function(id) {
