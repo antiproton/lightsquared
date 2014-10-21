@@ -73,6 +73,7 @@ define(function(require) {
 			}, this),
 			
 			this._user.Connected.addHandler(function() {
+				this._removeInactiveGames();
 				this.Connected.fire();
 			}, this),
 			
