@@ -61,7 +61,8 @@ define(function(require) {
 		return {
 			id: this._id,
 			name: this.getName(),
-			rating: this.getRating()
+			rating: this.getRating(),
+			isUser: true
 		};
 	}
 	

@@ -232,7 +232,8 @@ define(function(require) {
 		return {
 			id: this._id,
 			name: this._name,
-			rating: this._rating
+			rating: this._rating,
+			isUser: false
 		};
 	}
 	
