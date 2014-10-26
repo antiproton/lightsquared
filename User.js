@@ -190,6 +190,10 @@ define(function(require) {
 		});
 	}
 	
+	User.prototype.isConnected = function() {
+		return this._user.isConnected();
+	}
+	
 	User.prototype.replace = function(user) {
 		this._loadJson(user.getPersistentJson());
 		this._player = user.getPlayer();
