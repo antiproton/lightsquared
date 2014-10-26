@@ -8,6 +8,7 @@ define(function(require) {
 	var glicko2Constants = require("jsonchess/glicko2");
 	var Move = require("jsonchess/Move");
 	var PieceType = require("chess/PieceType");
+	var Colour = require("chess/Colour");
 	var Square = require("chess/Square");
 	var Player = require("./Player");
 	var Feed = require("./Feed");
@@ -693,9 +694,10 @@ define(function(require) {
 		
 		playersToListenTo.forEach(function(colour) {
 			var player = game.getPlayer(colour);
-			var playerId = player.getId();
 			
 			if(player.isUser()) {
+				var playerId = player.getId();
+				
 				var feed = new Feed(this, [
 					{
 						event: player.Connected,
