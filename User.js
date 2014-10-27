@@ -414,7 +414,9 @@ define(function(require) {
 			},
 			
 			"/request/games": function(data, client) {
-				client.send("/games", this._currentGames)
+				client.send("/games", this._currentGames.map(function(game) {
+					return game.getJsonWithoutHistory();
+				}))
 			},
 			
 			"/request/user": function(data, client) {

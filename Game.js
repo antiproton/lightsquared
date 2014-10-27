@@ -361,10 +361,10 @@ define(function(require) {
 		this.GameOver.fire(result);
 	}
 	
-	Game.prototype.toJSON = function() {
-		var history = this._game.getHistory().map(function(move) {
+	Game.prototype._toJson = function(includeHistory) {
+		var history = (includeHistory ? this._game.getHistory().map(function(move) {
 			return Move.fromMove(move);
-		});
+		}) : []);
 		
 		return {
 			white: this._players[Colour.white],
@@ -385,6 +385,14 @@ define(function(require) {
 			},
 			id: this._id
 		};
+	}
+	
+	Game.prototype.getJsonWithoutHistory = function() {
+		return this._toJson(false);
+	}
+	
+	Game.prototype.toJSON = function() {
+		return this._toJson(true);
 	}
 	
 	return Game;
