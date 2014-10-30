@@ -56,9 +56,9 @@ define(function(require) {
 			}
 		}
 		
-		this._players = {};
-		this._players[Colour.white] = white;
-		this._players[Colour.black] = black;
+		this.players = {};
+		this.players[Colour.white] = white;
+		this.players[Colour.black] = black;
 		
 		this._ratings = {};
 		this._ratings[Colour.white] = white.getRating();
@@ -122,7 +122,7 @@ define(function(require) {
 			var lastMoveTime = game.getLastMove().getTime();
 			var reimbursement = time() - lastMoveTime;
 			
-			game.addTime(reimbursement, game.getActiveColour());
+			game.addTime(reimbursement, game.activeColour);
 		}
 		
 		return game;
@@ -146,18 +146,18 @@ define(function(require) {
 	}
 	
 	Game.prototype.playerIsPlaying = function(player) {
-		return (this._players[Colour.white] === player || this._players[Colour.black] === player);
+		return (this.players[Colour.white] === player || this.players[Colour.black] === player);
 	}
 	
 	Game.prototype.getPlayer = function(colour) {
-		return this._players[colour];
+		return this.players[colour];
 	}
 	
 	Game.prototype.getPlayerColour = function(player) {
 		var playerColour = null;
 		
 		Colour.forEach(function(colour) {
-			if(this._players[colour] === player) {
+			if(this.players[colour] === player) {
 				playerColour = colour;
 			}
 		}, this);
@@ -166,7 +166,7 @@ define(function(require) {
 	}
 	
 	Game.prototype.isInProgress = function() {
-		return this._game.isInProgress();
+		return this._game.isInProgress;
 	}
 	
 	Game.prototype.timingHasStarted = function() {
@@ -178,23 +178,23 @@ define(function(require) {
 	}
 	
 	Game.prototype.getPosition = function() {
-		return this._game.getPosition();
+		return this._game.position;
 	}
 	
 	Game.prototype.getStartTime = function() {
-		return this._game.getStartTime();
+		return this._game.startTime;
 	}
 	
 	Game.prototype.getEndTime = function() {
-		return this._game.getEndTime();
+		return this._game.endTime;
 	}
 	
 	Game.prototype.getHistory = function() {
-		return this._game.getHistory();
+		return this._game.history;
 	}
 	
 	Game.prototype.getResult = function() {
-		return this._game.getResult();
+		return this._game.result;
 	}
 	
 	Game.prototype.chat = function(player, message) {
@@ -205,7 +205,7 @@ define(function(require) {
 	}
 	
 	Game.prototype.move = function(player, from, to, promoteTo) {
-		if(this.getPlayerColour(player) === this.getActiveColour()) {
+		if(this.getPlayerColour(player) === this._game.position.activeColour) {
 			var move = this._game.move(from, to, promoteTo);
 			
 			if(move !== null && move.isLegal()) {
@@ -228,7 +228,7 @@ define(function(require) {
 					};
 					
 					this._pendingPremove = null;
-					this.move(this._players[this.getActiveColour()], premove.from, premove.to, premove.promoteTo);
+					this.move(this.players[this._game.position.activeColour], premove.from, premove.to, premove.promoteTo);
 				}
 			}
 		}
@@ -238,8 +238,8 @@ define(function(require) {
 		var premove = new Premove(this.getPosition(), from, to, promoteTo)
 		
 		if(
-			this.getPlayerColour(player) === this.getActiveColour().opposite
-			&& premove.isValid()
+			this.getPlayerColour(player) === this._game.position.activeColour.opposite
+			&& premove.isValid //FIXME make sure this gets converted to a static property
 			&& this._pendingPremove === null
 		) {
 			this._pendingPremove = premove;
@@ -251,13 +251,13 @@ define(function(require) {
 	}
 	
 	Game.prototype.cancelPremove = function(player) {
-		if(this.getPlayerColour(player) === this.getActiveColour().opposite) {
+		if(this.getPlayerColour(player) === this._game.position.activeColour.opposite) {
 			this._pendingPremove = null;
 		}
 	}
 	
 	Game.prototype.getActiveColour = function() {
-		return this._game.getActiveColour();
+		return this._game.position.activeColour;
 	}
 	
 	Game.prototype.resign = function(player) {
@@ -267,14 +267,14 @@ define(function(require) {
 	}
 	
 	Game.prototype.offerDraw = function(player) {
-		if(this.getPlayerColour(player) === this.getActiveColour().opposite) {
+		if(this.getPlayerColour(player) === this._game.position.activeColour.opposite) {
 			this._isDrawOffered = true;
 			this.DrawOffered.fire();
 		}
 	}
 	
 	Game.prototype.acceptDraw = function(player) {
-		if(this._isDrawOffered && this.getPlayerColour(player) === this.getActiveColour()) {
+		if(this._isDrawOffered && this.getPlayerColour(player) === this._game.position.activeColour) {
 			this._game.drawByAgreement();
 		}
 	}
@@ -286,7 +286,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._rematch = function() {
-		this.Rematch.fire(new Game(this._players[Colour.black], this._players[Colour.white], {
+		this.Rematch.fire(new Game(this.players[Colour.black], this.players[Colour.white], {
 			initialTime: this._options.initialTime,
 			timeIncrement: this._options.timeIncrement
 		}));
@@ -351,7 +351,7 @@ define(function(require) {
 	}
 	
 	Game.prototype._abort = function() {
-		if(this.isInProgress()) {
+		if(this._game.isInProgress) {
 			this._isAborted = true;
 			this.Aborted.fire();
 		}
@@ -362,18 +362,18 @@ define(function(require) {
 	}
 	
 	Game.prototype.toJSON = function() {
-		var history = this._game.getHistory().map(function(move) {
-			return Move.fromMove(move);
+		var history = this._game.history.map(function(move) {
+			return Move.encode(move);
 		});
 		
 		return {
-			white: this._players[Colour.white],
-			black: this._players[Colour.black],
+			white: this.players[Colour.white],
+			black: this.players[Colour.black],
 			history: history,
-			isInProgress: this.isInProgress(),
-			result: this._game.getResult(),
-			startTime: this._game.getStartTime(),
-			endTime: this._game.getEndTime(),
+			isInProgress: this._game.isInProgress,
+			result: this._game.result,
+			startTime: this._game.startTime,
+			endTime: this._game.endTime,
 			initialRatings: this._ratings,
 			addedTime: this._addedTime,
 			isUndoRequested: this._isUndoRequested,
