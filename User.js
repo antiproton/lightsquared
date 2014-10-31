@@ -468,12 +468,8 @@ define(function(require) {
 		var subscriptions = this._subscriptions["/game/" + id] = {};
 		
 		subscriptions["/game/" + id + "/request/moves"] = function(startingIndex) {
-			var index = startingIndex;
-			
-			game.getHistory().slice(index).forEach((function(move) {
-				this._user.send("/game/" + id + "/move", Move.getShortJSON(move, index));
-			
-				index++;
+			game.getHistory().slice(startingIndex).forEach((function(move) {
+				this._user.send("/game/" + id + "/move", Move.encode(move));
 			}).bind(this));
 		};
 		
@@ -484,15 +480,15 @@ define(function(require) {
 		};
 		
 		subscriptions["/game/" + id + "/move"] = function(data) {
-			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
+			var promoteTo = (data.promoteTo ? PieceType.bySanString[data.promoteTo] : undefined);
 			
-			game.move(this._player, Square.fromSquareNo(data.from), Square.fromSquareNo(data.to), promoteTo);
+			game.move(this._player, Square.bySquareNo[data.from], Square.bySquareNo[data.to], promoteTo);
 		};
 		
 		subscriptions["/game/" + id + "/premove"] = function(data) {
-			var promoteTo = (data.promoteTo ? PieceType.fromSanString(data.promoteTo) : undefined);
-			var from = Square.fromSquareNo(data.from);
-			var to = Square.fromSquareNo(data.to);
+			var promoteTo = (data.promoteTo ? PieceType.bySanString[data.promoteTo] : undefined);
+			var from = Square.bySquareNo[data.from];
+			var to = Square.bySquareNo[data.to];
 			
 			if(game.getPlayerColour(this._player) === game.getActiveColour()) {
 				game.move(this._player, from, to, promoteTo);
@@ -850,7 +846,12 @@ define(function(require) {
 		
 		this._recentRatedResults.forEach(function(result) {
 			var opponentGlicko2 = result.opponentGlicko2;
-			var glicko2Opponent = glicko2.makePlayer(opponentGlicko2.rating, opponentGlicko2.rd, opponentGlicko2.vol);
+			
+			var glicko2Opponent = glicko2.makePlayer(
+				opponentGlicko2.rating,
+				opponentGlicko2.rd,
+				opponentGlicko2.vol
+			);
 			
 			matches.push([glicko2Player, glicko2Opponent, result.playerScore]);
 		});
