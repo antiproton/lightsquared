@@ -112,7 +112,7 @@ define(function(require) {
 			startTime: gameDetails.startTime,
 			addedTime: gameDetails.addedTime,
 			history: gameDetails.history.map(function(move) {
-				return Move.decode(Move.unpack(move));
+				return Move.decode(Move.unpack(move)); //FIXME - the moves are in jsonchess format, which the server Game options don't support
 			})
 		};
 		
