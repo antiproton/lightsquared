@@ -209,6 +209,8 @@ define(function(require) {
 			var move = this._game.move(from, to, promoteTo);
 			
 			if(move !== null && move.isLegal) {
+				move.generateLabels();
+				
 				this._isDrawOffered = false;
 				this._isUndoRequested = false;
 				
