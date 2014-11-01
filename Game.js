@@ -363,7 +363,7 @@ define(function(require) {
 	
 	Game.prototype.toJSON = function() {
 		var history = this._game.history.map(function(move) {
-			return Move.encode(move);
+			return Move.encodeAndPack(move);
 		});
 		
 		return {
