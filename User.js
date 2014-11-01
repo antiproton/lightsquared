@@ -469,7 +469,7 @@ define(function(require) {
 		
 		subscriptions["/game/" + id + "/request/moves"] = function(startingIndex) {
 			game.getHistory().slice(startingIndex).forEach((function(move) {
-				this._user.send("/game/" + id + "/move", Move.encode(move));
+				this._user.send("/game/" + id + "/move", Move.encodeAndPack(move));
 			}).bind(this));
 		};
 		
@@ -626,7 +626,7 @@ define(function(require) {
 		var id = game.getId();
 		
 		game.Move.addHandler(function(move) {
-			this._user.send("/game/" + id + "/move", Move.getShortJSON(move, game.getHistory().length - 1));
+			this._user.send("/game/" + id + "/move", Move.encodeAndPack(move));
 		}, this);
 		
 		game.Aborted.addHandler(function() {
