@@ -112,7 +112,7 @@ define(function(require) {
 			startTime: gameDetails.startTime,
 			addedTime: gameDetails.addedTime,
 			history: gameDetails.history.map(function(move) {
-				return Move.fromJSON(move);
+				return Move.decode(Move.unpack(move));
 			})
 		};
 		
@@ -208,7 +208,7 @@ define(function(require) {
 		if(this.getPlayerColour(player) === this._game.position.activeColour) {
 			var move = this._game.move(from, to, promoteTo);
 			
-			if(move !== null && move.isLegal()) {
+			if(move !== null && move.isLegal) {
 				this._isDrawOffered = false;
 				this._isUndoRequested = false;
 				
@@ -222,13 +222,19 @@ define(function(require) {
 				
 				if(this._pendingPremove !== null) {
 					var premove = {
-						from: this._pendingPremove.getFrom(),
-						to: this._pendingPremove.getTo(),
-						promoteTo: this._pendingPremove.getPromoteTo()
+						from: this._pendingPremove.from,
+						to: this._pendingPremove.to,
+						promoteTo: this._pendingPremove.promoteTo
 					};
 					
 					this._pendingPremove = null;
-					this.move(this.players[this._game.position.activeColour], premove.from, premove.to, premove.promoteTo);
+					
+					this.move(
+						this.players[this._game.position.activeColour],
+						premove.from,
+						premove.to,
+						premove.promoteTo
+					);
 				}
 			}
 		}
@@ -239,7 +245,7 @@ define(function(require) {
 		
 		if(
 			this.getPlayerColour(player) === this._game.position.activeColour.opposite
-			&& premove.isValid //FIXME make sure this gets converted to a static property
+			&& premove.isValid
 			&& this._pendingPremove === null
 		) {
 			this._pendingPremove = premove;
