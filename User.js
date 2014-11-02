@@ -183,7 +183,9 @@ define(function(require) {
 	User.prototype._sendRandomGame = function(game, lastMove) {
 		this._user.send("/random_game", {
 			id: game.getId(),
-			fen: game.getPosition().getFen(),
+			board: game.getPosition().board.map(function(piece) {
+				return (piece? piece.fenString : " ");
+			}).join(""),
 			lastMove: (lastMove ? {
 				from: lastMove.from.squareNo,
 				to: lastMove.from.squareNo
