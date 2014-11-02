@@ -16,10 +16,6 @@
 		"Array.prototype": "https://github.com/gushogg-blake/Array.prototype/archive/master.tar.gz",
 		"js": "https://github.com/gushogg-blake/js/archive/master.tar.gz"
 	},
-	"devDependencies": {
-		"node-monkey": "*",
-		"heapdump": "*"
-	},
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/jsonchess/lightsquared.git"
