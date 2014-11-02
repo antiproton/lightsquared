@@ -188,7 +188,7 @@ define(function(require) {
 			}).join(""),
 			lastMove: (lastMove ? {
 				from: lastMove.from.squareNo,
-				to: lastMove.from.squareNo
+				to: lastMove.to.squareNo
 			} : null)
 		});
 	}
