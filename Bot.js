@@ -82,9 +82,9 @@ define(function(require) {
 		var applyMove = (function(move) {
 			this._game.move(
 				this,
-				Square.fromAlgebraic(move[1]),
-				Square.fromAlgebraic(move[2]),
-				move[3] ? PieceType.fromSanString(move[3].toUpperCase()) : PieceType.queen
+				Square.byAlgebraic[move[1]],
+				Square.byAlgebraic[move[2]],
+				move[3] ? PieceType.bySanString[move[3].toUpperCase()] : PieceType.queen
 			);
 		}).bind(this);
 		
@@ -93,7 +93,7 @@ define(function(require) {
 			
 			if(move && this._game) {
 				var lastMove = this._game.getLastMove();
-				var startOrLastMoveTime = (lastMove ? lastMove.getTime() : this._game.getStartTime());
+				var startOrLastMoveTime = (lastMove ? lastMove.time : this._game.getStartTime());
 				var timeSinceLastMove = time() - startOrLastMoveTime;
 				
 				if(timeSinceLastMove < Bot.MIN_MOVE_TIME) {
@@ -182,7 +182,7 @@ define(function(require) {
 		
 		if(game && game.isInProgress() && game.getActiveColour() === game.getPlayerColour(this)) {
 			var moves = game.getHistory().map(function(move) {
-				return move.getUciLabel();
+				return move.uciLabel;
 			}).join(" ");
 			
 			var botTimeBuffer = 1000; //stop bots running out of time due to lag

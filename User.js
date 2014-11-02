@@ -185,8 +185,8 @@ define(function(require) {
 			id: game.getId(),
 			fen: game.getPosition().getFen(),
 			lastMove: (lastMove ? {
-				from: lastMove.getFrom().squareNo,
-				to: lastMove.getTo().squareNo
+				from: lastMove.from.squareNo,
+				to: lastMove.from.squareNo
 			} : null)
 		});
 	}
