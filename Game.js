@@ -9,6 +9,7 @@ define(function(require) {
 	var Square = require("chess/Square");
 	var ChessGame = require("chess/Game");
 	var PieceType = require("chess/PieceType");
+	var History = require("jsonchess/History");
 	
 	function Game(white, black, options) {
 		this._id = id();
@@ -39,6 +40,8 @@ define(function(require) {
 				this._options[p] = options[p];
 			}
 		}
+		
+		this._options.history = History.decode(this._options.history);
 		
 		this._addedTime = {};
 		this._addedTime[Colour.white] = 0;
@@ -111,15 +114,13 @@ define(function(require) {
 			timeIncrement: gameDetails.options.timeIncrement,
 			startTime: gameDetails.startTime,
 			addedTime: gameDetails.addedTime,
-			history: gameDetails.history.map(function(move) {
-				return Move.decode(Move.unpack(move)); //FIXME - the moves are in jsonchess format, which the server Game options don't support
-			})
+			history: gameDetails.history
 		};
 		
 		var game = new Game(players[Colour.white], players[Colour.black], options);
 		
 		if(game.timingHasStarted() && game.getLastMove()) {
-			var lastMoveTime = game.getLastMove().getTime();
+			var lastMoveTime = game.getLastMove().time;
 			var reimbursement = time() - lastMoveTime;
 			
 			game.addTime(reimbursement, game.activeColour);
