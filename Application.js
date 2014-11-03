@@ -82,7 +82,7 @@ define(function(require) {
 		this._games[gameId] = game;
 		
 		game.GameOver.addHandler(function() {
-			this._db.collection("games").insert(JSON.parse(JSON.stringify(game)), function() {});
+			this._db.collection("games").insert(game.getArchiveJSON(), function() {});
 			
 			delete this._games[gameId];
 		}, this);
