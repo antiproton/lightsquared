@@ -184,12 +184,15 @@ define(function(require) {
 		this._user.send("/random_game", {
 			id: game.getId(),
 			board: game.getPosition().board.map(function(piece) {
-				return (piece? piece.fenString : " ");
+				return (piece ? piece.fenString : " ");
 			}).join(""),
 			lastMove: (lastMove ? {
 				from: lastMove.from.squareNo,
 				to: lastMove.to.squareNo
-			} : null)
+			} : null),
+			white: game.players[Colour.white].getName(),
+			black: game.players[Colour.black].getName(),
+			timingDescription: game.getTimingStyle().getDescription()
 		});
 	}
 	
