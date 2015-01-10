@@ -60,7 +60,7 @@ define(function(require) {
 		this._rematchTimer = null;
 		this._seek = null;
 		this._uciSkillLevel = 5;
-		this._rating = Math.round(1400 + Math.random() * 200);
+		this._rating = Math.round(1450 + Math.random() * 100);
 		
 		this._glicko2 = {
 			rating: this._rating,
