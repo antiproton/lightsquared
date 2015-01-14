@@ -26,6 +26,7 @@ define(function(require) {
 			
 			this._seek.Expired.addHandler(function() {
 				this._seek = null;
+				this._seekFunction();
 			}, this);
 		}
 	};
