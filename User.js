@@ -53,6 +53,7 @@ define(function(require) {
 		this._prefs = {
 			premove: true,
 			alwaysQueen: false,
+			sound: false,
 			pieceStyle: null,
 			boardSize: null,
 			boardStyle: null
