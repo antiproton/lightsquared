@@ -30,7 +30,8 @@ define(function(require) {
 			this.players.push({
 				player: player,
 				gamesAsWhite: 0,
-				rating: player.getRating()
+				rating: player.getRating(),
+				score: 0
 			});
 			
 			if(this.players.length === this.playersRequired) {
