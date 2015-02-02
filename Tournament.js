@@ -111,6 +111,9 @@ define(function(require) {
 	there are any pairings then new games need to start.
 	
 	this accommodates warzone and round-by-round styles.
+	
+	in tournaments where new players can join after the start, getPairings
+	should be called when new people join as well.
 	*/
 	
 	/*
