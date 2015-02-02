@@ -10,7 +10,7 @@ define(function(require) {
 		this.GameStarted = new Event();
 		
 		this.games = [];
-		this.currentGames = [];
+		this.gamesInProgress = [];
 		this.round = 1;
 		this.owner = owner;
 		this.players = [];
@@ -71,7 +71,7 @@ define(function(require) {
 			}, this);
 			
 			this.games.push(game);
-			this.currentGames.push(game);
+			this.gamesInProgress.push(game);
 			
 			game.GameOver.addHandler(function(result) {
 				this._gameOver(game, result);
@@ -86,7 +86,7 @@ define(function(require) {
 			this._removePlayer(game.players[colour], this.playingPlayers);
 		}, this);
 		
-		this.currentGames.remove(game);
+		this.gamesInProgress.remove(game);
 		this._processResult(game, result);
 		
 		var pairings = this._getPairings();
