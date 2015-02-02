@@ -26,7 +26,7 @@ define(function(require) {
 	}
 	
 	Tournament.prototype.join = function(player) {
-		if(this.players.length < this.playersRequired) {
+		if(!this.isInProgress && this.players.length < this.playersRequired) {
 			this.players.push({
 				player: player,
 				gamesAsWhite: 0,
