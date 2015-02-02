@@ -97,7 +97,7 @@ define(function(require) {
 		}
 		
 		if(this._isOver()) {
-			
+			this.Finished.fire();
 		}
 	}
 	
