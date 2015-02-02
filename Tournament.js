@@ -133,25 +133,30 @@ define(function(require) {
 	
 	/*
 	generate the pairings for the next round
+	
+	since this is currently round-robin only, new pairings will not be generated
+	unless all games are finished (or the tournament hasn't started yet).
 	*/
 	
 	Tournament.prototype._getPairings = function() {
 		var pairings = [];
 		
-		var players = this.waitingPlayers.slice().sort(function(a, b) {
-			return a.rating - b.rating;
-		});
-		
-		while(players.length > 0) {
-			var a = players.shift();
-			var b = players.shift();
-			var white = (a.gamesAsWhite > b.gamesAsWhite ? b : a);
-			var black = (a === white ? b : a);
-			
-			pairings.push({
-				white: white,
-				black: black
+		if(this.gamesInProgress.length === 0) {
+			var players = this.waitingPlayers.slice().sort(function(a, b) {
+				return a.rating - b.rating;
 			});
+			
+			while(players.length > 0) {
+				var a = players.shift();
+				var b = players.shift();
+				var white = (a.gamesAsWhite > b.gamesAsWhite ? b : a);
+				var black = (a === white ? b : a);
+				
+				pairings.push({
+					white: white,
+					black: black
+				});
+			}
 		}
 		
 		return pairings;
