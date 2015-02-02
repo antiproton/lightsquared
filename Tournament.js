@@ -84,7 +84,10 @@ define(function(require) {
 	
 	Tournament.prototype._gameOver = function(game, result) {
 		Colour.forEach(function(colour) {
-			this._removePlayer(game.players[colour], this.playingPlayers);
+			var player = game.players[colour];
+			
+			this._removePlayer(player, this.playingPlayers);
+			this.waitingPlayers.push(player);
 		}, this);
 		
 		this.gamesInProgress.remove(game);
