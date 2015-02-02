@@ -128,7 +128,7 @@ define(function(require) {
 	*/
 	
 	Tournament.prototype._isOver = function() {
-		
+		return (this.waitingPlayers.length === 0 && this.gamesInProgress.length === 0);
 	}
 	
 	/*
