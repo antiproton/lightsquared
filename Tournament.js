@@ -1,4 +1,5 @@
 define(function(require) {
+	require("Array.prototype/remove");
 	var Colour = require("chess/Colour");
 	
 	function Tournament(owner, playersRequired) {
@@ -8,17 +9,21 @@ define(function(require) {
 		this.Canceled = new Event();
 		this.Finished = new Event();
 		this.GameStarted = new Event();
+		this.PlayerEliminated = new Event();
 		
 		this.games = [];
 		this.gamesInProgress = [];
+		
+		this.isInProgress = false;
 		this.round = 1;
 		this.owner = owner;
+		this.playersRequired = playersRequired;
+		
 		this.players = [];
 		this.currentPlayers = [];
-		this.playingPlayers = [];
 		this.waitingPlayers = [];
-		this.isInProgress = false;
-		this.playersRequired = playersRequired;
+		
+		this._tournamentPlayers = {};
 		
 		if(playersRequired < 4 || playersRequired % 2 === 1) {
 			throw "Players must be an even number greater than 2";
@@ -27,12 +32,7 @@ define(function(require) {
 	
 	Tournament.prototype.join = function(player) {
 		if(!this.isInProgress && this.players.length < this.playersRequired) {
-			this.players.push({
-				player: player,
-				gamesAsWhite: 0,
-				rating: player.getRating(),
-				score: 0
-			});
+			this._addPlayer(player);
 			
 			if(this.players.length === this.playersRequired) {
 				this._start();
@@ -47,7 +47,15 @@ define(function(require) {
 	}
 	
 	Tournament.prototype.leave = function(player) {
-		this._removePlayer(player, this.players);
+		if(this.isInProgress) {
+			var currentGame = this._getTournamentPlayer(player).currentGame;
+			
+			if(currentGame) {
+				currentGame.resign(player);
+			}
+		}
+		
+		this._removePlayer(player);
 		this.PlayerLeft.fire(player);
 	}
 	
@@ -66,10 +74,14 @@ define(function(require) {
 				timeIncrement: this.options.timeIncrement
 			});
 			
-			[pairing.white, pairing.black].forEach(function(player) {
+			for(var colour in pairing) {
+				var player = pairing[colour];
+				var tournamentPlayer = this._getTournamentPlayer(player);
+				
+				tournamentPlayer.currentGame = game;
+				
 				this.waitingPlayers.remove(player);
-				this.playingPlayers.push(player);
-			}, this);
+			}
 			
 			this.games.push(game);
 			this.gamesInProgress.push(game);
@@ -84,10 +96,11 @@ define(function(require) {
 	
 	Tournament.prototype._gameOver = function(game, result) {
 		Colour.forEach(function(colour) {
-			var player = game.players[colour];
+			var tournamentPlayer = this._getTournamentPlayer(game.players[colour]);
 			
-			this._removePlayer(player, this.playingPlayers);
-			this.waitingPlayers.push(player);
+			tournamentPlayer.currentGame = null;
+			
+			this.waitingPlayers.push(game.players[colour]);
 		}, this);
 		
 		this.gamesInProgress.remove(game);
@@ -119,14 +132,19 @@ define(function(require) {
 	/*
 	process a finished game
 	
-	this method must add the players to waitingPlayers if them/they are
-	still in the game
+	in knockouts, this method must knock out the loser if there is one.
+	
+	it must also update the tournament players' scores.
 	*/
 	
 	Tournament.prototype._processResult = function(game, result) {
 		Colour.forEach(function(colour) {
-			this._removePlayer(game.players[colour], this.waitingPlayers);
+			this._getTournamentPlayer(game.players[colour]).score += result.scores[colour];
 		}, this);
+		
+		if(!result.isDraw) {
+			this._eliminatePlayer(game.players[Colour.byFenString[result.winner].opposite]);
+		}
 	}
 	
 	/*
@@ -140,8 +158,8 @@ define(function(require) {
 	/*
 	generate the pairings for the next round
 	
-	since this is currently round-robin only, new pairings will not be generated
-	unless all games are finished (or the tournament hasn't started yet).
+	since this is currently knockout only, new pairings will only be generated
+	when there are no games in progress.
 	*/
 	
 	Tournament.prototype._getPairings = function() {
@@ -149,18 +167,18 @@ define(function(require) {
 		
 		if(this.gamesInProgress.length === 0) {
 			var players = this.waitingPlayers.slice().sort(function(a, b) {
-				return a.rating - b.rating;
+				return a.getRating() - b.getRating();
 			});
 			
 			while(players.length > 0) {
-				var a = players.shift();
-				var b = players.shift();
+				var a = this._getTournamentPlayer(players.shift());
+				var b = this._getTournamentPlayer(players.shift());
 				var white = (a.gamesAsWhite > b.gamesAsWhite ? b : a);
 				var black = (a === white ? b : a);
 				
 				pairings.push({
-					white: white,
-					black: black
+					white: white.player,
+					black: black.player
 				});
 			}
 		}
@@ -168,10 +186,35 @@ define(function(require) {
 		return pairings;
 	}
 	
-	Tournament.prototype._removePlayer = function(player, list) {
-		list.filterInPlace(function(tournamentPlayer) {
-			return (tournamentPlayer !== player);
-		});
+	Tournament.prototype._eliminatePlayer = function(player) {
+		this.currentPlayers.remove(player);
+		this.waitingPlayers.remove(player);
+		this.PlayerEliminated.fire(player);
+	}
+	
+	Tournament.prototype._removePlayer = function(player) {
+		delete this._tournamentPlayers[player.getId()];
+		
+		this.players.remove(player);
+		this.currentPlayers.remove(player);
+		this.waitingPlayers.remove(player);
+	}
+	
+	Tournament.prototype._addPlayer = function(player) {
+		this._tournamentPlayers[player.getId()] = {
+			player: player,
+			gamesAsWhite: 0,
+			score: 0,
+			currentGame: null
+		};
+		
+		this.players.push(player);
+		this.currentPlayers.push(player);
+		this.waitingPlayers.push(player);
+	}
+	
+	Tournament.prototype._getTournamentPlayer = function(player) {
+		return this._tournamentPlayers[player.getId()];
 	}
 	
 	return Tournament;
