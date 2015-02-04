@@ -25,9 +25,7 @@ define(function(require) {
 		
 		this._tournamentPlayers = {};
 		
-		if(playersRequired < 4 || playersRequired % 2 === 1) {
-			throw "Players must be an even number greater than 2";
-		}
+		this._checkOptions();
 	}
 	
 	Tournament.prototype.join = function(player) {
@@ -185,6 +183,27 @@ define(function(require) {
 		
 		return pairings;
 	}
+	
+	/*
+	check that the options are valid.  throw an exception if not.
+	*/
+	
+	Tournament.prototype._checkOptions = function() {
+		var n = this.options.playersRequired;
+		
+		switch(true) {
+			case !n:
+				throw "Player count must be specified";
+			case n < 4:
+				throw "Player count must be >= 4";
+			case (n & (n - 1)) !== 0:
+				throw "Player count must be a power of 2 for knockout tournaments";
+		}
+	}
+	
+	/*
+	end of overridable methods
+	*/
 	
 	Tournament.prototype._eliminatePlayer = function(player) {
 		this.currentPlayers.remove(player);
