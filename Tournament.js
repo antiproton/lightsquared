@@ -2,7 +2,7 @@ define(function(require) {
 	require("Array.prototype/remove");
 	var Colour = require("chess/Colour");
 	
-	function Tournament(owner, playersRequired) {
+	function Tournament(organiser, options) {
 		this.PlayerJoined = new Event();
 		this.PlayerLeft = new Event();
 		this.Started = new Event();
@@ -16,8 +16,8 @@ define(function(require) {
 		
 		this.isInProgress = false;
 		this.round = 1;
-		this.owner = owner;
-		this.playersRequired = playersRequired;
+		this.organiser = organiser;
+		this.options = options || {};
 		
 		this.players = [];
 		this.currentPlayers = [];
