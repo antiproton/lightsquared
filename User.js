@@ -100,7 +100,7 @@ define(function(require) {
 	
 	User.prototype._setupFeeds = function() {
 		this._feeds = {
-			"random_games": new Feed(this, [
+			"/random_games": new Feed(this, [
 				{
 					event: this._randomGames.Move,
 					handler: function(data) {
@@ -127,40 +127,52 @@ define(function(require) {
 				}).bind(this));
 			}),
 			
-			"users_online": new Feed(this, [
-				{
-					event: this._app.UserConnected,
-					handler: function(user) {
-						this._user.send("/list/users_online/add", user);
-					}
-				},
-				{
-					event: this._app.UserDisconnected,
-					handler: function(user) {
-						this._user.send("/list/users_online/remove", user.getId());
-					}
+			"/users_online": this._getListFeed(
+				"users_online",
+				this._app.UserConnected,
+				this._app.UserDisconnected,
+				function() {
+					return this._app.getOnlineUsers();
 				}
-			], function() {
-				this._user.send("/list/users_online", this._app.getOnlineUsers());
-			}),
+			),
 			
-			"open_seeks": new Feed(this, [
-				{
-					event: this._app.NewSeek,
-					handler: function(seek) {
-						this._user.send("/list/open_seeks/add", seek);
-					}
-				},
-				{
-					event: this._app.SeekExpired,
-					handler: function(id) {
-						this._user.send("/list/open_seeks/remove", id);
-					}
+			"/list/seeks": this._getListFeed(
+				"seeks",
+				this._app.NewSeek,
+				this._app.SeekExpired,
+				function() {
+					return this._app.getOpenSeeks();
 				}
-			], function() {
-				this._user.send("/list/open_seeks", this._app.getOpenSeeks());
-			})
+			),
+			
+			"/list/tournaments": this._getListFeed(
+				"tournaments",
+				this._app.NewTournament,
+				this._app.TournamentFinished,
+				function() {
+					return this._app.getActiveTournaments();
+				}
+			)
 		};
+	}
+	
+	User.prototype._getListFeed = function(listName, newItemEvent, removeItemEvent, getInitialList) {
+		return new Feed(this, [
+			{
+				event: newItemEvent,
+				handler: function(item) {
+					this._user.send("/list/" + listName + "/add", item);
+				}
+			},
+			{
+				event: removeItemEvent,
+				handler: function(id) {
+					this._user.send("/list/" + listName + "/remove", id);
+				}
+			}
+		], function() {
+			this._user.send("/list/" + listName, getInitialList.bind(this)());
+		});
 	}
 	
 	User.prototype._activateFeed = function(feedName) {
