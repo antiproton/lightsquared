@@ -439,10 +439,6 @@ define(function(require) {
 				client.send("/user", this._getPrivateJson());
 			},
 			
-			"/request/open_seeks": function(data, client) {
-				client.send("/open_seeks", this._app.getOpenSeeks());
-			},
-			
 			"/user/prefs/update": function(prefs) {
 				for(var pref in this._prefs) {
 					if(pref in prefs) {
