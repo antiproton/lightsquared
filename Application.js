@@ -27,6 +27,8 @@ define(function(require) {
 		this.Chat = new Event();
 		this.UserConnected = new Event();
 		this.UserDisconnected = new Event();
+		this.NewTournament = new Event();
+		this.TournamentFinished = new Event();
 		
 		server.UserConnected.addHandler(function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
