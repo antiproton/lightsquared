@@ -18,6 +18,7 @@ define(function(require) {
 		this.gamesInProgress = [];
 		
 		this.isInProgress = false;
+		this.isCanceled = false;
 		this.round = 1;
 		this.organiser = organiser;
 		this.options = options || {};
@@ -32,7 +33,7 @@ define(function(require) {
 	}
 	
 	Tournament.prototype.join = function(player) {
-		if(!this.isInProgress && this.players.length < this.playersRequired) {
+		if(!this.isInProgress && !this.isCanceled && this.players.length < this.playersRequired) {
 			this._addPlayer(player);
 			
 			if(this.players.length === this.playersRequired) {
@@ -58,6 +59,13 @@ define(function(require) {
 		
 		this._removePlayer(player);
 		this.PlayerLeft.fire(player);
+	}
+	
+	Tournament.prototype.cancel = function(user) {
+		if(user === this.organiser && !this.isInProgress) {
+			this.isCanceled = true;
+			this.Canceled.fire();
+		}
 	}
 	
 	Tournament.prototype._start = function() {
