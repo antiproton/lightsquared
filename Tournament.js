@@ -24,7 +24,7 @@ define(function(require) {
 		this.options = options || {};
 		
 		this.players = [];
-		this.activePlayers = [];
+		this.currentPlayers = [];
 		this.waitingPlayers = [];
 		
 		this._tournamentPlayers = {};
@@ -69,7 +69,7 @@ define(function(require) {
 	}
 	
 	Tournament.prototype._start = function() {
-		this.activePlayers = this.players.slice();
+		this.currentPlayers = this.players.slice();
 		this.waitingPlayers = this.players.slice();
 		this._startGames(this._getPairings());
 		this.isInProgress = true;
@@ -217,7 +217,7 @@ define(function(require) {
 	*/
 	
 	Tournament.prototype._eliminatePlayer = function(player) {
-		this.activePlayers.remove(player);
+		this.currentPlayers.remove(player);
 		this.waitingPlayers.remove(player);
 		this.PlayerEliminated.fire(player);
 	}
@@ -226,7 +226,7 @@ define(function(require) {
 		delete this._tournamentPlayers[player.getId()];
 		
 		this.players.remove(player);
-		this.activePlayers.remove(player);
+		this.currentPlayers.remove(player);
 		this.waitingPlayers.remove(player);
 	}
 	
@@ -239,7 +239,7 @@ define(function(require) {
 		};
 		
 		this.players.push(player);
-		this.activePlayers.push(player);
+		this.currentPlayers.push(player);
 		this.waitingPlayers.push(player);
 	}
 	
