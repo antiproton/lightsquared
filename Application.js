@@ -8,6 +8,7 @@ define(function(require) {
 	var User = require("./User");
 	var Seek = require("./Seek");
 	var Game = require("./Game");
+	var Tournament = require("./Tournament");
 	var RandomGames = require("./RandomGames");
 	var jsonchessMessageTypes = require("jsonchess/chatMessageTypes");
 	
@@ -16,6 +17,7 @@ define(function(require) {
 		this._loggedInUsers = {};
 		this._openSeeks = {};
 		this._games = {};
+		this._activeTournaments = {};
 		this._promisor = new Promisor(this);
 		this._publisher = new Publisher();
 		this._db = db;
@@ -134,6 +136,29 @@ define(function(require) {
 		});
 	}
 	
+	Application.prototype.createTournament = function(organiser, options) {
+		var tournament = new Tournament(organiser, options);
+		
+		tournament.Canceled.addHandler(function() {
+			this._removeTournament(tournament);
+		}, this);
+		
+		tournament.Finished.addHandler(function() {
+			this._removeTournament(tournament);
+			this._archiveTournament(tournament);
+		}, this);
+		
+		this._activeTournaments[tournament.id] = tournament;
+		
+		return tournament;
+	}
+	
+	Application.prototype._removeTournament = function(tournament) {
+		delete this._activeTournaments[tournament.id];
+		
+		this.TournamentExpired.fire(tournament.id);
+	}
+	
 	Application.prototype._replaceExistingLoggedInUser = function(user) {
 		var username = user.getUsername();
 		
@@ -224,6 +249,10 @@ define(function(require) {
 		else {
 			return false;
 		}
+	}
+	
+	Application.prototype.getActiveTournaments = function() {
+		return objToArray(this._activeTournaments);
 	}
 	
 	Application.prototype.getOpenSeeks = function() {
