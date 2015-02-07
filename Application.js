@@ -149,6 +149,7 @@ define(function(require) {
 		}, this);
 		
 		this._activeTournaments[tournament.id] = tournament;
+		this.NewTournament.fire(tournament);
 		
 		return tournament;
 	}
