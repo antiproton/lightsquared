@@ -248,5 +248,19 @@ define(function(require) {
 		return this._tournamentPlayers[player.getId()];
 	}
 	
+	Tournament.prototype.toJSON = function() {
+		return {
+			name: this.options.name,
+			organiser: this.organiser.getPlayer(),
+			initialTime: this.options.initialTime,
+			timeIncrement: this.options.timeIncrement,
+			isInProgress: this.isInProgress,
+			isCanceled: this.isCanceled,
+			round: this.round,
+			players: this.players,
+			playersRequired: this.options.playersRequired
+		};
+	}
+	
 	return Tournament;
 });
