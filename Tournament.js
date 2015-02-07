@@ -1,6 +1,7 @@
 define(function(require) {
 	require("Array.prototype/remove");
 	var id = require("js/id");
+	var Event = require("js/Event");
 	var Colour = require("chess/Colour");
 	
 	function Tournament(organiser, options) {
