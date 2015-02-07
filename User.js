@@ -419,6 +419,16 @@ define(function(require) {
 				this._acceptSeek(id);
 			},
 			
+			"/tournament/new": function(options) {
+				try {
+					this._user.send("/tournament/new/success", this._createTournament(options));
+				}
+				
+				catch(error) {
+					this._user.send("/tournament/new/failure", error);
+				}
+			},
+			
 			"/request/game": function(id, client) {
 				var game = this._spectateGame(id);
 				
@@ -475,6 +485,14 @@ define(function(require) {
 		for(var topic in subscriptions) {
 			this._user.subscribe(topic, subscriptions[topic].bind(this));
 		}
+	}
+	
+	User.prototype._createTournament = function(options) {
+		var tournament = this._app.createTournament(this, options);
+		
+		tournament.join(this._player);
+		
+		return tournament;
 	}
 	
 	User.prototype._subscribeToGameMessages = function(game) {
