@@ -34,7 +34,7 @@ define(function(require) {
 	}
 	
 	Tournament.prototype.join = function(player) {
-		if(!this.isInProgress && !this.isCanceled && this.players.length < this.playersRequired) {
+		if(!this.isInProgress && !this.isCanceled && this.players.length < this.options.playersRequired) {
 			this._addPlayer(player);
 			
 			if(this.players.length === this.playersRequired) {
