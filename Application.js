@@ -1,6 +1,5 @@
 define(function(require) {
 	require("Array.prototype/remove");
-	var Publisher = require("js/Publisher");
 	var time = require("js/time");
 	var Event = require("js/Event");
 	var objToArray = require("js/objToArray");
@@ -19,7 +18,6 @@ define(function(require) {
 		this._games = {};
 		this._activeTournaments = {};
 		this._promisor = new Promisor(this);
-		this._publisher = new Publisher();
 		this._db = db;
 		this._pendingGameRestorations = {};
 		
