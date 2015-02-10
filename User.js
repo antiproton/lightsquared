@@ -497,81 +497,83 @@ define(function(require) {
 	
 	User.prototype._subscribeToGameMessages = function(game) {
 		var id = game.getId();
-		var subscriptions = this._subscriptions["/game/" + id] = {};
 		
-		subscriptions["/game/" + id + "/request/moves"] = function(startingIndex) {
-			game.getHistory().slice(startingIndex).forEach((function(move) {
-				this._user.send("/game/" + id + "/move", Move.encodeAndPack(move));
-			}).bind(this));
-		};
-		
-		subscriptions["/game/" + id + "/chat"] = function(message) {
-			if(message.length > 0) {
-				game.chat(this._player, message);
-			}
-		};
-		
-		subscriptions["/game/" + id + "/move"] = function(data) {
-			var promoteTo = (data.promoteTo ? PieceType.bySanString[data.promoteTo] : undefined);
+		var subscriptions = {
+			"/request/moves": function(startingIndex) {
+				game.getHistory().slice(startingIndex).forEach((function(move) {
+					this._user.send("/game/" + id + "/move", Move.encodeAndPack(move));
+				}).bind(this));
+			},
 			
-			game.move(this._player, Square.bySquareNo[data.from], Square.bySquareNo[data.to], promoteTo);
-		};
-		
-		subscriptions["/game/" + id + "/premove"] = function(data) {
-			var promoteTo = (data.promoteTo ? PieceType.bySanString[data.promoteTo] : undefined);
-			var from = Square.bySquareNo[data.from];
-			var to = Square.bySquareNo[data.to];
+			"/chat": function(message) {
+				if(message.length > 0) {
+					game.chat(this._player, message);
+				}
+			},
 			
-			if(game.getPlayerColour(this._player) === game.getActiveColour()) {
-				game.move(this._player, from, to, promoteTo);
-			}
+			"/move": function(data) {
+				var promoteTo = (data.promoteTo ? PieceType.bySanString[data.promoteTo] : undefined);
+				
+				game.move(this._player, Square.bySquareNo[data.from], Square.bySquareNo[data.to], promoteTo);
+			},
 			
-			else {
-				game.premove(this._player, from, to, promoteTo);
+			"/premove": function(data) {
+				var promoteTo = (data.promoteTo ? PieceType.bySanString[data.promoteTo] : undefined);
+				var from = Square.bySquareNo[data.from];
+				var to = Square.bySquareNo[data.to];
+				
+				if(game.getPlayerColour(this._player) === game.getActiveColour()) {
+					game.move(this._player, from, to, promoteTo);
+				}
+				
+				else {
+					game.premove(this._player, from, to, promoteTo);
+				}
+			},
+			
+			"/request/premove": function() {
+				if(game.getPlayerColour(this._player) === game.getActiveColour().opposite) {
+					this._user.send("/game/" + id + "/premove", game.getPendingPremove());
+				}
+			},
+			
+			"/premove/cancel": function() {
+				game.cancelPremove(this._player);
+			},
+			
+			"/resign": function() {
+				game.resign(this._player);
+			},
+			
+			"/offer_draw": function() {
+				game.offerDraw(this._player);
+			},
+			
+			"/claim_draw": function() {
+				game.claimDraw(this._player);
+			},
+			
+			"/accept_draw": function() {
+				game.acceptDraw(this._player);
+			},
+			
+			"/rematch": function() {
+				game.offerRematch(this._player);
+			},
+			
+			"/rematch/decline": function() {
+				game.declineRematch(this._player);
+			},
+			
+			"/rematch/cancel": function() {
+				game.cancelRematchOffer(this._player);
 			}
-		};
-		
-		subscriptions["/game/" + id + "/request/premove"] = function() {
-			if(game.getPlayerColour(this._player) === game.getActiveColour().opposite) {
-				this._user.send("/game/" + id + "/premove", game.getPendingPremove());
-			}
-		};
-		
-		subscriptions["/game/" + id + "/premove/cancel"] = function() {
-			game.cancelPremove(this._player);
-		};
-		
-		subscriptions["/game/" + id + "/resign"] = function() {
-			game.resign(this._player);
-		};
-		
-		subscriptions["/game/" + id + "/offer_draw"] = function() {
-			game.offerDraw(this._player);
-		};
-		
-		subscriptions["/game/" + id + "/claim_draw"] = function() {
-			game.claimDraw(this._player);
-		};
-		
-		subscriptions["/game/" + id + "/accept_draw"] = function() {
-			game.acceptDraw(this._player);
-		};
-		
-		subscriptions["/game/" + id + "/rematch"] = function() {
-			game.offerRematch(this._player);
-		};
-		
-		subscriptions["/game/" + id + "/rematch/decline"] = function() {
-			game.declineRematch(this._player);
-		};
-		
-		subscriptions["/game/" + id + "/rematch/cancel"] = function() {
-			game.cancelRematchOffer(this._player);
 		};
 		
 		var subscription;
 		
 		for(var topic in subscriptions) {
+			topic = "/game/" + id + topic;
 			subscription = subscriptions[topic].bind(this);
 			
 			this._subscriptions["/game/" + id][topic] = subscription;
