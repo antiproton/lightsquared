@@ -497,6 +497,7 @@ define(function(require) {
 	
 	User.prototype._subscribeToGameMessages = function(game) {
 		var id = game.getId();
+		var gameTopic = "/game/" + id;
 		
 		var subscriptions = {
 			"/request/moves": function(startingIndex) {
@@ -570,13 +571,15 @@ define(function(require) {
 			}
 		};
 		
+		this._subscriptions[gameTopic] = {};
+		
 		var subscription;
 		
 		for(var topic in subscriptions) {
-			topic = "/game/" + id + topic;
+			topic = gameTopic + topic;
 			subscription = subscriptions[topic].bind(this);
 			
-			this._subscriptions["/game/" + id][topic] = subscription;
+			this._subscriptions[gameTopic][topic] = subscription;
 			this._user.subscribe(topic, subscription);
 		}
 	}
