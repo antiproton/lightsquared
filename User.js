@@ -576,11 +576,10 @@ define(function(require) {
 		var subscription;
 		
 		for(var topic in subscriptions) {
-			topic = gameTopic + topic;
 			subscription = subscriptions[topic].bind(this);
 			
 			this._subscriptions[gameTopic][topic] = subscription;
-			this._user.subscribe(topic, subscription);
+			this._user.subscribe(gameTopic + topic, subscription);
 		}
 	}
 	
