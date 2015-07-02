@@ -212,13 +212,13 @@ define(function(require) {
 		
 		this._game.offerRematch(this);
 		
-		if(this._game === game) {
-			this._rematchTimer = setTimeout((function() {
+		this._rematchTimer = setTimeout((function() {
+			if(this._game === game) {
 				game.cancelRematchOffer(this);
 				
 				this._game = null;
-			}).bind(this), 1000 * 10);
-		}
+			}
+		}).bind(this), 1000 * 10);
 	}
 	
 	Bot.prototype._clearRematchTimer = function() {
