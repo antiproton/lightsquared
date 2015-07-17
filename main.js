@@ -17,6 +17,10 @@ some reason.
 
 require("amdefine/intercept");
 
+var Server = require("websocket-server/Server");
+var Application = require("./Application");
+var Bot = require("./Bot");
+
 requirejs.config({
 	nodeRequire: require
 });
@@ -26,21 +30,19 @@ var argv = yargs.default({
 	port: 8080
 }).argv;
 
-requirejs(["websocket-server/Server", "./Application", "./Bot"], function(Server, Application, Bot) {
-	mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
-		if(db) {
-			var server = new Server(argv.port);
-			var app = new Application(server, db);
-			
-			for(var i = 0; i < argv.bots; i++) {
-				new Bot(app);
-			}
-		}
+mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
+	if(db) {
+		var server = new Server(argv.port);
+		var app = new Application(server, db);
 		
-		else {
-			console.log("Cannot connect to mongodb");
-			console.log(error);
-			process.exit(1);
+		for(var i = 0; i < argv.bots; i++) {
+			new Bot(app);
 		}
-	});
+	}
+	
+	else {
+		console.log("Cannot connect to mongodb");
+		console.log(error);
+		process.exit(1);
+	}
 });
