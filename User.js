@@ -12,6 +12,7 @@ define(function(require) {
 	var Square = require("chess/Square");
 	var Player = require("./Player");
 	var Feed = require("./Feed");
+	var WsProxy = require("sup/adaptors/websocket-server");
 	
 	var ANONYMOUS_USERNAME = "Anonymous";
 	var MAX_IDLE_TIME_ANONYMOUS = 1000 * 60 * 60 * 24;
@@ -49,6 +50,8 @@ define(function(require) {
 		this._currentSeek = null;
 		this._lastSeekOptions = null;
 		this._pendingRestorationRequests = [];
+		
+		this._tournamentsProxy = new WsProxy(this._app.tournaments, "/tournaments", user);
 		
 		this._prefs = {
 			premove: true,
@@ -142,15 +145,6 @@ define(function(require) {
 				this._app.SeekExpired,
 				function() {
 					return this._app.getOpenSeeks();
-				}
-			),
-			
-			"/list/tournaments": this._getListFeed(
-				"tournaments",
-				this._app.NewTournament,
-				this._app.TournamentFinished,
-				function() {
-					return this._app.getActiveTournaments();
 				}
 			)
 		};
@@ -420,13 +414,7 @@ define(function(require) {
 			},
 			
 			"/tournament/new": function(options) {
-				try {
-					this._user.send("/tournament/new/success", this._createTournament(options));
-				}
-				
-				catch(error) {
-					this._user.send("/tournament/new/failure", error);
-				}
+				this._user.send("/tournament/new/success", this._createTournament(options));
 			},
 			
 			"/request/game": function(id, client) {

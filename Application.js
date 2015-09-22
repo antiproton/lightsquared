@@ -10,12 +10,14 @@ define(function(require) {
 	var Tournament = require("./Tournament");
 	var RandomGames = require("./RandomGames");
 	var jsonchessMessageTypes = require("jsonchess/chatMessageTypes");
+	var List = require("sup/List");
 	
 	function Application(server, db) {
 		this._users = {};
 		this._loggedInUsers = {};
 		this._openSeeks = {};
 		this._games = {};
+		this.tournaments = new List();
 		this._activeTournaments = {};
 		this._promisor = new Promisor(this);
 		this._db = db;
@@ -27,8 +29,6 @@ define(function(require) {
 		this.Chat = new Event();
 		this.UserConnected = new Event();
 		this.UserDisconnected = new Event();
-		this.NewTournament = new Event();
-		this.TournamentFinished = new Event();
 		
 		server.UserConnected.addHandler(function(serverUser) {
 			var user = new User(serverUser, this, this._db.collection("users"));
@@ -147,15 +147,14 @@ define(function(require) {
 		}, this);
 		
 		this._activeTournaments[tournament.id] = tournament;
-		this.NewTournament.fire(tournament);
+		this.tournaments.add(tournament, "@");
 		
 		return tournament;
 	}
 	
 	Application.prototype._removeTournament = function(tournament) {
 		delete this._activeTournaments[tournament.id];
-		
-		this.TournamentExpired.fire(tournament.id);
+		this.tournaments.delItem(tournament);
 	}
 	
 	Application.prototype._replaceExistingLoggedInUser = function(user) {
@@ -248,10 +247,6 @@ define(function(require) {
 		else {
 			return false;
 		}
-	}
-	
-	Application.prototype.getActiveTournaments = function() {
-		return objToArray(this._activeTournaments);
 	}
 	
 	Application.prototype.getOpenSeeks = function() {

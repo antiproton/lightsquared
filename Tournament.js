@@ -3,12 +3,14 @@ define(function(require) {
 	var id = require("js/id");
 	var Event = require("js/Event");
 	var Colour = require("chess/Colour");
+	var Sup = require("sup/Sup");
+	var List = require("sup/List");
 	
 	function Tournament(organiser, options) {
+		Sup.call(this);
+		
 		this.id = id();
 		
-		this.PlayerJoined = new Event();
-		this.PlayerLeft = new Event();
 		this.Started = new Event();
 		this.Canceled = new Event();
 		this.Finished = new Event();
@@ -24,7 +26,7 @@ define(function(require) {
 		this.organiser = organiser;
 		this.options = options || {};
 		
-		this.players = [];
+		this.addChild("players", new List());
 		this.currentPlayers = [];
 		this.waitingPlayers = [];
 		
@@ -32,6 +34,8 @@ define(function(require) {
 		
 		this._checkOptions();
 	}
+	
+	Tournament.prototype = new Sup();
 	
 	Tournament.prototype.join = function(player) {
 		if(!this.isInProgress && !this.isCanceled && this.players.length < this.options.playersRequired) {
@@ -226,7 +230,7 @@ define(function(require) {
 	Tournament.prototype._removePlayer = function(player) {
 		delete this._tournamentPlayers[player.getId()];
 		
-		this.players.remove(player);
+		this.players.delItem(player);
 		this.currentPlayers.remove(player);
 		this.waitingPlayers.remove(player);
 	}
@@ -239,7 +243,8 @@ define(function(require) {
 			currentGame: null
 		};
 		
-		this.players.push(player);
+		this.players.add(player);
+		console.log("addded");
 		this.currentPlayers.push(player);
 		this.waitingPlayers.push(player);
 	}
