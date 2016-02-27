@@ -2,7 +2,6 @@
 
 var requirejs = require("requirejs");
 var mongodb = require("mongodb");
-var yargs = require("yargs");
 
 /*
 amdefine/intercept - allows requirejs-style modules to be required
@@ -20,22 +19,18 @@ require("amdefine/intercept");
 var Server = require("websocket-server/Server");
 var Application = require("./Application");
 var Bot = require("./Bot");
+var config = require("./config");
 
 requirejs.config({
 	nodeRequire: require
 });
 
-var argv = yargs.default({
-	bots: 0,
-	port: 8080
-}).argv;
-
 mongodb.MongoClient.connect("mongodb://localhost:27017/lightsquare", function(error, db) {
 	if(db) {
-		var server = new Server(argv.port);
+		var server = new Server(config.port);
 		var app = new Application(server, db);
 		
-		for(var i = 0; i < argv.bots; i++) {
+		for(var i = 0; i < config.bots; i++) {
 			new Bot(app);
 		}
 	}

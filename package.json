@@ -8,7 +8,6 @@
 		"mongodb": "*",
 		"glicko2": "*",
 		"requirejs": "*",
-		"yargs": "*",
 		"websocket-server": "https://github.com/gushogg-blake/websocket-server/archive/master.tar.gz",
 		"chess": "https://github.com/gushogg-blake/chess/archive/master.tar.gz",
 		"jsonchess": "https://github.com/jsonchess/jsonchess/archive/master.tar.gz",
