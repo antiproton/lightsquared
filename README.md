@@ -29,7 +29,7 @@ Running the server
 Invoke main.js directly, or use [forever][3] to run it in the background (`#npm install
 -g forever`).
 
-Use the `bots` property in `config.js` option to create computer players.
+Use the `bots` property in `config.js` to create computer players.
 
 **Example forever command:**
 
