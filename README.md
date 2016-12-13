@@ -17,6 +17,7 @@ installation procedure or follow the steps below:
 - To make bots work, install the [Stockfish engine](http://stockfishchess.org/)
     (`#apt-get install stockfish`, or download it and place `stockfish`
     somewhere on your path)
+- copy `config.dist.js` and rename to `config.js`
 
 **Note** - the `websocket` module requires the `node` command, which can be obtained by
 installing the `nodejs-legacy` package, or possibly by just symlinking /usr/bin/node
