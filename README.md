@@ -29,12 +29,12 @@ Running the server
 Invoke main.js directly, or use [forever][3] to run it in the background (`#npm install
 -g forever`).
 
-Use the --bots N option to create computer players, e.g. `$js main.js --bots 5`.
+Use the `bots` property in `config.js` option to create computer players.
 
 **Example forever command:**
 
 ```
-forever start /home/gus/projects/lightsquared/main.js --bots 5
+forever start /home/gus/projects/lightsquared/main.js
 ```
 
 [3]:https://github.com/nodejitsu/forever
